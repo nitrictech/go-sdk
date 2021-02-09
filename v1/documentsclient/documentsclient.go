@@ -20,6 +20,7 @@ type NitricDocumentsClient struct {
 	c v1.DocumentsClient
 }
 
+// CreateDocument - stores a new document in the document db
 func (d NitricDocumentsClient) CreateDocument(collection string, key string, document map[string]interface{}) error  {
 	// Convert payload to Protobuf Struct
 	docStruct, err := structpb.NewStruct(document)
@@ -36,6 +37,7 @@ func (d NitricDocumentsClient) CreateDocument(collection string, key string, doc
 	return err
 }
 
+// GetDocument - retrieve an existing document from the document db
 func (d NitricDocumentsClient) GetDocument(collection string, key string) (map[string]interface{}, error)  {
 	res, err := d.c.GetDocument(context.Background(), &v1.GetDocumentRequest{
 		Collection: collection,
@@ -47,6 +49,7 @@ func (d NitricDocumentsClient) GetDocument(collection string, key string) (map[s
 	return res.GetDocument().AsMap(), nil
 }
 
+// UpdateDocument - updates the contents of an existing document in the document db
 func (d NitricDocumentsClient) UpdateDocument(collection string, key string, document map[string]interface{}) error  {
 	// Convert payload to Protobuf Struct
 	docStruct, err := structpb.NewStruct(document)
@@ -63,6 +66,7 @@ func (d NitricDocumentsClient) UpdateDocument(collection string, key string, doc
 	return err
 }
 
+// DeleteDocument - deletes an existing document from the document db
 func (d NitricDocumentsClient) DeleteDocument(collection string, key string) error  {
 	_, err := d.c.DeleteDocument(context.Background(), &v1.DeleteDocumentRequest{
 		Collection: collection,
@@ -78,7 +82,7 @@ func (d NitricDocumentsClient) Close() error {
 }
 
 // FIXME: Extract into shared code.
-func New() (DocumentsClient, error) {
+func NewDocumentsClient() (DocumentsClient, error) {
 	// Connect to the gRPC Membrane Server
 	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
 	if err != nil {

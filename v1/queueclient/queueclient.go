@@ -58,6 +58,9 @@ func wireToEvent(event *v1.NitricEvent) eventclient.Event  {
 	}
 }
 
+// Push - publishes events to a queue to be processed asynchronously by other services
+// queueName should be the Nitric name of the queue. This will be automatically resolved to the provider specific
+// queue identifier.
 func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*PushResponse, error)  {
 	// Convert SDK Event objects to gRPC Event objects
 	wireEvents := make([]*v1.NitricEvent, len(events))
@@ -90,6 +93,9 @@ func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*
 	return &PushResponse{failedEvents: failedEvents}, nil
 }
 
+// Pop - retrieve events from the specifed queue. The items returned are contained in a QueueItem
+// which provides context for the source queue and the lease on the event.
+// queue items must be completed using Complete or they will be distributed again or forwarded to a dead letter queue.
 func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error)  {
 	// Set minimum depth to 1.
 	if depth < 1 {
@@ -136,7 +142,7 @@ func (q NitricQueueClient) Close() error {
 	return q.conn.Close()
 }
 
-func New() (QueueClient, error) {
+func NewQueueClient() (QueueClient, error) {
 	// Connect to the gRPC Membrane Server
 	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
 	if err != nil {

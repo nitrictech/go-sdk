@@ -111,7 +111,7 @@ func (e NitricEventClient) Close() error {
 	return e.conn.Close()
 }
 
-func New() (EventClient, error) {
+func NewEventClient() (EventClient, error) {
 	// Connect to the gRPC Membrane Server
 	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
 	if err != nil {

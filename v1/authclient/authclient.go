@@ -11,6 +11,7 @@ type AuthClient interface {
 	CreateUser(tenant string, userId string, email string, password string) error
 }
 
+// NitricAuthClient - gRPC based client to nitric membrane server for auth services.
 type NitricAuthClient struct {
 	conn *grpc.ClientConn
 	c v1.AuthClient
@@ -36,7 +37,8 @@ func (a NitricAuthClient) Close() error {
 }
 
 // FIXME: Extract into shared code.
-func New() (AuthClient, error) {
+// NewAuthClient - create a new nitric auth client
+func NewAuthClient() (AuthClient, error) {
 	// Connect to the gRPC Membrane Server
 	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
 	if err != nil {
