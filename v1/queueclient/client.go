@@ -21,11 +21,13 @@ type PushResponse struct {
 type QueueItem struct {
 	event eventclient.Event
 	leaseId string
+	queue string
 }
 
 type QueueClient interface {
 	Push (queueName string, events []eventclient.Event) (*PushResponse, error)
 	Pop (queueName string, depth int) ([]QueueItem, error)
+	Complete (item QueueItem) error
 }
 
 type NitricQueueClient struct {
@@ -109,10 +111,23 @@ func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error)
 		queueItems[i] = QueueItem{
 			event:   wireToEvent(item.GetEvent()),
 			leaseId: item.GetLeaseId(),
+			queue: queueName,
 		}
 	}
 
 	return queueItems, nil
+}
+
+// Complete - marks a queue item as successfully completed and removes it from the queue.
+//
+// All items retrieved through Pop must be Completed or Released so they're not reprocessed or sent to a dead letter queue.
+func (q NitricQueueClient) Complete(item QueueItem) error {
+	_, err := q.c.Complete(context.Background(), &v1.CompleteRequest{
+		Queue: item.queue,
+		LeaseId: item.leaseId,
+	})
+
+	return err
 }
 
 // Close - closes the connection to the membrane server
