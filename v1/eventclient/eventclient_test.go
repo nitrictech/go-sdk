@@ -22,7 +22,6 @@ var _ = Describe("Eventclient", func() {
 				mockEventClient := mock_v1.NewMockEventingClient(ctrl)
 
 				By("Calling GetTopics")
-
 				mockEventClient.EXPECT().GetTopics(gomock.Any(), &emptypb.Empty{}).Return(&v1.GetTopicsReply{
 					Topics: []string{"test-topic"},
 				}, nil)

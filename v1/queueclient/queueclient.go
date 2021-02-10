@@ -143,3 +143,9 @@ func NewQueueClient(conn *grpc.ClientConn) QueueClient {
 		c:    v1.NewQueueClient(conn),
 	}
 }
+
+func NewWithClient(client v1.QueueClient) QueueClient {
+	return &NitricQueueClient{
+		c: client,
+	}
+}
