@@ -3,6 +3,7 @@ package documentsclient
 import (
 	"context"
 	"fmt"
+
 	v1 "go.nitric.io/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -16,12 +17,11 @@ type DocumentsClient interface {
 }
 
 type NitricDocumentsClient struct {
-	conn *grpc.ClientConn
 	c v1.DocumentsClient
 }
 
 // CreateDocument - stores a new document in the document db
-func (d NitricDocumentsClient) CreateDocument(collection string, key string, document map[string]interface{}) error  {
+func (d NitricDocumentsClient) CreateDocument(collection string, key string, document map[string]interface{}) error {
 	// Convert payload to Protobuf Struct
 	docStruct, err := structpb.NewStruct(document)
 	if err != nil {
@@ -38,7 +38,7 @@ func (d NitricDocumentsClient) CreateDocument(collection string, key string, doc
 }
 
 // GetDocument - retrieve an existing document from the document db
-func (d NitricDocumentsClient) GetDocument(collection string, key string) (map[string]interface{}, error)  {
+func (d NitricDocumentsClient) GetDocument(collection string, key string) (map[string]interface{}, error) {
 	res, err := d.c.GetDocument(context.Background(), &v1.GetDocumentRequest{
 		Collection: collection,
 		Key:        key,
@@ -50,7 +50,7 @@ func (d NitricDocumentsClient) GetDocument(collection string, key string) (map[s
 }
 
 // UpdateDocument - updates the contents of an existing document in the document db
-func (d NitricDocumentsClient) UpdateDocument(collection string, key string, document map[string]interface{}) error  {
+func (d NitricDocumentsClient) UpdateDocument(collection string, key string, document map[string]interface{}) error {
 	// Convert payload to Protobuf Struct
 	docStruct, err := structpb.NewStruct(document)
 	if err != nil {
@@ -67,7 +67,7 @@ func (d NitricDocumentsClient) UpdateDocument(collection string, key string, doc
 }
 
 // DeleteDocument - deletes an existing document from the document db
-func (d NitricDocumentsClient) DeleteDocument(collection string, key string) error  {
+func (d NitricDocumentsClient) DeleteDocument(collection string, key string) error {
 	_, err := d.c.DeleteDocument(context.Background(), &v1.DeleteDocumentRequest{
 		Collection: collection,
 		Key:        key,
@@ -75,22 +75,14 @@ func (d NitricDocumentsClient) DeleteDocument(collection string, key string) err
 	return err
 }
 
-// Close - closes the connection to the membrane server
-// no need to call close if the connect is to remain open for the lifetime of the application.
-func (d NitricDocumentsClient) Close() error {
-	return d.conn.Close()
+func NewDocumentsClient(conn *grpc.ClientConn) DocumentsClient {
+	return &NitricDocumentsClient{
+		c: v1.NewDocumentsClient(conn),
+	}
 }
 
-// FIXME: Extract into shared code.
-func NewDocumentsClient() (DocumentsClient, error) {
-	// Connect to the gRPC Membrane Server
-	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to establish connection to Membrane gRPC server: %s", err)
-	}
-
+func NewWithClient(client v1.DocumentsClient) DocumentsClient {
 	return &NitricDocumentsClient{
-		conn: conn,
-		c: v1.NewDocumentsClient(conn),
-	}, nil
+		c: client,
+	}
 }

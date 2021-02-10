@@ -3,6 +3,7 @@ package queueclient
 import (
 	"context"
 	"fmt"
+
 	v1 "go.nitric.io/go-sdk/interfaces/nitric/v1"
 	"go.nitric.io/go-sdk/v1/eventclient"
 	"google.golang.org/grpc"
@@ -10,7 +11,7 @@ import (
 )
 
 type FailedEvent struct {
-	event eventclient.Event
+	event   eventclient.Event
 	message string
 }
 
@@ -19,23 +20,23 @@ type PushResponse struct {
 }
 
 type QueueItem struct {
-	event eventclient.Event
+	event   eventclient.Event
 	leaseId string
-	queue string
+	queue   string
 }
 
 type QueueClient interface {
-	Push (queueName string, events []eventclient.Event) (*PushResponse, error)
-	Pop (queueName string, depth int) ([]QueueItem, error)
-	Complete (item QueueItem) error
+	Push(queueName string, events []eventclient.Event) (*PushResponse, error)
+	Pop(queueName string, depth int) ([]QueueItem, error)
+	Complete(item QueueItem) error
 }
 
 type NitricQueueClient struct {
 	conn *grpc.ClientConn
-	c v1.QueueClient
+	c    v1.QueueClient
 }
 
-func eventToWire(event eventclient.Event) (*v1.NitricEvent, error)  {
+func eventToWire(event eventclient.Event) (*v1.NitricEvent, error) {
 	// Convert payload to Protobuf Struct
 	payloadStruct, err := structpb.NewStruct(*event.Payload)
 	if err != nil {
@@ -43,13 +44,13 @@ func eventToWire(event eventclient.Event) (*v1.NitricEvent, error)  {
 	}
 
 	return &v1.NitricEvent{
-		RequestId: *event.RequestId,
+		RequestId:   *event.RequestId,
 		PayloadType: *event.PayloadType,
-		Payload: payloadStruct,
+		Payload:     payloadStruct,
 	}, nil
 }
 
-func wireToEvent(event *v1.NitricEvent) eventclient.Event  {
+func wireToEvent(event *v1.NitricEvent) eventclient.Event {
 	payload := event.Payload.AsMap()
 	return eventclient.Event{
 		RequestId:   &event.RequestId,
@@ -61,7 +62,7 @@ func wireToEvent(event *v1.NitricEvent) eventclient.Event  {
 // Push - publishes events to a queue to be processed asynchronously by other services
 // queueName should be the Nitric name of the queue. This will be automatically resolved to the provider specific
 // queue identifier.
-func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*PushResponse, error)  {
+func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*PushResponse, error) {
 	// Convert SDK Event objects to gRPC Event objects
 	wireEvents := make([]*v1.NitricEvent, len(events))
 	for i, event := range events {
@@ -85,7 +86,7 @@ func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*
 	failedEvents := make([]FailedEvent, len(res.GetFailedMessages()))
 	for i, failedEvent := range res.GetFailedMessages() {
 		failedEvents[i] = FailedEvent{
-			event: wireToEvent(failedEvent.GetEvent()),
+			event:   wireToEvent(failedEvent.GetEvent()),
 			message: failedEvent.GetMessage(),
 		}
 	}
@@ -96,7 +97,7 @@ func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*
 // Pop - retrieve events from the specifed queue. The items returned are contained in a QueueItem
 // which provides context for the source queue and the lease on the event.
 // queue items must be completed using Complete or they will be distributed again or forwarded to a dead letter queue.
-func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error)  {
+func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error) {
 	// Set minimum depth to 1.
 	if depth < 1 {
 		depth = 1
@@ -117,7 +118,7 @@ func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error)
 		queueItems[i] = QueueItem{
 			event:   wireToEvent(item.GetEvent()),
 			leaseId: item.GetLeaseId(),
-			queue: queueName,
+			queue:   queueName,
 		}
 	}
 
@@ -129,28 +130,16 @@ func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error)
 // All items retrieved through Pop must be Completed or Released so they're not reprocessed or sent to a dead letter queue.
 func (q NitricQueueClient) Complete(item QueueItem) error {
 	_, err := q.c.Complete(context.Background(), &v1.CompleteRequest{
-		Queue: item.queue,
+		Queue:   item.queue,
 		LeaseId: item.leaseId,
 	})
 
 	return err
 }
 
-// Close - closes the connection to the membrane server
-// no need to call close if the connect is to remain open for the lifetime of the application.
-func (q NitricQueueClient) Close() error {
-	return q.conn.Close()
-}
-
-func NewQueueClient() (QueueClient, error) {
-	// Connect to the gRPC Membrane Server
-	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to establish connection to Membrane gRPC server: %s", err)
-	}
-
+func NewQueueClient(conn *grpc.ClientConn) QueueClient {
 	return &NitricQueueClient{
 		conn: conn,
-		c: v1.NewQueueClient(conn),
-	}, nil
+		c:    v1.NewQueueClient(conn),
+	}
 }

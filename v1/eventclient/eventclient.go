@@ -3,6 +3,7 @@ package eventclient
 import (
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
 	v1 "go.nitric.io/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
@@ -15,9 +16,9 @@ type Topic interface {
 }
 
 type Event struct {
-	Payload *map[string]interface{}
+	Payload     *map[string]interface{}
 	PayloadType *string
-	RequestId *string
+	RequestId   *string
 }
 
 // Represents a Topic for event publishing. The runtime representation of a topic is provider specific.
@@ -31,7 +32,7 @@ func (t *NitricTopic) GetName() string {
 }
 
 // String - returns the string representation of this topic
-func (t *NitricTopic) String() string  {
+func (t *NitricTopic) String() string {
 	return t.name
 }
 
@@ -42,7 +43,7 @@ type EventClient interface {
 
 type NitricEventClient struct {
 	conn *grpc.ClientConn
-	c v1.EventingClient
+	c    v1.EventingClient
 }
 
 // GetTopics - returns a slice of deployed topics in the current stack and provider.
@@ -66,11 +67,11 @@ func (e NitricEventClient) GetTopics() ([]Topic, error) {
 
 type PublishOptions struct {
 	TopicName *string
-	Event *Event
+	Event     *Event
 }
 
 // Publish - publishes the provided event data to the specified topic.
-func (e NitricEventClient) Publish (opts PublishOptions) (*string, error)  {
+func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 	// Generate UUID as request id if none provided
 	requestId := opts.Event.RequestId
 	if requestId == nil {
@@ -105,21 +106,15 @@ func (e NitricEventClient) Publish (opts PublishOptions) (*string, error)  {
 	return requestId, nil
 }
 
-// Close - closes the connection to the membrane server
-// no need to call close if the connect is to remain open for the lifetime of the application.
-func (e NitricEventClient) Close() error {
-	return e.conn.Close()
-}
-
-func NewEventClient() (EventClient, error) {
-	// Connect to the gRPC Membrane Server
-	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to establish connection to Membrane gRPC server: %s", err)
-	}
-
+func NewEventClient(conn *grpc.ClientConn) EventClient {
 	return &NitricEventClient{
 		conn: conn,
-		c: v1.NewEventingClient(conn),
-	}, nil
+		c:    v1.NewEventingClient(conn),
+	}
+}
+
+func NewWithClient(client v1.EventingClient) EventClient {
+	return &NitricEventClient{
+		c: client,
+	}
 }
