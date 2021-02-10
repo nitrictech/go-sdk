@@ -29,14 +29,6 @@ func (a NitricAuthClient) CreateUser(tenant string, userId string, email string,
 	return err
 }
 
-// Close - closes the connection to the membrane server
-// no need to call close if the connect is to remain open for the lifetime of the application.
-func (a NitricAuthClient) Close() {
-	if a.conn != nil {
-		_ = a.conn.Close()
-	}
-}
-
 // FIXME: Extract into shared code.
 // NewAuthClient - create a new nitric auth client
 func NewAuthClient(conn *grpc.ClientConn) AuthClient {
