@@ -11,3 +11,12 @@ generate-proto:
 	@echo Generating Proto Sources
 	@mkdir -p ./interfaces/
 	@protoc --go_out=./interfaces/ --go-grpc_out=./interfaces/ -I ./contracts/proto/ ./contracts/proto/**/*.proto
+
+# Generate mock implementations
+generate-mocks:
+	@echo Generating Mock RPC Clients
+	@go run github.com/golang/mock/mockgen go.nitric.io/go-sdk/interfaces/nitric/v1 AuthClient,DocumentsClient,EventingClient,QueueClient,StorageClient  > mocks/clients.go
+
+test: generate-mocks
+	@echo Testing Membrane
+	@go run github.com/onsi/ginkgo/ginkgo -cover ./v1/...

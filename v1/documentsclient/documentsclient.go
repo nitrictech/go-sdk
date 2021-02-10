@@ -3,6 +3,7 @@ package documentsclient
 import (
 	"context"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 
 	v1 "go.nitric.io/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
@@ -12,6 +13,7 @@ import (
 type DocumentsClient interface {
 	CreateDocument(collection string, key string, document map[string]interface{}) error
 	GetDocument(collection string, key string) (map[string]interface{}, error)
+	DecodeDocument(collection string, key string, output interface{}, opts ...DecodeOption) error
 	UpdateDocument(collection string, key string, document map[string]interface{}) error
 	DeleteDocument(collection string, key string) error
 }
@@ -35,6 +37,54 @@ func (d NitricDocumentsClient) CreateDocument(collection string, key string, doc
 	})
 
 	return err
+}
+
+type DecodeOption interface {
+	Apply(c *mapstructure.DecoderConfig)
+}
+
+func WithUnknownKeys(allow bool) DecodeOption {
+	return withUnknownKeys{allow}
+}
+
+type withUnknownKeys struct { allow bool }
+
+func (w withUnknownKeys) Apply(c *mapstructure.DecoderConfig)  {
+	c.ErrorUnused = !w.allow
+}
+
+// DecodeDocument - retrieves a document and decodes its contents into the given Go interface{}
+//
+// internally this method calls GetDocument then decodes the map[string]interface{} into the supplied interface{}
+//
+// this method helps parse the types of documents represented by structs.
+func (d NitricDocumentsClient) DecodeDocument(collection string, key string, output interface{}, opts ...DecodeOption) error {
+	document, err := d.GetDocument(collection, key)
+	if err != nil {
+		return err
+	}
+	decoderConfig := mapstructure.DecoderConfig{
+		//DecodeHook:       nil,
+		ErrorUnused:      true, // Default behavior is to error when keys are missing from the output interface{}
+		//ZeroFields:       false,
+		//WeaklyTypedInput: false,
+		//Squash:           false,
+		//Metadata:         nil,
+		Result:           output,
+		//TagName:          "",
+	}
+
+	// Apply additional options
+	for _, opt := range opts {
+		opt.Apply(&decoderConfig)
+	}
+
+	// Decode the document into the object
+	decoder, err := mapstructure.NewDecoder(&decoderConfig)
+	if err != nil {
+		return err
+	}
+	return decoder.Decode(document)
 }
 
 // GetDocument - retrieve an existing document from the document db
