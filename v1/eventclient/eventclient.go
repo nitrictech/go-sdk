@@ -73,14 +73,14 @@ type PublishOptions struct {
 // Publish - publishes the provided event data to the specified topic.
 func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 	// Generate UUID as request id if none provided
-	requestId := opts.Event.RequestId
-	if requestId == nil {
-		if newUuid, err := uuid.NewRandom(); err != nil && newUuid.String() != "" {
-			uuidStr := newUuid.String()
-			requestId = &uuidStr
-		} else {
-			return nil, fmt.Errorf("failed to generate event request id: %s", err)
+	var requestID = opts.Event.RequestId
+	if requestID == nil {
+		// TODO: Pass in request id generator as an interface so it can be customized.
+		uuidStr := uuid.New().String()
+		if uuidStr == "" {
+			return nil, fmt.Errorf("failed to generate unique request id")
 		}
+		requestID = &uuidStr
 	}
 
 	// Convert payload to Protobuf Struct
@@ -93,7 +93,7 @@ func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 	_, err = e.c.Publish(context.Background(), &v1.PublishRequest{
 		TopicName: *opts.TopicName,
 		Event: &v1.NitricEvent{
-			RequestId:   *requestId,
+			RequestId:   *requestID,
 			PayloadType: *opts.Event.PayloadType,
 			Payload:     payloadStruct,
 		},
@@ -103,7 +103,7 @@ func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 		return nil, err
 	}
 
-	return requestId, nil
+	return requestID, nil
 }
 
 func NewEventClient(conn *grpc.ClientConn) EventClient {

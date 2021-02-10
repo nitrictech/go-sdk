@@ -1,12 +1,12 @@
 package storageclient_test
 
-import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+// import (
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
 
-	"go.nitric.io/go-sdk/v1/storageclient"
-)
+// 	"go.nitric.io/go-sdk/v1/storageclient"
+// )
 
-var _ = Describe("Storageclient", func() {
+// var _ = Describe("Storageclient", func() {
 
-})
+// })
