@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"net"
 	"os"
 
 	"go.nitric.io/go-sdk/v1/authclient"
@@ -138,8 +139,7 @@ func nitricHost() string {
 
 // nitricAddress - constructs the full address i.e. host:port, of the nitric service based on config or defaults
 func nitricAddress() string {
-	//return net.JoinHostPort(nitricAddress(), nitricPort())
-	return "test"
+	return net.JoinHostPort(nitricHost(), nitricPort())
 }
 
 // New - constructs a new NitricClient with a connection to the nitric service.
