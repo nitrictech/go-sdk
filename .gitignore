@@ -20,5 +20,5 @@ bin/
 
 *.coverprofile
 
-# Ignore proto generated interfaces
-interfaces/
+# Ignore auto-generated mock files
+/mocks/*.go
