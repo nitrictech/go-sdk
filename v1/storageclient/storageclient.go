@@ -54,3 +54,9 @@ func NewStorageClient(conn *grpc.ClientConn) StorageClient {
 		c:    v1.NewStorageClient(conn),
 	}
 }
+
+func NewWithClient(client v1.StorageClient) StorageClient {
+	return &NitricStorageClient{
+		c: client,
+	}
+}
