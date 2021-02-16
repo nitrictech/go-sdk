@@ -8,7 +8,7 @@ type NitricFunction func(*NitricRequest) *NitricResponse
 // Start - Starts accepting requests for the provided NitricFunction
 //
 // This should be the only method called in the 'main' method of your entrypoint package
-func Start(f NitricFunction) {
+func Start(f NitricFunction) error {
 	// Listen on the perscribed Nitric Application port (from env variables)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Translate the given HTTP request to a NitricRequest
@@ -29,4 +29,7 @@ func Start(f NitricFunction) {
 		// Write the reponse
 		response.writeHTTPResponse(w)
 	})
+
+	// Listen and block
+	return http.ListenAndServe("0.0.0.0:9001", nil)
 }
