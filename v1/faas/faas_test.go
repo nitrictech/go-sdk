@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"net/http"
 
+	"github.com/nitrictech/go-sdk/v1/faas"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"go.nitric.io/go-sdk/v1/faas"
 )
 
 type MockFunctionSpy struct {
@@ -37,7 +37,7 @@ type MockHttpOptions struct {
 }
 
 func createMockHttpRequest(opts MockHttpOptions) *http.Request {
-	request, _ := http.NewRequest("POST", "http://0.0.0.0:9001", bytes.NewReader(opts.body))
+	request, _ := http.NewRequest("POST", "http://0.0.0.0:8080", bytes.NewReader(opts.body))
 
 	request.Header.Add("x-nitric-request-id", opts.requestId)
 	request.Header.Add("x-nitric-source-type", opts.sourceType)
@@ -80,24 +80,24 @@ var _ = Describe("Faas", func() {
 				http.DefaultClient.Do(request)
 			})
 
-			It("Should recieve the correct request", func() {
-				By("Recieving a single request")
+			It("Should receive the correct request", func() {
+				By("Receiving a single request")
 				Expect(mockFunction.loggedRequests).To(HaveLen(1))
 
-				recievedRequest := mockFunction.loggedRequests[0]
-				recievedContext := recievedRequest.GetContext()
+				receivedRequest := mockFunction.loggedRequests[0]
+				receivedContext := receivedRequest.GetContext()
 
 				By("Having the provided request id")
-				Expect((&recievedContext).GetRequestID()).To(BeEquivalentTo("1234"))
+				Expect((&receivedContext).GetRequestID()).To(BeEquivalentTo("1234"))
 
 				//By("Having the provided payload type")
-				//Expect((&recievedContext).GetPayloadType()).To(BeEquivalentTo("test-payload"))
+				//Expect((&receivedContext).GetPayloadType()).To(BeEquivalentTo("test-payload"))
 
 				By("Having the correct source type")
-				Expect((&recievedContext).GetSourceType()).To(BeEquivalentTo(faas.Request))
+				Expect((&receivedContext).GetSourceType()).To(BeEquivalentTo(faas.Request))
 
 				By("Having the provided source")
-				Expect((&recievedContext).GetSource()).To(BeEquivalentTo("test-source"))
+				Expect((&receivedContext).GetSource()).To(BeEquivalentTo("test-source"))
 			})
 		})
 
@@ -115,13 +115,13 @@ var _ = Describe("Faas", func() {
 			})
 
 			It("Should have the supplied sourceType", func() {
-				By("Recieving a single request")
+				By("Receiving a single request")
 				Expect(mockFunction.loggedRequests).To(HaveLen(1))
 
-				recievedRequest := mockFunction.loggedRequests[0]
-				recievedContext := recievedRequest.GetContext()
+				receivedRequest := mockFunction.loggedRequests[0]
+				receivedContext := receivedRequest.GetContext()
 
-				Expect((&recievedContext).GetSourceType()).To(BeEquivalentTo(faas.Subscription))
+				Expect((&receivedContext).GetSourceType()).To(BeEquivalentTo(faas.Subscription))
 			})
 		})
 
@@ -139,13 +139,13 @@ var _ = Describe("Faas", func() {
 			})
 
 			It("Should have the supplied sourceType", func() {
-				By("Recieving a single request")
+				By("Receiving a single request")
 				Expect(mockFunction.loggedRequests).To(HaveLen(1))
 
-				recievedRequest := mockFunction.loggedRequests[0]
-				recievedContext := recievedRequest.GetContext()
+				receivedRequest := mockFunction.loggedRequests[0]
+				receivedContext := receivedRequest.GetContext()
 
-				Expect((&recievedContext).GetSourceType()).To(BeEquivalentTo(faas.Unknown))
+				Expect((&receivedContext).GetSourceType()).To(BeEquivalentTo(faas.Unknown))
 			})
 		})
 	})

@@ -2,7 +2,7 @@ package authclient
 
 import (
 	"context"
-	v1 "go.nitric.io/go-sdk/interfaces/nitric/v1"
+	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
 )
 

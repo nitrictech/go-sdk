@@ -15,7 +15,7 @@ generate-proto:
 # Generate mock implementations
 generate-mocks:
 	@echo Generating Mock RPC Clients
-	@go run github.com/golang/mock/mockgen go.nitric.io/go-sdk/interfaces/nitric/v1 AuthClient,DocumentsClient,EventingClient,QueueClient,StorageClient  > mocks/clients.go
+	@go run github.com/golang/mock/mockgen github.com/nitrictech/go-sdk/interfaces/nitric/v1 AuthClient,DocumentsClient,EventingClient,QueueClient,StorageClient  > mocks/clients.go
 
 test: generate-mocks
 	@echo Testing Nitric Go SDK
