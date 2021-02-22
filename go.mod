@@ -1,4 +1,4 @@
-module go.nitric.io/go-sdk
+module github.com/nitrictech/go-sdk
 
 go 1.15
 
