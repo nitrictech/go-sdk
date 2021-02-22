@@ -5,11 +5,11 @@ import (
 	"net"
 	"os"
 
-	"go.nitric.io/go-sdk/v1/authclient"
-	"go.nitric.io/go-sdk/v1/documentsclient"
-	"go.nitric.io/go-sdk/v1/eventclient"
-	"go.nitric.io/go-sdk/v1/queueclient"
-	"go.nitric.io/go-sdk/v1/storageclient"
+	"github.com/nitrictech/go-sdk/v1/authclient"
+	"github.com/nitrictech/go-sdk/v1/documentsclient"
+	"github.com/nitrictech/go-sdk/v1/eventclient"
+	"github.com/nitrictech/go-sdk/v1/queueclient"
+	"github.com/nitrictech/go-sdk/v1/storageclient"
 	"google.golang.org/grpc"
 )
 

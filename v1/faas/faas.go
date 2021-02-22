@@ -1,6 +1,9 @@
 package faas
 
-import "net/http"
+import (
+	"net/http"
+	"os"
+)
 
 // NitricFunction - a function built using Nitric, to be executed
 type NitricFunction func(*NitricRequest) *NitricResponse
@@ -30,6 +33,10 @@ func Start(f NitricFunction) error {
 		response.writeHTTPResponse(w)
 	})
 
+	var childAddress = "127.0.0.1:8080"
+	if env, ok := os.LookupEnv("CHILD_ADDRESS"); ok {
+		childAddress = env
+	}
 	// Listen and block
-	return http.ListenAndServe("0.0.0.0:9001", nil)
+	return http.ListenAndServe(childAddress, nil)
 }

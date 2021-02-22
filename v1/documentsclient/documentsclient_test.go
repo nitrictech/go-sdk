@@ -6,9 +6,9 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	v1 "go.nitric.io/go-sdk/interfaces/nitric/v1"
-	mock_v1 "go.nitric.io/go-sdk/mocks"
-	"go.nitric.io/go-sdk/v1/documentsclient"
+	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	"github.com/nitrictech/go-sdk/v1/documentsclient"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )

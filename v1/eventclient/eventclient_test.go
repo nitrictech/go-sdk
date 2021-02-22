@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	v1 "go.nitric.io/go-sdk/interfaces/nitric/v1"
-	mock_v1 "go.nitric.io/go-sdk/mocks"
+	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
