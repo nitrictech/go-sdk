@@ -7,202 +7,197 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// DocumentsClient is the client API for Documents service.
+// DocumentClient is the client API for Document service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type DocumentsClient interface {
-	CreateDocument(ctx context.Context, in *CreateDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetDocument(ctx context.Context, in *GetDocumentRequest, opts ...grpc.CallOption) (*GetDocumentReply, error)
-	UpdateDocument(ctx context.Context, in *UpdateDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	DeleteDocument(ctx context.Context, in *DeleteDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+type DocumentClient interface {
+	Create(ctx context.Context, in *DocumentCreateRequest, opts ...grpc.CallOption) (*DocumentCreateResponse, error)
+	Get(ctx context.Context, in *DocumentGetRequest, opts ...grpc.CallOption) (*DocumentGetResponse, error)
+	Update(ctx context.Context, in *DocumentUpdateRequest, opts ...grpc.CallOption) (*DocumentUpdateResponse, error)
+	Delete(ctx context.Context, in *DocumentDeleteRequest, opts ...grpc.CallOption) (*DocumentDeleteResponse, error)
 }
 
-type documentsClient struct {
+type documentClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewDocumentsClient(cc grpc.ClientConnInterface) DocumentsClient {
-	return &documentsClient{cc}
+func NewDocumentClient(cc grpc.ClientConnInterface) DocumentClient {
+	return &documentClient{cc}
 }
 
-func (c *documentsClient) CreateDocument(ctx context.Context, in *CreateDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Documents/CreateDocument", in, out, opts...)
+func (c *documentClient) Create(ctx context.Context, in *DocumentCreateRequest, opts ...grpc.CallOption) (*DocumentCreateResponse, error) {
+	out := new(DocumentCreateResponse)
+	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Document/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *documentsClient) GetDocument(ctx context.Context, in *GetDocumentRequest, opts ...grpc.CallOption) (*GetDocumentReply, error) {
-	out := new(GetDocumentReply)
-	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Documents/GetDocument", in, out, opts...)
+func (c *documentClient) Get(ctx context.Context, in *DocumentGetRequest, opts ...grpc.CallOption) (*DocumentGetResponse, error) {
+	out := new(DocumentGetResponse)
+	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Document/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *documentsClient) UpdateDocument(ctx context.Context, in *UpdateDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Documents/UpdateDocument", in, out, opts...)
+func (c *documentClient) Update(ctx context.Context, in *DocumentUpdateRequest, opts ...grpc.CallOption) (*DocumentUpdateResponse, error) {
+	out := new(DocumentUpdateResponse)
+	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Document/Update", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *documentsClient) DeleteDocument(ctx context.Context, in *DeleteDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Documents/DeleteDocument", in, out, opts...)
+func (c *documentClient) Delete(ctx context.Context, in *DocumentDeleteRequest, opts ...grpc.CallOption) (*DocumentDeleteResponse, error) {
+	out := new(DocumentDeleteResponse)
+	err := c.cc.Invoke(ctx, "/nitric.v1.documents.Document/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// DocumentsServer is the server API for Documents service.
-// All implementations must embed UnimplementedDocumentsServer
+// DocumentServer is the server API for Document service.
+// All implementations must embed UnimplementedDocumentServer
 // for forward compatibility
-type DocumentsServer interface {
-	CreateDocument(context.Context, *CreateDocumentRequest) (*emptypb.Empty, error)
-	GetDocument(context.Context, *GetDocumentRequest) (*GetDocumentReply, error)
-	UpdateDocument(context.Context, *UpdateDocumentRequest) (*emptypb.Empty, error)
-	DeleteDocument(context.Context, *DeleteDocumentRequest) (*emptypb.Empty, error)
-	mustEmbedUnimplementedDocumentsServer()
+type DocumentServer interface {
+	Create(context.Context, *DocumentCreateRequest) (*DocumentCreateResponse, error)
+	Get(context.Context, *DocumentGetRequest) (*DocumentGetResponse, error)
+	Update(context.Context, *DocumentUpdateRequest) (*DocumentUpdateResponse, error)
+	Delete(context.Context, *DocumentDeleteRequest) (*DocumentDeleteResponse, error)
+	mustEmbedUnimplementedDocumentServer()
 }
 
-// UnimplementedDocumentsServer must be embedded to have forward compatible implementations.
-type UnimplementedDocumentsServer struct {
+// UnimplementedDocumentServer must be embedded to have forward compatible implementations.
+type UnimplementedDocumentServer struct {
 }
 
-func (UnimplementedDocumentsServer) CreateDocument(context.Context, *CreateDocumentRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateDocument not implemented")
+func (UnimplementedDocumentServer) Create(context.Context, *DocumentCreateRequest) (*DocumentCreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedDocumentsServer) GetDocument(context.Context, *GetDocumentRequest) (*GetDocumentReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDocument not implemented")
+func (UnimplementedDocumentServer) Get(context.Context, *DocumentGetRequest) (*DocumentGetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedDocumentsServer) UpdateDocument(context.Context, *UpdateDocumentRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateDocument not implemented")
+func (UnimplementedDocumentServer) Update(context.Context, *DocumentUpdateRequest) (*DocumentUpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedDocumentsServer) DeleteDocument(context.Context, *DeleteDocumentRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteDocument not implemented")
+func (UnimplementedDocumentServer) Delete(context.Context, *DocumentDeleteRequest) (*DocumentDeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedDocumentsServer) mustEmbedUnimplementedDocumentsServer() {}
+func (UnimplementedDocumentServer) mustEmbedUnimplementedDocumentServer() {}
 
-// UnsafeDocumentsServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DocumentsServer will
+// UnsafeDocumentServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DocumentServer will
 // result in compilation errors.
-type UnsafeDocumentsServer interface {
-	mustEmbedUnimplementedDocumentsServer()
+type UnsafeDocumentServer interface {
+	mustEmbedUnimplementedDocumentServer()
 }
 
-func RegisterDocumentsServer(s grpc.ServiceRegistrar, srv DocumentsServer) {
-	s.RegisterService(&Documents_ServiceDesc, srv)
+func RegisterDocumentServer(s grpc.ServiceRegistrar, srv DocumentServer) {
+	s.RegisterService(&_Document_serviceDesc, srv)
 }
 
-func _Documents_CreateDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateDocumentRequest)
+func _Document_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DocumentCreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DocumentsServer).CreateDocument(ctx, in)
+		return srv.(DocumentServer).Create(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.documents.Documents/CreateDocument",
+		FullMethod: "/nitric.v1.documents.Document/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DocumentsServer).CreateDocument(ctx, req.(*CreateDocumentRequest))
+		return srv.(DocumentServer).Create(ctx, req.(*DocumentCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Documents_GetDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDocumentRequest)
+func _Document_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DocumentGetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DocumentsServer).GetDocument(ctx, in)
+		return srv.(DocumentServer).Get(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.documents.Documents/GetDocument",
+		FullMethod: "/nitric.v1.documents.Document/Get",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DocumentsServer).GetDocument(ctx, req.(*GetDocumentRequest))
+		return srv.(DocumentServer).Get(ctx, req.(*DocumentGetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Documents_UpdateDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateDocumentRequest)
+func _Document_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DocumentUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DocumentsServer).UpdateDocument(ctx, in)
+		return srv.(DocumentServer).Update(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.documents.Documents/UpdateDocument",
+		FullMethod: "/nitric.v1.documents.Document/Update",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DocumentsServer).UpdateDocument(ctx, req.(*UpdateDocumentRequest))
+		return srv.(DocumentServer).Update(ctx, req.(*DocumentUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Documents_DeleteDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDocumentRequest)
+func _Document_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DocumentDeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DocumentsServer).DeleteDocument(ctx, in)
+		return srv.(DocumentServer).Delete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.documents.Documents/DeleteDocument",
+		FullMethod: "/nitric.v1.documents.Document/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DocumentsServer).DeleteDocument(ctx, req.(*DeleteDocumentRequest))
+		return srv.(DocumentServer).Delete(ctx, req.(*DocumentDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Documents_ServiceDesc is the grpc.ServiceDesc for Documents service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var Documents_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.v1.documents.Documents",
-	HandlerType: (*DocumentsServer)(nil),
+var _Document_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "nitric.v1.documents.Document",
+	HandlerType: (*DocumentServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateDocument",
-			Handler:    _Documents_CreateDocument_Handler,
+			MethodName: "Create",
+			Handler:    _Document_Create_Handler,
 		},
 		{
-			MethodName: "GetDocument",
-			Handler:    _Documents_GetDocument_Handler,
+			MethodName: "Get",
+			Handler:    _Document_Get_Handler,
 		},
 		{
-			MethodName: "UpdateDocument",
-			Handler:    _Documents_UpdateDocument_Handler,
+			MethodName: "Update",
+			Handler:    _Document_Update_Handler,
 		},
 		{
-			MethodName: "DeleteDocument",
-			Handler:    _Documents_DeleteDocument_Handler,
+			MethodName: "Delete",
+			Handler:    _Document_Delete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

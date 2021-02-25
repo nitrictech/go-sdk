@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -43,22 +42,23 @@ type EventClient interface {
 
 type NitricEventClient struct {
 	conn *grpc.ClientConn
-	c    v1.EventingClient
+	c    v1.EventClient
+	t    v1.TopicClient
 }
 
 // GetTopics - returns a slice of deployed topics in the current stack and provider.
 func (e NitricEventClient) GetTopics() ([]Topic, error) {
 	// Get a list of topics from the server
-	res, err := e.c.GetTopics(context.Background(), &emptypb.Empty{})
+	res, err := e.t.List(context.Background(), &v1.TopicListRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("an error occurred getting topics: %s", err)
 	}
 
 	// Convert the response into Topic objects
 	topics := make([]Topic, 0, len(res.GetTopics()))
-	for _, t := range res.GetTopics() {
+	for _, topic := range res.GetTopics() {
 		topics = append(topics, &NitricTopic{
-			name: t,
+			name: topic.GetName(),
 		})
 	}
 
@@ -90,8 +90,8 @@ func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 	}
 
 	// Publish the event
-	_, err = e.c.Publish(context.Background(), &v1.PublishRequest{
-		TopicName: *opts.TopicName,
+	_, err = e.c.Publish(context.Background(), &v1.EventPublishRequest{
+		Topic: *opts.TopicName,
 		Event: &v1.NitricEvent{
 			RequestId:   *requestID,
 			PayloadType: *opts.Event.PayloadType,
@@ -109,12 +109,14 @@ func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 func NewEventClient(conn *grpc.ClientConn) EventClient {
 	return &NitricEventClient{
 		conn: conn,
-		c:    v1.NewEventingClient(conn),
+		c:    v1.NewEventClient(conn),
+		t:    v1.NewTopicClient(conn),
 	}
 }
 
-func NewWithClient(client v1.EventingClient) EventClient {
+func NewWithClient(eventClient v1.EventClient, topicClient v1.TopicClient) EventClient {
 	return &NitricEventClient{
-		c: client,
+		c: eventClient,
+		t: topicClient,
 	}
 }

@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"github.com/fatih/structs"
 	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	"github.com/nitrictech/go-sdk/v1/documentsclient"
-	"google.golang.org/protobuf/types/known/emptypb"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -19,10 +18,10 @@ var _ = Describe("Documentsclient", func() {
 	When("CreateDocument", func() {
 		When("The collection exists", func() {
 			It("Should create the document", func() {
-				mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+				mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 				By("Calling CreateDocument with the expected inputs")
-				mockDocClient.EXPECT().CreateDocument(gomock.Any(), &v1.CreateDocumentRequest{
+				mockDocClient.EXPECT().Create(gomock.Any(), &v1.DocumentCreateRequest{
 					Collection: "test-collection",
 					Key:        "test-key",
 					Document:   &structpb.Struct{
@@ -45,10 +44,10 @@ var _ = Describe("Documentsclient", func() {
 
 		When("The collection doesn't exist", func() {
 			It("Return an error", func() {
-				mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+				mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 				By("Calling CreateDocument with the expected inputs")
-				mockDocClient.EXPECT().CreateDocument(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
+				mockDocClient.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
 
 				client := documentsclient.NewWithClient(mockDocClient)
 				input := map[string]interface{}{}
@@ -64,7 +63,7 @@ var _ = Describe("Documentsclient", func() {
 		When("The collection exists", func() {
 			When("The document exists", func() {
 				It("Should retrieve the document", func() {
-					mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+					mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 					mockDocument, _ := structpb.NewStruct(map[string]interface{}{
 						"test": 123,
@@ -72,13 +71,13 @@ var _ = Describe("Documentsclient", func() {
 
 					By("Calling GetDocument with the expected inputs")
 					mockDocClient.EXPECT().
-						GetDocument(
+						Get(
 							gomock.Any(),
-							&v1.GetDocumentRequest{
+							&v1.DocumentGetRequest{
 								Collection: "test-collection",
 								Key:        "test-key",
 							},
-						).Return(&v1.GetDocumentReply{
+						).Return(&v1.DocumentGetResponse{
 						Document: mockDocument,
 					}, nil)
 
@@ -95,9 +94,9 @@ var _ = Describe("Documentsclient", func() {
 			When("The document doesn't exist", func() {
 				It("Should return an error", func() {
 					By("Calling GetDocument")
-					mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+					mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 					mockDocClient.EXPECT().
-						GetDocument(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
+						Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
 
 					client := documentsclient.NewWithClient(mockDocClient)
 
@@ -113,9 +112,9 @@ var _ = Describe("Documentsclient", func() {
 		When("The collection doesn't exist", func() {
 			It("Should return an error", func() {
 				By("Calling GetDocument")
-				mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+				mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 				mockDocClient.EXPECT().
-					GetDocument(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
+					Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
 
 				client := documentsclient.NewWithClient(mockDocClient)
 
@@ -144,7 +143,7 @@ var _ = Describe("Documentsclient", func() {
 								StringValue string
 							}
 
-							mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+							mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 							theDoc := &DecodeDocument{
 								IntValue:    12,
@@ -156,7 +155,7 @@ var _ = Describe("Documentsclient", func() {
 
 							By("Calling GetDocument")
 							mockDocClient.EXPECT().
-								GetDocument(gomock.Any(), gomock.Any()).Return(&v1.GetDocumentReply{
+								Get(gomock.Any(), gomock.Any()).Return(&v1.DocumentGetResponse{
 								Document: mockDocument,
 							}, nil)
 
@@ -182,7 +181,7 @@ var _ = Describe("Documentsclient", func() {
 								StringValue string
 							}
 
-							mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+							mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 							theDoc := &Document{
 								IntValue:    12,
@@ -194,7 +193,7 @@ var _ = Describe("Documentsclient", func() {
 
 							By("Calling GetDocument")
 							mockDocClient.EXPECT().
-								GetDocument(gomock.Any(), gomock.Any()).Return(&v1.GetDocumentReply{
+								Get(gomock.Any(), gomock.Any()).Return(&v1.DocumentGetResponse{
 								Document: mockDocument,
 							}, nil)
 
@@ -224,7 +223,7 @@ var _ = Describe("Documentsclient", func() {
 							StringValue string
 						}
 
-						mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+						mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 						theDoc := &Document{
 							IntValue:    12,
@@ -236,7 +235,7 @@ var _ = Describe("Documentsclient", func() {
 
 						By("Calling GetDocument")
 						mockDocClient.EXPECT().
-							GetDocument(gomock.Any(), gomock.Any()).Return(&v1.GetDocumentReply{
+							Get(gomock.Any(), gomock.Any()).Return(&v1.DocumentGetResponse{
 							Document: mockDocument,
 						}, nil)
 
@@ -274,7 +273,7 @@ var _ = Describe("Documentsclient", func() {
 							ExtraValue  string // One extra value, not present in the struct used for decoding.
 						}
 
-						mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+						mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 						theDoc := &Document{
 							IntValue:    12,
@@ -287,7 +286,7 @@ var _ = Describe("Documentsclient", func() {
 
 						By("Calling GetDocument")
 						mockDocClient.EXPECT().
-							GetDocument(gomock.Any(), gomock.Any()).Return(&v1.GetDocumentReply{
+							Get(gomock.Any(), gomock.Any()).Return(&v1.DocumentGetResponse{
 							Document: mockDocument,
 						}, nil)
 
@@ -316,7 +315,7 @@ var _ = Describe("Documentsclient", func() {
 								ExtraValue  string // One extra value, not present in the struct used for decoding.
 							}
 
-							mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+							mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 							theDoc := &Document{
 								IntValue:    12,
@@ -329,7 +328,7 @@ var _ = Describe("Documentsclient", func() {
 
 							By("Calling GetDocument")
 							mockDocClient.EXPECT().
-								GetDocument(gomock.Any(), gomock.Any()).Return(&v1.GetDocumentReply{
+								Get(gomock.Any(), gomock.Any()).Return(&v1.DocumentGetResponse{
 								Document: mockDocument,
 							}, nil)
 
@@ -359,7 +358,7 @@ var _ = Describe("Documentsclient", func() {
 							StringValue string
 						}
 
-						mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+						mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 						theDoc := &DecodeDocument{
 							IntValue:    12,
@@ -371,7 +370,7 @@ var _ = Describe("Documentsclient", func() {
 
 						By("Calling GetDocument")
 						mockDocClient.EXPECT().
-							GetDocument(gomock.Any(), gomock.Any()).Return(&v1.GetDocumentReply{
+							Get(gomock.Any(), gomock.Any()).Return(&v1.DocumentGetResponse{
 							Document: mockDocument,
 						}, nil)
 
@@ -396,13 +395,13 @@ var _ = Describe("Documentsclient", func() {
 		When("The collection exists", func() {
 			When("The document exists", func() {
 				It("Should update the document", func() {
-					mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+					mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 					By("Calling UpdateDocument with the expected inputs")
 					mockDocClient.EXPECT().
-						UpdateDocument(
+						Update(
 							gomock.Any(),
-							&v1.UpdateDocumentRequest{
+							&v1.DocumentUpdateRequest{
 								Collection: "test-collection",
 								Key:        "test-key",
 								Document:  &structpb.Struct{
@@ -411,7 +410,7 @@ var _ = Describe("Documentsclient", func() {
 									},
 								},
 							},
-						).Return(&emptypb.Empty{}, nil)
+						).Return(&v1.DocumentUpdateResponse{}, nil)
 
 					client := documentsclient.NewWithClient(mockDocClient)
 					input := map[string]interface{}{
@@ -426,9 +425,9 @@ var _ = Describe("Documentsclient", func() {
 			When("The document doesn't exist", func() {
 				It("Should return an error", func() {
 					By("Calling UpdateDocument")
-					mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+					mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 					mockDocClient.EXPECT().
-						UpdateDocument(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
+						Update(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
 
 					client := documentsclient.NewWithClient(mockDocClient)
 
@@ -444,9 +443,9 @@ var _ = Describe("Documentsclient", func() {
 		When("The collection doesn't exist", func() {
 			It("Should return an error", func() {
 				By("Calling UpdateDocument")
-				mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+				mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 				mockDocClient.EXPECT().
-					UpdateDocument(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
+					Update(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
 
 				client := documentsclient.NewWithClient(mockDocClient)
 
@@ -463,17 +462,17 @@ var _ = Describe("Documentsclient", func() {
 		When("The collection exists", func() {
 			When("The document exists", func() {
 				It("Should delete the document", func() {
-					mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+					mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 
 					By("Calling DeleteDocument with the expected inputs")
 					mockDocClient.EXPECT().
-						DeleteDocument(
+						Delete(
 							gomock.Any(),
-							&v1.DeleteDocumentRequest{
+							&v1.DocumentDeleteRequest{
 								Collection: "test-collection",
 								Key:        "test-key",
 							},
-						).Return(&emptypb.Empty{}, nil)
+						).Return(&v1.DocumentDeleteResponse{}, nil)
 
 					client := documentsclient.NewWithClient(mockDocClient)
 					err := client.DeleteDocument("test-collection", "test-key")
@@ -485,9 +484,9 @@ var _ = Describe("Documentsclient", func() {
 			When("The document doesn't exist", func() {
 				It("Should return an error", func() {
 					By("Calling DeleteDocument")
-					mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+					mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 					mockDocClient.EXPECT().
-						DeleteDocument(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
+						Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
 
 					client := documentsclient.NewWithClient(mockDocClient)
 
@@ -503,9 +502,9 @@ var _ = Describe("Documentsclient", func() {
 		When("The collection doesn't exist", func() {
 			It("Should return an error", func() {
 				By("Calling DeleteDocument")
-				mockDocClient := mock_v1.NewMockDocumentsClient(ctrl)
+				mockDocClient := mock_v1.NewMockDocumentClient(ctrl)
 				mockDocClient.EXPECT().
-					DeleteDocument(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
+					Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock not found error"))
 
 				client := documentsclient.NewWithClient(mockDocClient)
 

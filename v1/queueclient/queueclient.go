@@ -74,7 +74,7 @@ func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*
 	}
 
 	// Push the events to the queue
-	res, err := q.c.Push(context.Background(), &v1.PushRequest{
+	res, err := q.c.BatchPush(context.Background(), &v1.QueueBatchPushRequest{
 		Queue:  queueName,
 		Events: wireEvents,
 	})
@@ -83,8 +83,8 @@ func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*
 	}
 
 	// Convert the gRPC Failed Events to SDK Failed Event objects
-	failedEvents := make([]FailedEvent, len(res.GetFailedMessages()))
-	for i, failedEvent := range res.GetFailedMessages() {
+	failedEvents := make([]FailedEvent, len(res.GetFailedEvents()))
+	for i, failedEvent := range res.GetFailedEvents() {
 		failedEvents[i] = FailedEvent{
 			event:   wireToEvent(failedEvent.GetEvent()),
 			message: failedEvent.GetMessage(),
@@ -104,7 +104,7 @@ func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error)
 	}
 
 	// Pop the requested off the queue
-	res, err := q.c.Pop(context.Background(), &v1.PopRequest{
+	res, err := q.c.Pop(context.Background(), &v1.QueuePopRequest{
 		Queue: queueName,
 		Depth: int32(depth),
 	})
@@ -129,7 +129,7 @@ func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error)
 //
 // All items retrieved through Pop must be Completed or Released so they're not reprocessed or sent to a dead letter queue.
 func (q NitricQueueClient) Complete(item QueueItem) error {
-	_, err := q.c.Complete(context.Background(), &v1.CompleteRequest{
+	_, err := q.c.Complete(context.Background(), &v1.QueueCompleteRequest{
 		Queue:   item.queue,
 		LeaseId: item.leaseId,
 	})
