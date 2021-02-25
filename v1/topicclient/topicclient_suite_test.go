@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestEventclient(t *testing.T) {
+func TestTopicclient(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Eventclient Suite")
+	RunSpecs(t, "Topicclient Suite")
 }
