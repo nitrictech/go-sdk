@@ -15,13 +15,13 @@ var _ = Describe("Authclient", func() {
 	When("CreateUser", func() {
 		When("The user is created by the gRPC server", func() {
 			It("Should call gRPC CreateUser", func() {
-				mockGRPCAuthClient := mock_v1.NewMockAuthClient(ctrl)
+				mockGRPCAuthClient := mock_v1.NewMockUserClient(ctrl)
 
 				By("Calling CreateUser with the expected inputs")
 				mockGRPCAuthClient.EXPECT().
-					CreateUser(
+					Create(
 						gomock.Any(),
-						&v1.CreateUserRequest{
+						&v1.UserCreateRequest{
 							Tenant:   "test-tenant",
 							Id:       "testid",
 							Email:    "test@example.com",
@@ -40,11 +40,11 @@ var _ = Describe("Authclient", func() {
 
 		When("An error is returned from the gRPC server", func () {
 			It("Should call gRPC CreateUser", func() {
-				mockGRPCAuthClient := mock_v1.NewMockAuthClient(ctrl)
+				mockGRPCAuthClient := mock_v1.NewMockUserClient(ctrl)
 
 				By("Calling CreateUser")
 				mockGRPCAuthClient.EXPECT().
-					CreateUser(gomock.Any(), gomock.Any()).
+					Create(gomock.Any(), gomock.Any()).
 					Return(nil, fmt.Errorf("mock error"))
 
 				client := NewWithClient(mockGRPCAuthClient)

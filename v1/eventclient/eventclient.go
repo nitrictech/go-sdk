@@ -7,13 +7,8 @@ import (
 	"github.com/google/uuid"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
-
-type Topic interface {
-	GetName() string
-}
 
 type Event struct {
 	Payload     *map[string]interface{}
@@ -21,48 +16,13 @@ type Event struct {
 	RequestId   *string
 }
 
-// Represents a Topic for event publishing. The runtime representation of a topic is provider specific.
-type NitricTopic struct {
-	name string
-}
-
-// GetName - returns the Nitric name of the topic
-func (t *NitricTopic) GetName() string {
-	return t.name
-}
-
-// String - returns the string representation of this topic
-func (t *NitricTopic) String() string {
-	return t.name
-}
-
 type EventClient interface {
-	GetTopics() ([]Topic, error)
 	Publish(opts PublishOptions) (*string, error)
 }
 
 type NitricEventClient struct {
 	conn *grpc.ClientConn
-	c    v1.EventingClient
-}
-
-// GetTopics - returns a slice of deployed topics in the current stack and provider.
-func (e NitricEventClient) GetTopics() ([]Topic, error) {
-	// Get a list of topics from the server
-	res, err := e.c.GetTopics(context.Background(), &emptypb.Empty{})
-	if err != nil {
-		return nil, fmt.Errorf("an error occurred getting topics: %s", err)
-	}
-
-	// Convert the response into Topic objects
-	topics := make([]Topic, 0, len(res.GetTopics()))
-	for _, t := range res.GetTopics() {
-		topics = append(topics, &NitricTopic{
-			name: t,
-		})
-	}
-
-	return topics, nil
+	c    v1.EventClient
 }
 
 type PublishOptions struct {
@@ -90,8 +50,8 @@ func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 	}
 
 	// Publish the event
-	_, err = e.c.Publish(context.Background(), &v1.PublishRequest{
-		TopicName: *opts.TopicName,
+	_, err = e.c.Publish(context.Background(), &v1.EventPublishRequest{
+		Topic: *opts.TopicName,
 		Event: &v1.NitricEvent{
 			RequestId:   *requestID,
 			PayloadType: *opts.Event.PayloadType,
@@ -109,12 +69,12 @@ func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 func NewEventClient(conn *grpc.ClientConn) EventClient {
 	return &NitricEventClient{
 		conn: conn,
-		c:    v1.NewEventingClient(conn),
+		c:    v1.NewEventClient(conn),
 	}
 }
 
-func NewWithClient(client v1.EventingClient) EventClient {
+func NewWithClient(eventClient v1.EventClient, topicClient v1.TopicClient) EventClient {
 	return &NitricEventClient{
-		c: client,
+		c: eventClient,
 	}
 }

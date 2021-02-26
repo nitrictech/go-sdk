@@ -19,7 +19,7 @@ type DocumentsClient interface {
 }
 
 type NitricDocumentsClient struct {
-	c v1.DocumentsClient
+	c v1.DocumentClient
 }
 
 // CreateDocument - stores a new document in the document db
@@ -30,7 +30,7 @@ func (d NitricDocumentsClient) CreateDocument(collection string, key string, doc
 		return fmt.Errorf("failed to serialize document: %s", err)
 	}
 
-	_, err = d.c.CreateDocument(context.Background(), &v1.CreateDocumentRequest{
+	_, err = d.c.Create(context.Background(), &v1.DocumentCreateRequest{
 		Collection: collection,
 		Key:        key,
 		Document:   docStruct,
@@ -89,7 +89,7 @@ func (d NitricDocumentsClient) DecodeDocument(collection string, key string, out
 
 // GetDocument - retrieve an existing document from the document db
 func (d NitricDocumentsClient) GetDocument(collection string, key string) (map[string]interface{}, error) {
-	res, err := d.c.GetDocument(context.Background(), &v1.GetDocumentRequest{
+	res, err := d.c.Get(context.Background(), &v1.DocumentGetRequest{
 		Collection: collection,
 		Key:        key,
 	})
@@ -107,7 +107,7 @@ func (d NitricDocumentsClient) UpdateDocument(collection string, key string, doc
 		return fmt.Errorf("failed to serialize document: %s", err)
 	}
 
-	_, err = d.c.UpdateDocument(context.Background(), &v1.UpdateDocumentRequest{
+	_, err = d.c.Update(context.Background(), &v1.DocumentUpdateRequest{
 		Collection: collection,
 		Key:        key,
 		Document:   docStruct,
@@ -118,7 +118,7 @@ func (d NitricDocumentsClient) UpdateDocument(collection string, key string, doc
 
 // DeleteDocument - deletes an existing document from the document db
 func (d NitricDocumentsClient) DeleteDocument(collection string, key string) error {
-	_, err := d.c.DeleteDocument(context.Background(), &v1.DeleteDocumentRequest{
+	_, err := d.c.Delete(context.Background(), &v1.DocumentDeleteRequest{
 		Collection: collection,
 		Key:        key,
 	})
@@ -127,11 +127,11 @@ func (d NitricDocumentsClient) DeleteDocument(collection string, key string) err
 
 func NewDocumentsClient(conn *grpc.ClientConn) DocumentsClient {
 	return &NitricDocumentsClient{
-		c: v1.NewDocumentsClient(conn),
+		c: v1.NewDocumentClient(conn),
 	}
 }
 
-func NewWithClient(client v1.DocumentsClient) DocumentsClient {
+func NewWithClient(client v1.DocumentClient) DocumentsClient {
 	return &NitricDocumentsClient{
 		c: client,
 	}

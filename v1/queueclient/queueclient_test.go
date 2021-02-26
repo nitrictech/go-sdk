@@ -21,7 +21,7 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 					By("Calling Push with a single event")
-					mockQueueClient.EXPECT().Push(gomock.Any(), &v1.PushRequest{
+					mockQueueClient.EXPECT().BatchPush(gomock.Any(), &v1.QueueBatchPushRequest{
 						Queue: "test-queue",
 						Events: []*v1.NitricEvent{
 							{
@@ -34,7 +34,7 @@ var _ = Describe("Eventclient", func() {
 								},
 							},
 						},
-					}).Return(&v1.PushResponse{}, nil)
+					}).Return(&v1.QueueBatchPushResponse{}, nil)
 
 					requestId := "test-request-id"
 					payloadType := "test-payload-type"
@@ -64,7 +64,7 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 					By("Calling Push with multiple events")
-					mockQueueClient.EXPECT().Push(gomock.Any(), &v1.PushRequest{
+					mockQueueClient.EXPECT().BatchPush(gomock.Any(), &v1.QueueBatchPushRequest{
 						Queue: "test-queue",
 						Events: []*v1.NitricEvent{
 							{
@@ -86,7 +86,7 @@ var _ = Describe("Eventclient", func() {
 								},
 							},
 						},
-					}).Return(&v1.PushResponse{}, nil)
+					}).Return(&v1.QueueBatchPushResponse{}, nil)
 
 					requestId := "test-request-id"
 					payloadType := "test-payload-type"
@@ -122,7 +122,7 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 					By("Calling Push with multiple events")
-					mockQueueClient.EXPECT().Push(gomock.Any(), &v1.PushRequest{
+					mockQueueClient.EXPECT().BatchPush(gomock.Any(), &v1.QueueBatchPushRequest{
 						Queue: "test-queue",
 						Events: []*v1.NitricEvent{
 							{
@@ -144,9 +144,9 @@ var _ = Describe("Eventclient", func() {
 								},
 							},
 						},
-					}).Return(&v1.PushResponse{
-						FailedMessages: []*v1.FailedMessage{
-							&v1.FailedMessage{
+					}).Return(&v1.QueueBatchPushResponse{
+						FailedEvents: []*v1.FailedEvent{
+							{
 								Event: &v1.NitricEvent{},
 								Message: "mock failure message",
 							},
@@ -187,7 +187,7 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 					By("Calling Push with multiple events")
-					mockQueueClient.EXPECT().Push(gomock.Any(), gomock.Any()).Return(nil,
+					mockQueueClient.EXPECT().BatchPush(gomock.Any(), gomock.Any()).Return(nil,
 						fmt.Errorf("mock error"))
 
 					requestId := "test-request-id"
@@ -217,10 +217,10 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 	
 					By("Calling Pop")
-					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.PopRequest{
+					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.QueuePopRequest{
 						Queue: "test-queue",
 						Depth: 5,
-					}).Return(&v1.PopResponse{
+					}).Return(&v1.QueuePopResponse{
 						Items: []*v1.NitricQueueItem{
 							&v1.NitricQueueItem{
 								Event:   &v1.NitricEvent{
@@ -268,10 +268,10 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 					By("Calling Pop")
-					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.PopRequest{
+					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.QueuePopRequest{
 						Queue: "test-queue",
 						Depth: 5,
-					}).Return(&v1.PopResponse{
+					}).Return(&v1.QueuePopResponse{
 						Items: []*v1.NitricQueueItem{
 							{
 								Event:   &v1.NitricEvent{
@@ -344,10 +344,10 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 					By("Calling Pop")
-					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.PopRequest{
+					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.QueuePopRequest{
 						Queue: "test-queue",
 						Depth: 5,
-					}).Return(&v1.PopResponse{
+					}).Return(&v1.QueuePopResponse{
 						Items: []*v1.NitricQueueItem{},
 					}, nil)
 
@@ -368,10 +368,10 @@ var _ = Describe("Eventclient", func() {
 					mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 					By("Calling Pop with a depth of 1")
-					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.PopRequest{
+					mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.QueuePopRequest{
 						Queue: "test-queue",
 						Depth: 1,
-					}).Return(&v1.PopResponse{
+					}).Return(&v1.QueuePopResponse{
 						Items: []*v1.NitricQueueItem{},
 					}, nil)
 
@@ -393,7 +393,7 @@ var _ = Describe("Eventclient", func() {
 				mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 				By("Calling Pop")
-				mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.PopRequest{
+				mockQueueClient.EXPECT().Pop(gomock.Any(), &v1.QueuePopRequest{
 					Queue: "test-queue",
 					Depth: 5,
 				}).Return(nil, fmt.Errorf("mock error"))
@@ -413,10 +413,10 @@ var _ = Describe("Eventclient", func() {
 				mockQueueClient := mock_v1.NewMockQueueClient(ctrl)
 
 				By("Calling Complete")
-				mockQueueClient.EXPECT().Complete(gomock.Any(), &v1.CompleteRequest{
+				mockQueueClient.EXPECT().Complete(gomock.Any(), &v1.QueueCompleteRequest{
 					Queue: "test-queue",
 					LeaseId: "test-lease-id",
-				}).Return(&v1.CompleteResponse{}, nil)
+				}).Return(&v1.QueueCompleteResponse{}, nil)
 
 				client := NewWithClient(mockQueueClient)
 				err := client.Complete(QueueItem{

@@ -13,12 +13,12 @@ type AuthClient interface {
 // NitricAuthClient - gRPC based client to nitric membrane server for auth services.
 type NitricAuthClient struct {
 	conn *grpc.ClientConn
-	c    v1.AuthClient
+	c    v1.UserClient
 }
 
 // CreateUser - create a new user in the provided specific auth service.
 func (a NitricAuthClient) CreateUser(tenant string, userId string, email string, password string) error {
-	_, err := a.c.CreateUser(context.Background(), &v1.CreateUserRequest{
+	_, err := a.c.Create(context.Background(), &v1.UserCreateRequest{
 		Tenant:   tenant,
 		Id:       userId,
 		Email:    email,
@@ -34,11 +34,11 @@ func (a NitricAuthClient) CreateUser(tenant string, userId string, email string,
 func NewAuthClient(conn *grpc.ClientConn) AuthClient {
 	return &NitricAuthClient{
 		conn: conn,
-		c:    v1.NewAuthClient(conn),
+		c:    v1.NewUserClient(conn),
 	}
 }
 
-func NewWithClient(client v1.AuthClient) AuthClient {
+func NewWithClient(client v1.UserClient) AuthClient {
 	return &NitricAuthClient{
 		c:    client,
 	}

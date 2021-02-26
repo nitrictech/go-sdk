@@ -20,7 +20,7 @@ type NitricStorageClient struct {
 
 // Get - retrieves an exist item from a bucket by its key
 func (s NitricStorageClient) Get(bucketName string, key string) ([]byte, error) {
-	res, err := s.c.Get(context.Background(), &v1.GetRequest{
+	res, err := s.c.Get(context.Background(), &v1.StorageGetRequest{
 		BucketName: bucketName,
 		Key:        key,
 	})
@@ -34,16 +34,11 @@ func (s NitricStorageClient) Get(bucketName string, key string) ([]byte, error) 
 
 // Put - stores an item in a bucket under the given key.
 func (s NitricStorageClient) Put(bucketName string, key string, body []byte) error {
-	res, err := s.c.Put(context.Background(), &v1.PutRequest{
+	_, err := s.c.Put(context.Background(), &v1.StoragePutRequest{
 		BucketName: bucketName,
 		Key:        key,
 		Body:       body,
 	})
-
-	// FIXME: we probably shouldn't return a success boolean. Errors should indicate a failure.
-	if res != nil && !res.GetSuccess() {
-		return fmt.Errorf("failed to store data, unexpected failure status returned")
-	}
 
 	return err
 }
