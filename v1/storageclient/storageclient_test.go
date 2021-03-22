@@ -2,31 +2,32 @@ package storageclient
 
 import (
 	"fmt"
+
 	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Storageclient", func() {
 	ctrl := gomock.NewController(GinkgoT())
 
-	When("Put", func() {
+	When("Write", func() {
 		When("The bucket exists", func() {
-			When("Putting a new item", func() {
+			When("Writeting a new item", func() {
 				It("Should push the event", func() {
 					mockStorageClient := mock_v1.NewMockStorageClient(ctrl)
 
-					By("Calling Put with the expected inputs")
-					mockStorageClient.EXPECT().Put(gomock.Any(), &v1.StoragePutRequest{
+					By("Calling Write with the expected inWrites")
+					mockStorageClient.EXPECT().Write(gomock.Any(), &v1.StorageWriteRequest{
 						BucketName: "test-bucket",
 						Key:        "test-key",
 						Body:       []byte{},
-					} ).Return(&v1.StoragePutResponse{}, nil)
+					}).Return(&v1.StorageWriteResponse{}, nil)
 
 					client := NewWithClient(mockStorageClient)
-					err := client.Put("test-bucket", "test-key", []byte{})
+					err := client.Write("test-bucket", "test-key", []byte{})
 
 					By("Not returning an error")
 					Expect(err).ShouldNot(HaveOccurred())
@@ -38,12 +39,12 @@ var _ = Describe("Storageclient", func() {
 			It("Should return the error", func() {
 				mockStorageClient := mock_v1.NewMockStorageClient(ctrl)
 
-				By("Calling Put with the expected inputs")
-				mockStorageClient.EXPECT().Put(gomock.Any(), gomock.Any()).Return(nil,
+				By("Calling Write with the expected inWrites")
+				mockStorageClient.EXPECT().Write(gomock.Any(), gomock.Any()).Return(nil,
 					fmt.Errorf("mock error"))
 
 				client := NewWithClient(mockStorageClient)
-				err := client.Put("test-bucket", "test-key", []byte{})
+				err := client.Write("test-bucket", "test-key", []byte{})
 
 				By("Returning an error")
 				Expect(err).Should(HaveOccurred())
@@ -51,23 +52,23 @@ var _ = Describe("Storageclient", func() {
 		})
 	})
 
-	When("Get", func() {
+	When("Read", func() {
 		When("The bucket exists", func() {
 			When("The key exists", func() {
 				It("Should retrieve the item", func() {
 					mockStorageClient := mock_v1.NewMockStorageClient(ctrl)
 
-					By("Calling Get with the expected inputs")
-					mockStorageClient.EXPECT().Get(gomock.Any(), &v1.StorageGetRequest{
+					By("Calling Read with the expected inWrites")
+					mockStorageClient.EXPECT().Read(gomock.Any(), &v1.StorageReadRequest{
 						BucketName: "test-bucket",
 						Key:        "test-key",
 						// FIXME: Using 'Reply' for storage but 'Request' for other services.
-					}).Return(&v1.StorageGetResponse{
+					}).Return(&v1.StorageReadResponse{
 						Body: []byte{},
 					}, nil)
 
 					client := NewWithClient(mockStorageClient)
-					item, err := client.Get("test-bucket", "test-key")
+					item, err := client.Read("test-bucket", "test-key")
 
 					By("Not returning an error")
 					Expect(err).ShouldNot(HaveOccurred())
@@ -86,14 +87,14 @@ var _ = Describe("Storageclient", func() {
 			It("Should return an error", func() {
 				mockStorageClient := mock_v1.NewMockStorageClient(ctrl)
 
-				By("Calling Get, which returns an error")
-				mockStorageClient.EXPECT().Get(gomock.Any(), &v1.StorageGetRequest{
+				By("Calling Read, which returns an error")
+				mockStorageClient.EXPECT().Read(gomock.Any(), &v1.StorageReadRequest{
 					BucketName: "test-bucket",
 					Key:        "test-key",
 				}).Return(nil, fmt.Errorf("mock error"))
 
 				client := NewWithClient(mockStorageClient)
-				_, err := client.Get("test-bucket", "test-key")
+				_, err := client.Read("test-bucket", "test-key")
 
 				By("Returning an error")
 				Expect(err).Should(HaveOccurred())

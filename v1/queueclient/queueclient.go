@@ -15,7 +15,7 @@ type FailedEvent struct {
 	message string
 }
 
-type PushResponse struct {
+type SendBatchResponse struct {
 	failedEvents []FailedEvent
 }
 
@@ -26,8 +26,9 @@ type QueueItem struct {
 }
 
 type QueueClient interface {
-	Push(queueName string, events []eventclient.Event) (*PushResponse, error)
-	Pop(queueName string, depth int) ([]QueueItem, error)
+	Send(queueName string, event eventclient.Event) error
+	SendBatch(queueName string, events []eventclient.Event) (*SendBatchResponse, error)
+	Receive(queueName string, depth int) ([]QueueItem, error)
 	Complete(item QueueItem) error
 }
 
@@ -59,10 +60,25 @@ func wireToEvent(event *v1.NitricEvent) eventclient.Event {
 	}
 }
 
-// Push - publishes events to a queue to be processed asynchronously by other services
+// Send - Sends a single event to a queue to be processed asynchronously by other services
+// queueName is the nitric name of the queue (defined in the nitric.yaml file)
+func (q NitricQueueClient) Send(queueName string, event eventclient.Event) error {
+	wireEvent, err := eventToWire(event)
+
+	if err == nil {
+		_, err = q.c.Send(context.TODO(), &v1.QueueSendRequest{
+			Queue: queueName,
+			Event: wireEvent,
+		})
+	}
+
+	return err
+}
+
+// SendBatch - publishes multiple events to a queue to be processed asynchronously by other services
 // queueName should be the Nitric name of the queue. This will be automatically resolved to the provider specific
 // queue identifier.
-func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*PushResponse, error) {
+func (q NitricQueueClient) SendBatch(queueName string, events []eventclient.Event) (*SendBatchResponse, error) {
 	// Convert SDK Event objects to gRPC Event objects
 	wireEvents := make([]*v1.NitricEvent, len(events))
 	for i, event := range events {
@@ -74,7 +90,7 @@ func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*
 	}
 
 	// Push the events to the queue
-	res, err := q.c.BatchPush(context.Background(), &v1.QueueBatchPushRequest{
+	res, err := q.c.SendBatch(context.Background(), &v1.QueueSendBatchRequest{
 		Queue:  queueName,
 		Events: wireEvents,
 	})
@@ -91,20 +107,20 @@ func (q NitricQueueClient) Push(queueName string, events []eventclient.Event) (*
 		}
 	}
 
-	return &PushResponse{failedEvents: failedEvents}, nil
+	return &SendBatchResponse{failedEvents: failedEvents}, nil
 }
 
-// Pop - retrieve events from the specifed queue. The items returned are contained in a QueueItem
+// Receive - retrieve events from the specifed queue. The items returned are contained in a QueueItem
 // which provides context for the source queue and the lease on the event.
 // queue items must be completed using Complete or they will be distributed again or forwarded to a dead letter queue.
-func (q NitricQueueClient) Pop(queueName string, depth int) ([]QueueItem, error) {
+func (q NitricQueueClient) Receive(queueName string, depth int) ([]QueueItem, error) {
 	// Set minimum depth to 1.
 	if depth < 1 {
 		depth = 1
 	}
 
-	// Pop the requested off the queue
-	res, err := q.c.Pop(context.Background(), &v1.QueuePopRequest{
+	// receieve up to the requested depth off of the queue
+	res, err := q.c.Receive(context.Background(), &v1.QueueReceiveRequest{
 		Queue: queueName,
 		Depth: int32(depth),
 	})

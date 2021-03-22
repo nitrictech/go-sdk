@@ -1,4 +1,4 @@
-package documentsclient_test
+package kvclient_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestDocumentsclient(t *testing.T) {
+func TestKVclient(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Documentsclient Suite")
 }
