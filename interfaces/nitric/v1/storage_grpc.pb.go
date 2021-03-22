@@ -17,10 +17,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StorageClient interface {
-	// Store an item to a bucket
-	Put(ctx context.Context, in *StoragePutRequest, opts ...grpc.CallOption) (*StoragePutResponse, error)
 	// Retrieve an item from a bucket
-	Get(ctx context.Context, in *StorageGetRequest, opts ...grpc.CallOption) (*StorageGetResponse, error)
+	Read(ctx context.Context, in *StorageReadRequest, opts ...grpc.CallOption) (*StorageReadResponse, error)
+	// Store an item to a bucket
+	Write(ctx context.Context, in *StorageWriteRequest, opts ...grpc.CallOption) (*StorageWriteResponse, error)
 	// Delete an item from a bucket
 	Delete(ctx context.Context, in *StorageDeleteRequest, opts ...grpc.CallOption) (*StorageDeleteResponse, error)
 }
@@ -33,18 +33,18 @@ func NewStorageClient(cc grpc.ClientConnInterface) StorageClient {
 	return &storageClient{cc}
 }
 
-func (c *storageClient) Put(ctx context.Context, in *StoragePutRequest, opts ...grpc.CallOption) (*StoragePutResponse, error) {
-	out := new(StoragePutResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.storage.Storage/Put", in, out, opts...)
+func (c *storageClient) Read(ctx context.Context, in *StorageReadRequest, opts ...grpc.CallOption) (*StorageReadResponse, error) {
+	out := new(StorageReadResponse)
+	err := c.cc.Invoke(ctx, "/nitric.storage.v1.Storage/Read", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storageClient) Get(ctx context.Context, in *StorageGetRequest, opts ...grpc.CallOption) (*StorageGetResponse, error) {
-	out := new(StorageGetResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.storage.Storage/Get", in, out, opts...)
+func (c *storageClient) Write(ctx context.Context, in *StorageWriteRequest, opts ...grpc.CallOption) (*StorageWriteResponse, error) {
+	out := new(StorageWriteResponse)
+	err := c.cc.Invoke(ctx, "/nitric.storage.v1.Storage/Write", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *storageClient) Get(ctx context.Context, in *StorageGetRequest, opts ...
 
 func (c *storageClient) Delete(ctx context.Context, in *StorageDeleteRequest, opts ...grpc.CallOption) (*StorageDeleteResponse, error) {
 	out := new(StorageDeleteResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.storage.Storage/Delete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/nitric.storage.v1.Storage/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,10 +64,10 @@ func (c *storageClient) Delete(ctx context.Context, in *StorageDeleteRequest, op
 // All implementations must embed UnimplementedStorageServer
 // for forward compatibility
 type StorageServer interface {
-	// Store an item to a bucket
-	Put(context.Context, *StoragePutRequest) (*StoragePutResponse, error)
 	// Retrieve an item from a bucket
-	Get(context.Context, *StorageGetRequest) (*StorageGetResponse, error)
+	Read(context.Context, *StorageReadRequest) (*StorageReadResponse, error)
+	// Store an item to a bucket
+	Write(context.Context, *StorageWriteRequest) (*StorageWriteResponse, error)
 	// Delete an item from a bucket
 	Delete(context.Context, *StorageDeleteRequest) (*StorageDeleteResponse, error)
 	mustEmbedUnimplementedStorageServer()
@@ -77,11 +77,11 @@ type StorageServer interface {
 type UnimplementedStorageServer struct {
 }
 
-func (UnimplementedStorageServer) Put(context.Context, *StoragePutRequest) (*StoragePutResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Put not implemented")
+func (UnimplementedStorageServer) Read(context.Context, *StorageReadRequest) (*StorageReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
 }
-func (UnimplementedStorageServer) Get(context.Context, *StorageGetRequest) (*StorageGetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedStorageServer) Write(context.Context, *StorageWriteRequest) (*StorageWriteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Write not implemented")
 }
 func (UnimplementedStorageServer) Delete(context.Context, *StorageDeleteRequest) (*StorageDeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
@@ -99,38 +99,38 @@ func RegisterStorageServer(s grpc.ServiceRegistrar, srv StorageServer) {
 	s.RegisterService(&_Storage_serviceDesc, srv)
 }
 
-func _Storage_Put_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StoragePutRequest)
+func _Storage_Read_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StorageReadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageServer).Put(ctx, in)
+		return srv.(StorageServer).Read(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.storage.Storage/Put",
+		FullMethod: "/nitric.storage.v1.Storage/Read",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageServer).Put(ctx, req.(*StoragePutRequest))
+		return srv.(StorageServer).Read(ctx, req.(*StorageReadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Storage_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StorageGetRequest)
+func _Storage_Write_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StorageWriteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageServer).Get(ctx, in)
+		return srv.(StorageServer).Write(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.storage.Storage/Get",
+		FullMethod: "/nitric.storage.v1.Storage/Write",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageServer).Get(ctx, req.(*StorageGetRequest))
+		return srv.(StorageServer).Write(ctx, req.(*StorageWriteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -145,7 +145,7 @@ func _Storage_Delete_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.storage.Storage/Delete",
+		FullMethod: "/nitric.storage.v1.Storage/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StorageServer).Delete(ctx, req.(*StorageDeleteRequest))
@@ -154,16 +154,16 @@ func _Storage_Delete_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 var _Storage_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.v1.storage.Storage",
+	ServiceName: "nitric.storage.v1.Storage",
 	HandlerType: (*StorageServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Put",
-			Handler:    _Storage_Put_Handler,
+			MethodName: "Read",
+			Handler:    _Storage_Read_Handler,
 		},
 		{
-			MethodName: "Get",
-			Handler:    _Storage_Get_Handler,
+			MethodName: "Write",
+			Handler:    _Storage_Write_Handler,
 		},
 		{
 			MethodName: "Delete",
@@ -171,5 +171,5 @@ var _Storage_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/storage.proto",
+	Metadata: "storage/v1/storage.proto",
 }

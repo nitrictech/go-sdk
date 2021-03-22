@@ -31,7 +31,7 @@ func NewUserClient(cc grpc.ClientConnInterface) UserClient {
 
 func (c *userClient) Create(ctx context.Context, in *UserCreateRequest, opts ...grpc.CallOption) (*UserCreateResponse, error) {
 	out := new(UserCreateResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.auth.User/Create", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/nitric.auth.v1.User/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func _User_Create_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.auth.User/Create",
+		FullMethod: "/nitric.auth.v1.User/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServer).Create(ctx, req.(*UserCreateRequest))
@@ -86,7 +86,7 @@ func _User_Create_Handler(srv interface{}, ctx context.Context, dec func(interfa
 }
 
 var _User_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.v1.auth.User",
+	ServiceName: "nitric.auth.v1.User",
 	HandlerType: (*UserServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -95,5 +95,5 @@ var _User_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/auth.proto",
+	Metadata: "auth/v1/auth.proto",
 }
