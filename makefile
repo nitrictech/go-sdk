@@ -6,12 +6,14 @@ install-tools: install
 	@echo Installing tools from tools.go
 	@cat ./tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
+clean:
+	@rm -rf ./interfaces
+
 # Generate interfaces
-generate-proto:
+generate-proto: clean
 	@echo Generating Proto Sources
-	@rm -rf ./interfaces/
 	@mkdir -p ./interfaces/
-	@protoc --go_out=./interfaces/ --go-grpc_out=./interfaces/ -I ./contracts/proto/ ./contracts/proto/**/*.proto
+	@protoc --go_out=./interfaces/ --go-grpc_out=./interfaces/ -I ./contracts/proto/ ./contracts/proto/*/**/*.proto
 
 # Generate mock implementations
 generate-mocks:
