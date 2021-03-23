@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nitrictech/go-sdk/api/eventclient"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
-	"github.com/nitrictech/go-sdk/v1/eventclient"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
 )
