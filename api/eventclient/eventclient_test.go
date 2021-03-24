@@ -31,7 +31,7 @@ var _ = Describe("Eventclient", func() {
 				mockEventClient.EXPECT().Publish(gomock.Any(), &v1.EventPublishRequest{
 					Topic: "test-topic",
 					Event: &v1.NitricEvent{
-						RequestId:   "abc123",
+						Id:          "abc123",
 						PayloadType: "test-payload-type",
 						Payload:     payloadStruct,
 					},
@@ -42,12 +42,12 @@ var _ = Describe("Eventclient", func() {
 				payloadType := "test-payload-type"
 				requestId := "abc123"
 				// FIXME: This interface doesn't match the others.
-				reqId, err := client.Publish(PublishOptions{
-					TopicName: &topicName,
+				result, err := client.Publish(&PublishOptions{
+					Topic: topicName,
 					Event: &Event{
-						Payload:     &payload,
-						PayloadType: &payloadType,
-						RequestId:   &requestId,
+						Payload:     payload,
+						PayloadType: payloadType,
+						ID:          requestId,
 					},
 				})
 
@@ -55,7 +55,7 @@ var _ = Describe("Eventclient", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Returning the request id")
-				Expect(*reqId).To(Equal("abc123"))
+				Expect(result.RequestID).To(Equal("abc123"))
 			})
 
 			When("No request id is specified", func() {
@@ -72,11 +72,11 @@ var _ = Describe("Eventclient", func() {
 					client := NewWithClient(mockEventClient, nil)
 					topicName := "test-topic"
 					payloadType := "test-payload-type"
-					reqId, err := client.Publish(PublishOptions{
-						TopicName: &topicName,
+					result, err := client.Publish(&PublishOptions{
+						Topic: topicName,
 						Event: &Event{
-							Payload:     &payload,
-							PayloadType: &payloadType,
+							Payload:     payload,
+							PayloadType: payloadType,
 						},
 					})
 
@@ -84,7 +84,7 @@ var _ = Describe("Eventclient", func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					By("Returning the request id")
-					uuid.MustParse(*reqId)
+					uuid.MustParse(result.RequestID)
 				})
 			})
 		})
@@ -104,12 +104,12 @@ var _ = Describe("Eventclient", func() {
 				topicName := "test-topic"
 				payloadType := "test-payload-type"
 				requestID := "abc123"
-				_, err := client.Publish(PublishOptions{
-					TopicName: &topicName,
+				_, err := client.Publish(&PublishOptions{
+					Topic: topicName,
 					Event: &Event{
-						Payload:     &payload,
-						PayloadType: &payloadType,
-						RequestId:   &requestID,
+						Payload:     payload,
+						PayloadType: payloadType,
+						ID:          requestID,
 					},
 				})
 
