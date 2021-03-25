@@ -48,7 +48,7 @@ func (c *Client) ensureGrpcConnection() {
 	}
 }
 
-// Documents - returns a document service client
+// KV - returns a kv service client
 func (c *Client) KV() kvclient.KVClient {
 	c.ensureGrpcConnection()
 	if c.kv == nil {
