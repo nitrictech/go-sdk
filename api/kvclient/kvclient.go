@@ -14,7 +14,7 @@ import (
 type KVClient interface {
 	GetKey(collection string, key string) (map[string]interface{}, error)
 	DecodeKey(collection string, key string, output interface{}, opts ...DecodeOption) error
-	PutKey(collection string, key string, document map[string]interface{}) error
+	PutKey(collection string, key string, value map[string]interface{}) error
 	DeleteKey(collection string, key string) error
 }
 
@@ -36,13 +36,13 @@ func (w withUnknownKeys) Apply(c *mapstructure.DecoderConfig) {
 	c.ErrorUnused = !w.allow
 }
 
-// DecodeDocument - retrieves a document and decodes its contents into the given Go interface{}
+// DecodeKey - retrieves a value and decodes its contents into the given Go interface{}
 //
-// internally this method calls GetDocument then decodes the map[string]interface{} into the supplied interface{}
+// internally this method calls GetKey then decodes the map[string]interface{} into the supplied interface{}
 //
-// this method helps parse the types of documents represented by structs.
+// this method helps parse the types of value represented by structs.
 func (d NitricKVClient) DecodeKey(collection string, key string, output interface{}, opts ...DecodeOption) error {
-	document, err := d.GetKey(collection, key)
+	value, err := d.GetKey(collection, key)
 	if err != nil {
 		return err
 	}
@@ -62,15 +62,15 @@ func (d NitricKVClient) DecodeKey(collection string, key string, output interfac
 		opt.Apply(&decoderConfig)
 	}
 
-	// Decode the document into the object
+	// Decode the value into the object
 	decoder, err := mapstructure.NewDecoder(&decoderConfig)
 	if err != nil {
 		return err
 	}
-	return decoder.Decode(document)
+	return decoder.Decode(value)
 }
 
-// GetDocument - retrieve an existing document from the document db
+// GetKey - retrieve an existing value from the kv store
 func (d NitricKVClient) GetKey(collection string, key string) (map[string]interface{}, error) {
 	res, err := d.c.Get(context.Background(), &v1.KeyValueGetRequest{
 		Collection: collection,
@@ -82,12 +82,12 @@ func (d NitricKVClient) GetKey(collection string, key string) (map[string]interf
 	return res.GetValue().AsMap(), nil
 }
 
-// UpdateDocument - updates the contents of an existing document in the document db
-func (d NitricKVClient) PutKey(collection string, key string, document map[string]interface{}) error {
+// PutKey - updates the value of an existing key in the kv store
+func (d NitricKVClient) PutKey(collection string, key string, value map[string]interface{}) error {
 	// Convert payload to Protobuf Struct
-	valueStruct, err := structpb.NewStruct(document)
+	valueStruct, err := structpb.NewStruct(value)
 	if err != nil {
-		return fmt.Errorf("failed to serialize document: %s", err)
+		return fmt.Errorf("failed to serialize value: %s", err)
 	}
 
 	_, err = d.c.Put(context.Background(), &v1.KeyValuePutRequest{
@@ -99,7 +99,7 @@ func (d NitricKVClient) PutKey(collection string, key string, document map[strin
 	return err
 }
 
-// DeleteDocument - deletes an existing document from the document db
+// DeleteKey - deletes an existing key from the kv store
 func (d NitricKVClient) DeleteKey(collection string, key string) error {
 	_, err := d.c.Delete(context.Background(), &v1.KeyValueDeleteRequest{
 		Collection: collection,
