@@ -95,7 +95,7 @@ func wireToTask(task *v1.NitricTask) *Task {
 	}
 }
 
-// Send - Sends a single event to a queue to be processed asynchronously by other services
+// Send - Sends a single task to a queue to be processed asynchronously by other services
 // queueName is the nitric name of the queue (defined in the nitric.yaml file)
 func (q NitricQueueClient) Send(opts *SendOptions) (*SendResult, error) {
 	var finalErr error
@@ -113,11 +113,11 @@ func (q NitricQueueClient) Send(opts *SendOptions) (*SendResult, error) {
 	return nil, finalErr
 }
 
-// SendBatch - publishes multiple events to a queue to be processed asynchronously by other services
+// SendBatch - publishes multiple tasks to a queue to be processed asynchronously by other services
 // queueName should be the Nitric name of the queue. This will be automatically resolved to the provider specific
 // queue identifier.
 func (q NitricQueueClient) SendBatch(opts *SendBatchOptions) (*SendBatchResult, error) {
-	// Convert SDK Event objects to gRPC Event objects
+	// Convert SDK Task objects to gRPC Task objects
 	wireTasks := make([]*v1.NitricTask, len(opts.Tasks))
 	for i, task := range opts.Tasks {
 		wireTask, err := taskToWire(task)
@@ -127,7 +127,7 @@ func (q NitricQueueClient) SendBatch(opts *SendBatchOptions) (*SendBatchResult, 
 		wireTasks[i] = wireTask
 	}
 
-	// Push the events to the queue
+	// Push the tasks to the queue
 	res, err := q.c.SendBatch(context.Background(), &v1.QueueSendBatchRequest{
 		Queue: opts.Queue,
 		Tasks: wireTasks,
@@ -136,7 +136,7 @@ func (q NitricQueueClient) SendBatch(opts *SendBatchOptions) (*SendBatchResult, 
 		return nil, err
 	}
 
-	// Convert the gRPC Failed Events to SDK Failed Event objects
+	// Convert the gRPC Failed Tasks to SDK Failed Task objects
 	failedTasks := make([]*FailedTask, len(res.GetFailedTasks()))
 	for i, failedTask := range res.GetFailedTasks() {
 		failedTasks[i] = &FailedTask{
@@ -148,8 +148,8 @@ func (q NitricQueueClient) SendBatch(opts *SendBatchOptions) (*SendBatchResult, 
 	return &SendBatchResult{FailedTasks: failedTasks}, nil
 }
 
-// Receive - retrieve events from the specifed queue. The items returned are contained in a QueueItem
-// which provides context for the source queue and the lease on the event.
+// Receive - retrieve tasks from the specifed queue. The items returned are contained in a QueueItem
+// which provides context for the source queue and the lease on the tasks.
 // queue items must be completed using Complete or they will be distributed again or forwarded to a dead letter queue.
 func (q NitricQueueClient) Receive(opts *RecieveOptions) (*RecieveResult, error) {
 	// Set minimum depth to 1.
