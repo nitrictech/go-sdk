@@ -150,7 +150,7 @@ func (q NitricQueueClient) SendBatch(opts *SendBatchOptions) (*SendBatchResult, 
 
 // Receive - retrieve tasks from the specifed queue. The items returned are contained in a QueueItem
 // which provides context for the source queue and the lease on the tasks.
-// queue items must be completed using Complete or they will be distributed again or forwarded to a dead letter queue.
+// Tasks must be completed using Complete or they will be distributed again or forwarded to a dead letter queue.
 func (q NitricQueueClient) Receive(opts *RecieveOptions) (*RecieveResult, error) {
 	// Set minimum depth to 1.
 	var depth = 1
@@ -178,7 +178,7 @@ func (q NitricQueueClient) Receive(opts *RecieveOptions) (*RecieveResult, error)
 	}, nil
 }
 
-// Complete - marks a queue item as successfully completed and removes it from the queue.
+// Complete - marks a task as successfully completed and removes it from the queue.
 //
 // All items retrieved through Pop must be Completed or Released so they're not reprocessed or sent to a dead letter queue.
 func (q NitricQueueClient) Complete(opts *CompleteOptions) (*CompleteResult, error) {
