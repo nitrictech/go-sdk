@@ -96,7 +96,6 @@ func wireToTask(task *v1.NitricTask) *Task {
 }
 
 // Send - Sends a single task to a queue to be processed asynchronously by other services
-// queueName is the nitric name of the queue (defined in the nitric.yaml file)
 func (q NitricQueueClient) Send(opts *SendOptions) (*SendResult, error) {
 	var finalErr error
 	if wireTask, err := taskToWire(opts.Task); err == nil {
@@ -114,8 +113,6 @@ func (q NitricQueueClient) Send(opts *SendOptions) (*SendResult, error) {
 }
 
 // SendBatch - publishes multiple tasks to a queue to be processed asynchronously by other services
-// queueName should be the Nitric name of the queue. This will be automatically resolved to the provider specific
-// queue identifier.
 func (q NitricQueueClient) SendBatch(opts *SendBatchOptions) (*SendBatchResult, error) {
 	// Convert SDK Task objects to gRPC Task objects
 	wireTasks := make([]*v1.NitricTask, len(opts.Tasks))
