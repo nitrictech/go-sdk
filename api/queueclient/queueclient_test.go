@@ -248,7 +248,7 @@ var _ = Describe("Eventclient", func() {
 					}, nil)
 
 					client := NewWithClient(mockQueueClient)
-					items, err := client.Receive(&RecieveOptions{
+					items, err := client.Receive(&ReceiveOptions{
 						Queue: "test-queue",
 						Depth: 5,
 					})
@@ -307,7 +307,7 @@ var _ = Describe("Eventclient", func() {
 					}, nil)
 
 					client := NewWithClient(mockQueueClient)
-					items, err := client.Receive(&RecieveOptions{
+					items, err := client.Receive(&ReceiveOptions{
 						Queue: "test-queue",
 						Depth: 5,
 					})
@@ -355,7 +355,7 @@ var _ = Describe("Eventclient", func() {
 					}, nil)
 
 					client := NewWithClient(mockQueueClient)
-					items, err := client.Receive(&RecieveOptions{
+					items, err := client.Receive(&ReceiveOptions{
 						Queue: "test-queue",
 						Depth: 5,
 					})
@@ -383,7 +383,7 @@ var _ = Describe("Eventclient", func() {
 
 					client := NewWithClient(mockQueueClient)
 					// pass in a depth less than 1
-					items, err := client.Receive(&RecieveOptions{
+					items, err := client.Receive(&ReceiveOptions{
 						Queue: "test-queue",
 						Depth: 0,
 					})
@@ -408,7 +408,7 @@ var _ = Describe("Eventclient", func() {
 				}).Return(nil, fmt.Errorf("mock error"))
 
 				client := NewWithClient(mockQueueClient)
-				_, err := client.Receive(&RecieveOptions{
+				_, err := client.Receive(&ReceiveOptions{
 					Queue: "test-queue",
 					Depth: 5,
 				})

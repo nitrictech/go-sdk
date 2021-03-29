@@ -41,7 +41,7 @@ type SendBatchOptions struct {
 	Tasks []*Task
 }
 
-type RecieveOptions struct {
+type ReceiveOptions struct {
 	Queue string
 	Depth int
 }
@@ -51,11 +51,11 @@ type CompleteOptions struct {
 	Task  *Task
 }
 
-type QueueRecieveResult struct {
+type QueueReceiveResult struct {
 }
 
 type SendResult struct{}
-type RecieveResult struct {
+type ReceiveResult struct {
 	Tasks []*Task
 }
 type CompleteResult struct{}
@@ -63,7 +63,7 @@ type CompleteResult struct{}
 type QueueClient interface {
 	Send(opts *SendOptions) (*SendResult, error)
 	SendBatch(opts *SendBatchOptions) (*SendBatchResult, error)
-	Receive(opts *RecieveOptions) (*RecieveResult, error)
+	Receive(opts *ReceiveOptions) (*ReceiveResult, error)
 	Complete(opts *CompleteOptions) (*CompleteResult, error)
 }
 
@@ -151,7 +151,7 @@ func (q NitricQueueClient) SendBatch(opts *SendBatchOptions) (*SendBatchResult, 
 // Receive - retrieve tasks from the specifed queue. The items returned are contained in a QueueItem
 // which provides context for the source queue and the lease on the tasks.
 // Tasks must be completed using Complete or they will be distributed again or forwarded to a dead letter queue.
-func (q NitricQueueClient) Receive(opts *RecieveOptions) (*RecieveResult, error) {
+func (q NitricQueueClient) Receive(opts *ReceiveOptions) (*ReceiveResult, error) {
 	// Set minimum depth to 1.
 	var depth = 1
 	if opts.Depth > 0 {
@@ -173,7 +173,7 @@ func (q NitricQueueClient) Receive(opts *RecieveOptions) (*RecieveResult, error)
 		tasks[i] = wireToTask(item)
 	}
 
-	return &RecieveResult{
+	return &ReceiveResult{
 		Tasks: tasks,
 	}, nil
 }
