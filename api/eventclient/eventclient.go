@@ -11,13 +11,13 @@ import (
 )
 
 type Event struct {
-	Payload     *map[string]interface{}
-	PayloadType *string
-	RequestId   *string
+	Payload     map[string]interface{}
+	PayloadType string
+	ID          string
 }
 
 type EventClient interface {
-	Publish(opts PublishOptions) (*string, error)
+	Publish(opts *PublishOptions) (*PublishResult, error)
 }
 
 type NitricEventClient struct {
@@ -26,35 +26,39 @@ type NitricEventClient struct {
 }
 
 type PublishOptions struct {
-	TopicName *string
-	Event     *Event
+	Topic string
+	Event *Event
+}
+
+type PublishResult struct {
+	RequestID string
 }
 
 // Publish - publishes the provided event data to the specified topic.
-func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
+func (e NitricEventClient) Publish(opts *PublishOptions) (*PublishResult, error) {
 	// Generate UUID as request id if none provided
-	var requestID = opts.Event.RequestId
-	if requestID == nil {
+	var requestID = opts.Event.ID
+	if requestID == "" {
 		// TODO: Pass in request id generator as an interface so it can be customized.
 		uuidStr := uuid.New().String()
 		if uuidStr == "" {
 			return nil, fmt.Errorf("failed to generate unique request id")
 		}
-		requestID = &uuidStr
+		requestID = uuidStr
 	}
 
 	// Convert payload to Protobuf Struct
-	payloadStruct, err := structpb.NewStruct(*opts.Event.Payload)
+	payloadStruct, err := structpb.NewStruct(opts.Event.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize payload: %s", err)
 	}
 
 	// Publish the event
 	_, err = e.c.Publish(context.Background(), &v1.EventPublishRequest{
-		Topic: *opts.TopicName,
+		Topic: opts.Topic,
 		Event: &v1.NitricEvent{
-			RequestId:   *requestID,
-			PayloadType: *opts.Event.PayloadType,
+			Id:          requestID,
+			PayloadType: opts.Event.PayloadType,
 			Payload:     payloadStruct,
 		},
 	})
@@ -63,7 +67,9 @@ func (e NitricEventClient) Publish(opts PublishOptions) (*string, error) {
 		return nil, err
 	}
 
-	return requestID, nil
+	return &PublishResult{
+		RequestID: requestID,
+	}, nil
 }
 
 func NewEventClient(conn *grpc.ClientConn) EventClient {

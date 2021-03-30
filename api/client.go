@@ -5,11 +5,10 @@ import (
 	"net"
 	"os"
 
-	"github.com/nitrictech/go-sdk/v1/authclient"
-	"github.com/nitrictech/go-sdk/v1/documentsclient"
-	"github.com/nitrictech/go-sdk/v1/eventclient"
-	"github.com/nitrictech/go-sdk/v1/queueclient"
-	"github.com/nitrictech/go-sdk/v1/storageclient"
+	"github.com/nitrictech/go-sdk/api/eventclient"
+	"github.com/nitrictech/go-sdk/api/kvclient"
+	"github.com/nitrictech/go-sdk/api/queueclient"
+	"github.com/nitrictech/go-sdk/api/storageclient"
 	"google.golang.org/grpc"
 )
 
@@ -23,8 +22,7 @@ const (
 // NitricClient - provider services client
 // TODO: Look at adding generics for scope: https://blog.golang.org/generics-next-step
 type NitricClient interface {
-	Auth() authclient.AuthClient
-	Documents() documentsclient.DocumentsClient
+	KV() kvclient.KVClient
 	Eventing() eventclient.EventClient
 	Queue() queueclient.QueueClient
 	Storage() storageclient.StorageClient
@@ -34,8 +32,7 @@ type NitricClient interface {
 // Client - NitricClient gRPC implementation
 type Client struct {
 	connection *grpc.ClientConn
-	auth       authclient.AuthClient
-	documents  documentsclient.DocumentsClient
+	kv         kvclient.KVClient
 	eventing   eventclient.EventClient
 	queue      queueclient.QueueClient
 	storage    storageclient.StorageClient
@@ -51,24 +48,14 @@ func (c *Client) ensureGrpcConnection() {
 	}
 }
 
-// Auth - returns an auth service client
-func (c *Client) Auth() authclient.AuthClient {
+// KV - returns a kv service client
+func (c *Client) KV() kvclient.KVClient {
 	c.ensureGrpcConnection()
-	if c.auth == nil {
-		c.auth = authclient.NewAuthClient(c.connection)
+	if c.kv == nil {
+		c.kv = kvclient.NewKVClient(c.connection)
 	}
 
-	return c.auth
-}
-
-// Documents - returns a document service client
-func (c *Client) Documents() documentsclient.DocumentsClient {
-	c.ensureGrpcConnection()
-	if c.documents == nil {
-		c.documents = documentsclient.NewDocumentsClient(c.connection)
-	}
-
-	return c.documents
+	return c.kv
 }
 
 // Storage - returns a storage client
@@ -109,8 +96,7 @@ func (c *Client) Close() {
 		c.queue = nil
 		c.eventing = nil
 		c.storage = nil
-		c.auth = nil
-		c.documents = nil
+		c.kv = nil
 	}
 }
 

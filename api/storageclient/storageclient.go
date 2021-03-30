@@ -9,8 +9,8 @@ import (
 )
 
 type StorageClient interface {
-	Get(bucketName string, key string) ([]byte, error)
-	Put(bucketName string, key string, body []byte) error
+	Read(bucketName string, key string) ([]byte, error)
+	Write(bucketName string, key string, body []byte) error
 }
 
 type NitricStorageClient struct {
@@ -19,8 +19,8 @@ type NitricStorageClient struct {
 }
 
 // Get - retrieves an exist item from a bucket by its key
-func (s NitricStorageClient) Get(bucketName string, key string) ([]byte, error) {
-	res, err := s.c.Get(context.Background(), &v1.StorageGetRequest{
+func (s NitricStorageClient) Read(bucketName string, key string) ([]byte, error) {
+	res, err := s.c.Read(context.Background(), &v1.StorageReadRequest{
 		BucketName: bucketName,
 		Key:        key,
 	})
@@ -33,8 +33,8 @@ func (s NitricStorageClient) Get(bucketName string, key string) ([]byte, error) 
 }
 
 // Put - stores an item in a bucket under the given key.
-func (s NitricStorageClient) Put(bucketName string, key string, body []byte) error {
-	_, err := s.c.Put(context.Background(), &v1.StoragePutRequest{
+func (s NitricStorageClient) Write(bucketName string, key string, body []byte) error {
+	_, err := s.c.Write(context.Background(), &v1.StorageWriteRequest{
 		BucketName: bucketName,
 		Key:        key,
 		Body:       body,

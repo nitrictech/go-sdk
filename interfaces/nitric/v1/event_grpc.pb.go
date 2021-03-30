@@ -31,7 +31,7 @@ func NewEventClient(cc grpc.ClientConnInterface) EventClient {
 
 func (c *eventClient) Publish(ctx context.Context, in *EventPublishRequest, opts ...grpc.CallOption) (*EventPublishResponse, error) {
 	out := new(EventPublishResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.events.Event/Publish", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/nitric.event.v1.Event/Publish", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func _Event_Publish_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.events.Event/Publish",
+		FullMethod: "/nitric.event.v1.Event/Publish",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(EventServer).Publish(ctx, req.(*EventPublishRequest))
@@ -86,7 +86,7 @@ func _Event_Publish_Handler(srv interface{}, ctx context.Context, dec func(inter
 }
 
 var _Event_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.v1.events.Event",
+	ServiceName: "nitric.event.v1.Event",
 	HandlerType: (*EventServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -95,7 +95,7 @@ var _Event_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/events.proto",
+	Metadata: "event/v1/event.proto",
 }
 
 // TopicClient is the client API for Topic service.
@@ -116,7 +116,7 @@ func NewTopicClient(cc grpc.ClientConnInterface) TopicClient {
 
 func (c *topicClient) List(ctx context.Context, in *TopicListRequest, opts ...grpc.CallOption) (*TopicListResponse, error) {
 	out := new(TopicListResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.events.Topic/List", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/nitric.event.v1.Topic/List", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func _Topic_List_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.events.Topic/List",
+		FullMethod: "/nitric.event.v1.Topic/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TopicServer).List(ctx, req.(*TopicListRequest))
@@ -171,7 +171,7 @@ func _Topic_List_Handler(srv interface{}, ctx context.Context, dec func(interfac
 }
 
 var _Topic_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.v1.events.Topic",
+	ServiceName: "nitric.event.v1.Topic",
 	HandlerType: (*TopicServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -180,5 +180,5 @@ var _Topic_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/events.proto",
+	Metadata: "event/v1/event.proto",
 }

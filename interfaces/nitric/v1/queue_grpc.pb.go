@@ -17,12 +17,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueueClient interface {
-	// Push a single event to a queue
-	Push(ctx context.Context, in *QueuePushRequest, opts ...grpc.CallOption) (*QueuePushResponse, error)
-	// Push multiple events to a queue
-	BatchPush(ctx context.Context, in *QueueBatchPushRequest, opts ...grpc.CallOption) (*QueueBatchPushResponse, error)
-	// Pop event(s) off a queue
-	Pop(ctx context.Context, in *QueuePopRequest, opts ...grpc.CallOption) (*QueuePopResponse, error)
+	// Send a single event to a queue
+	Send(ctx context.Context, in *QueueSendRequest, opts ...grpc.CallOption) (*QueueSendResponse, error)
+	// Send multiple events to a queue
+	SendBatch(ctx context.Context, in *QueueSendBatchRequest, opts ...grpc.CallOption) (*QueueSendBatchResponse, error)
+	// Receive event(s) off a queue
+	Receive(ctx context.Context, in *QueueReceiveRequest, opts ...grpc.CallOption) (*QueueReceiveResponse, error)
 	// Complete an event previously popped from a queue
 	Complete(ctx context.Context, in *QueueCompleteRequest, opts ...grpc.CallOption) (*QueueCompleteResponse, error)
 }
@@ -35,27 +35,27 @@ func NewQueueClient(cc grpc.ClientConnInterface) QueueClient {
 	return &queueClient{cc}
 }
 
-func (c *queueClient) Push(ctx context.Context, in *QueuePushRequest, opts ...grpc.CallOption) (*QueuePushResponse, error) {
-	out := new(QueuePushResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.queues.Queue/Push", in, out, opts...)
+func (c *queueClient) Send(ctx context.Context, in *QueueSendRequest, opts ...grpc.CallOption) (*QueueSendResponse, error) {
+	out := new(QueueSendResponse)
+	err := c.cc.Invoke(ctx, "/nitric.queue.v1.Queue/Send", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queueClient) BatchPush(ctx context.Context, in *QueueBatchPushRequest, opts ...grpc.CallOption) (*QueueBatchPushResponse, error) {
-	out := new(QueueBatchPushResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.queues.Queue/BatchPush", in, out, opts...)
+func (c *queueClient) SendBatch(ctx context.Context, in *QueueSendBatchRequest, opts ...grpc.CallOption) (*QueueSendBatchResponse, error) {
+	out := new(QueueSendBatchResponse)
+	err := c.cc.Invoke(ctx, "/nitric.queue.v1.Queue/SendBatch", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queueClient) Pop(ctx context.Context, in *QueuePopRequest, opts ...grpc.CallOption) (*QueuePopResponse, error) {
-	out := new(QueuePopResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.queues.Queue/Pop", in, out, opts...)
+func (c *queueClient) Receive(ctx context.Context, in *QueueReceiveRequest, opts ...grpc.CallOption) (*QueueReceiveResponse, error) {
+	out := new(QueueReceiveResponse)
+	err := c.cc.Invoke(ctx, "/nitric.queue.v1.Queue/Receive", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c *queueClient) Pop(ctx context.Context, in *QueuePopRequest, opts ...grpc
 
 func (c *queueClient) Complete(ctx context.Context, in *QueueCompleteRequest, opts ...grpc.CallOption) (*QueueCompleteResponse, error) {
 	out := new(QueueCompleteResponse)
-	err := c.cc.Invoke(ctx, "/nitric.v1.queues.Queue/Complete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/nitric.queue.v1.Queue/Complete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,12 +75,12 @@ func (c *queueClient) Complete(ctx context.Context, in *QueueCompleteRequest, op
 // All implementations must embed UnimplementedQueueServer
 // for forward compatibility
 type QueueServer interface {
-	// Push a single event to a queue
-	Push(context.Context, *QueuePushRequest) (*QueuePushResponse, error)
-	// Push multiple events to a queue
-	BatchPush(context.Context, *QueueBatchPushRequest) (*QueueBatchPushResponse, error)
-	// Pop event(s) off a queue
-	Pop(context.Context, *QueuePopRequest) (*QueuePopResponse, error)
+	// Send a single event to a queue
+	Send(context.Context, *QueueSendRequest) (*QueueSendResponse, error)
+	// Send multiple events to a queue
+	SendBatch(context.Context, *QueueSendBatchRequest) (*QueueSendBatchResponse, error)
+	// Receive event(s) off a queue
+	Receive(context.Context, *QueueReceiveRequest) (*QueueReceiveResponse, error)
 	// Complete an event previously popped from a queue
 	Complete(context.Context, *QueueCompleteRequest) (*QueueCompleteResponse, error)
 	mustEmbedUnimplementedQueueServer()
@@ -90,14 +90,14 @@ type QueueServer interface {
 type UnimplementedQueueServer struct {
 }
 
-func (UnimplementedQueueServer) Push(context.Context, *QueuePushRequest) (*QueuePushResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Push not implemented")
+func (UnimplementedQueueServer) Send(context.Context, *QueueSendRequest) (*QueueSendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
 }
-func (UnimplementedQueueServer) BatchPush(context.Context, *QueueBatchPushRequest) (*QueueBatchPushResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BatchPush not implemented")
+func (UnimplementedQueueServer) SendBatch(context.Context, *QueueSendBatchRequest) (*QueueSendBatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendBatch not implemented")
 }
-func (UnimplementedQueueServer) Pop(context.Context, *QueuePopRequest) (*QueuePopResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Pop not implemented")
+func (UnimplementedQueueServer) Receive(context.Context, *QueueReceiveRequest) (*QueueReceiveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Receive not implemented")
 }
 func (UnimplementedQueueServer) Complete(context.Context, *QueueCompleteRequest) (*QueueCompleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Complete not implemented")
@@ -115,56 +115,56 @@ func RegisterQueueServer(s grpc.ServiceRegistrar, srv QueueServer) {
 	s.RegisterService(&_Queue_serviceDesc, srv)
 }
 
-func _Queue_Push_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueuePushRequest)
+func _Queue_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueueSendRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueueServer).Push(ctx, in)
+		return srv.(QueueServer).Send(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.queues.Queue/Push",
+		FullMethod: "/nitric.queue.v1.Queue/Send",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueueServer).Push(ctx, req.(*QueuePushRequest))
+		return srv.(QueueServer).Send(ctx, req.(*QueueSendRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Queue_BatchPush_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueueBatchPushRequest)
+func _Queue_SendBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueueSendBatchRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueueServer).BatchPush(ctx, in)
+		return srv.(QueueServer).SendBatch(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.queues.Queue/BatchPush",
+		FullMethod: "/nitric.queue.v1.Queue/SendBatch",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueueServer).BatchPush(ctx, req.(*QueueBatchPushRequest))
+		return srv.(QueueServer).SendBatch(ctx, req.(*QueueSendBatchRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Queue_Pop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueuePopRequest)
+func _Queue_Receive_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueueReceiveRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueueServer).Pop(ctx, in)
+		return srv.(QueueServer).Receive(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.queues.Queue/Pop",
+		FullMethod: "/nitric.queue.v1.Queue/Receive",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueueServer).Pop(ctx, req.(*QueuePopRequest))
+		return srv.(QueueServer).Receive(ctx, req.(*QueueReceiveRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -179,7 +179,7 @@ func _Queue_Complete_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.v1.queues.Queue/Complete",
+		FullMethod: "/nitric.queue.v1.Queue/Complete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueueServer).Complete(ctx, req.(*QueueCompleteRequest))
@@ -188,20 +188,20 @@ func _Queue_Complete_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 var _Queue_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.v1.queues.Queue",
+	ServiceName: "nitric.queue.v1.Queue",
 	HandlerType: (*QueueServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Push",
-			Handler:    _Queue_Push_Handler,
+			MethodName: "Send",
+			Handler:    _Queue_Send_Handler,
 		},
 		{
-			MethodName: "BatchPush",
-			Handler:    _Queue_BatchPush_Handler,
+			MethodName: "SendBatch",
+			Handler:    _Queue_SendBatch_Handler,
 		},
 		{
-			MethodName: "Pop",
-			Handler:    _Queue_Pop_Handler,
+			MethodName: "Receive",
+			Handler:    _Queue_Receive_Handler,
 		},
 		{
 			MethodName: "Complete",
@@ -209,5 +209,5 @@ var _Queue_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/queues.proto",
+	Metadata: "queue/v1/queue.proto",
 }
