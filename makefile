@@ -6,6 +6,19 @@ install-tools: install
 	@echo Installing tools from tools.go
 	@cat ./tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
+init: install-tools
+	@echo Installing git hooks
+	@find .git/hooks -type l -exec rm {} \; && find .githooks -type f -exec ln -sf ../../{} .git/hooks/ \;
+
+fmt:
+	@echo Formatting Code
+	@gofmt -s -w ./**/*.go
+
+lint:
+	@echo Formatting Code
+	@golint ./...
+
+
 clean:
 	@rm -rf ./interfaces
 
