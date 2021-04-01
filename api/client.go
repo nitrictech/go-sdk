@@ -1,4 +1,4 @@
-package v1
+package api
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ const (
 // TODO: Look at adding generics for scope: https://blog.golang.org/generics-next-step
 type NitricClient interface {
 	KV() kvclient.KVClient
-	Eventing() eventclient.EventClient
+	Event() eventclient.EventClient
 	Queue() queueclient.QueueClient
 	Storage() storageclient.StorageClient
 	Close()
@@ -68,8 +68,8 @@ func (c *Client) Storage() storageclient.StorageClient {
 	return c.storage
 }
 
-// Eventing - retuns an eventing service client
-func (c *Client) Eventing() eventclient.EventClient {
+// Event - returns an event service client
+func (c *Client) Event() eventclient.EventClient {
 	c.ensureGrpcConnection()
 	if c.eventing == nil {
 		c.eventing = eventclient.NewEventClient(c.connection)
