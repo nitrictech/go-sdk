@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-	"github.com/google/uuid"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
@@ -35,7 +34,9 @@ var _ = Describe("Eventclient", func() {
 						PayloadType: "test-payload-type",
 						Payload:     payloadStruct,
 					},
-				}).Return(&v1.EventPublishResponse{}, nil)
+				}).Return(&v1.EventPublishResponse{
+					Id: "abc123",
+				}, nil)
 
 				client := NewWithClient(mockEventClient, nil)
 				topicName := "test-topic"
@@ -56,36 +57,6 @@ var _ = Describe("Eventclient", func() {
 
 				By("Returning the request id")
 				Expect(result.RequestID).To(Equal("abc123"))
-			})
-
-			When("No request id is specified", func() {
-				It("Should publish the event", func() {
-					mockEventClient := mock_v1.NewMockEventClient(ctrl)
-
-					By("Calling GetTopics")
-					payload := map[string]interface{}{
-						"test": "content",
-					}
-
-					mockEventClient.EXPECT().Publish(gomock.Any(), gomock.Any()).Return(&v1.EventPublishResponse{}, nil)
-
-					client := NewWithClient(mockEventClient, nil)
-					topicName := "test-topic"
-					payloadType := "test-payload-type"
-					result, err := client.Publish(&PublishOptions{
-						Topic: topicName,
-						Event: &Event{
-							Payload:     payload,
-							PayloadType: payloadType,
-						},
-					})
-
-					By("Not returning an error")
-					Expect(err).ShouldNot(HaveOccurred())
-
-					By("Returning the request id")
-					uuid.MustParse(result.RequestID)
-				})
 			})
 		})
 
