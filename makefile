@@ -4,7 +4,7 @@ install:
 
 install-tools: install
 	@echo Installing tools from tools.go
-	@cat ./tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+	@cat ./tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go get %
 
 init: install-tools
 	@echo Installing git hooks
@@ -18,6 +18,10 @@ lint:
 	@echo Formatting Code
 	@golint ./...
 
+license-check: install-tools
+	@echo Checking OSS Licenses
+	@go build -o ./bin/licenses ./licenses.go 
+	@lichen --config=./lichen.yaml ./bin/licenses
 
 clean:
 	@rm -rf ./interfaces
