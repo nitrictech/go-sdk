@@ -21,7 +21,7 @@ lint:
 license-check: install-tools
 	@echo Checking OSS Licenses
 	@go build -o ./bin/licenses ./licenses.go 
-	@lichen --config=./lichen.yaml ./bin/licenses
+	@go run github.com/uw-labs/lichen --config=./lichen.yaml ./bin/licenses
 
 clean:
 	@rm -rf ./interfaces
