@@ -4,6 +4,7 @@ package v1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -11,6 +12,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // QueueClient is the client API for Queue service.
@@ -112,7 +114,7 @@ type UnsafeQueueServer interface {
 }
 
 func RegisterQueueServer(s grpc.ServiceRegistrar, srv QueueServer) {
-	s.RegisterService(&_Queue_serviceDesc, srv)
+	s.RegisterService(&Queue_ServiceDesc, srv)
 }
 
 func _Queue_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -187,7 +189,10 @@ func _Queue_Complete_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Queue_serviceDesc = grpc.ServiceDesc{
+// Queue_ServiceDesc is the grpc.ServiceDesc for Queue service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Queue_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "nitric.queue.v1.Queue",
 	HandlerType: (*QueueServer)(nil),
 	Methods: []grpc.MethodDesc{

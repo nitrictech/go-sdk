@@ -4,6 +4,7 @@ package v1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -11,14 +12,18 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // KeyValueClient is the client API for KeyValue service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type KeyValueClient interface {
+	// Get an existing key
 	Get(ctx context.Context, in *KeyValueGetRequest, opts ...grpc.CallOption) (*KeyValueGetResponse, error)
+	// Create a new or overwrite and existing key
 	Put(ctx context.Context, in *KeyValuePutRequest, opts ...grpc.CallOption) (*KeyValuePutResponse, error)
+	// Delete an existing
 	Delete(ctx context.Context, in *KeyValueDeleteRequest, opts ...grpc.CallOption) (*KeyValueDeleteResponse, error)
 }
 
@@ -61,8 +66,11 @@ func (c *keyValueClient) Delete(ctx context.Context, in *KeyValueDeleteRequest, 
 // All implementations must embed UnimplementedKeyValueServer
 // for forward compatibility
 type KeyValueServer interface {
+	// Get an existing key
 	Get(context.Context, *KeyValueGetRequest) (*KeyValueGetResponse, error)
+	// Create a new or overwrite and existing key
 	Put(context.Context, *KeyValuePutRequest) (*KeyValuePutResponse, error)
+	// Delete an existing
 	Delete(context.Context, *KeyValueDeleteRequest) (*KeyValueDeleteResponse, error)
 	mustEmbedUnimplementedKeyValueServer()
 }
@@ -90,7 +98,7 @@ type UnsafeKeyValueServer interface {
 }
 
 func RegisterKeyValueServer(s grpc.ServiceRegistrar, srv KeyValueServer) {
-	s.RegisterService(&_KeyValue_serviceDesc, srv)
+	s.RegisterService(&KeyValue_ServiceDesc, srv)
 }
 
 func _KeyValue_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -147,7 +155,10 @@ func _KeyValue_Delete_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-var _KeyValue_serviceDesc = grpc.ServiceDesc{
+// KeyValue_ServiceDesc is the grpc.ServiceDesc for KeyValue service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var KeyValue_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "nitric.kv.v1.KeyValue",
 	HandlerType: (*KeyValueServer)(nil),
 	Methods: []grpc.MethodDesc{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -36,17 +35,6 @@ type PublishResult struct {
 
 // Publish - publishes the provided event data to the specified topic.
 func (e NitricEventClient) Publish(opts *PublishOptions) (*PublishResult, error) {
-	// Generate UUID as request id if none provided
-	var requestID = opts.Event.ID
-	if requestID == "" {
-		// TODO: Pass in request id generator as an interface so it can be customized.
-		uuidStr := uuid.New().String()
-		if uuidStr == "" {
-			return nil, fmt.Errorf("failed to generate unique request id")
-		}
-		requestID = uuidStr
-	}
-
 	// Convert payload to Protobuf Struct
 	payloadStruct, err := structpb.NewStruct(opts.Event.Payload)
 	if err != nil {
@@ -54,10 +42,10 @@ func (e NitricEventClient) Publish(opts *PublishOptions) (*PublishResult, error)
 	}
 
 	// Publish the event
-	_, err = e.c.Publish(context.Background(), &v1.EventPublishRequest{
+	resp, err := e.c.Publish(context.Background(), &v1.EventPublishRequest{
 		Topic: opts.Topic,
 		Event: &v1.NitricEvent{
-			Id:          requestID,
+			Id:          opts.Event.ID,
 			PayloadType: opts.Event.PayloadType,
 			Payload:     payloadStruct,
 		},
@@ -68,7 +56,7 @@ func (e NitricEventClient) Publish(opts *PublishOptions) (*PublishResult, error)
 	}
 
 	return &PublishResult{
-		RequestID: requestID,
+		RequestID: resp.Id,
 	}, nil
 }
 

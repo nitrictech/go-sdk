@@ -4,6 +4,7 @@ package v1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -11,13 +12,14 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // EventClient is the client API for Event service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EventClient interface {
-	// Publish a message to a given topic
+	// Publishes an message to a given topic
 	Publish(ctx context.Context, in *EventPublishRequest, opts ...grpc.CallOption) (*EventPublishResponse, error)
 }
 
@@ -42,7 +44,7 @@ func (c *eventClient) Publish(ctx context.Context, in *EventPublishRequest, opts
 // All implementations must embed UnimplementedEventServer
 // for forward compatibility
 type EventServer interface {
-	// Publish a message to a given topic
+	// Publishes an message to a given topic
 	Publish(context.Context, *EventPublishRequest) (*EventPublishResponse, error)
 	mustEmbedUnimplementedEventServer()
 }
@@ -64,7 +66,7 @@ type UnsafeEventServer interface {
 }
 
 func RegisterEventServer(s grpc.ServiceRegistrar, srv EventServer) {
-	s.RegisterService(&_Event_serviceDesc, srv)
+	s.RegisterService(&Event_ServiceDesc, srv)
 }
 
 func _Event_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -85,7 +87,10 @@ func _Event_Publish_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Event_serviceDesc = grpc.ServiceDesc{
+// Event_ServiceDesc is the grpc.ServiceDesc for Event service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Event_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "nitric.event.v1.Event",
 	HandlerType: (*EventServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -149,7 +154,7 @@ type UnsafeTopicServer interface {
 }
 
 func RegisterTopicServer(s grpc.ServiceRegistrar, srv TopicServer) {
-	s.RegisterService(&_Topic_serviceDesc, srv)
+	s.RegisterService(&Topic_ServiceDesc, srv)
 }
 
 func _Topic_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -170,7 +175,10 @@ func _Topic_List_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Topic_serviceDesc = grpc.ServiceDesc{
+// Topic_ServiceDesc is the grpc.ServiceDesc for Topic service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Topic_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "nitric.event.v1.Topic",
 	HandlerType: (*TopicServer)(nil),
 	Methods: []grpc.MethodDesc{
