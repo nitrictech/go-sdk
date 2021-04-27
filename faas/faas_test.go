@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/nitrictech/go-sdk/v1/faas"
+	"github.com/nitrictech/go-sdk/faas"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
