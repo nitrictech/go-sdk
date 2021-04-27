@@ -2,8 +2,8 @@ package faas
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/valyala/fasthttp"
 )
 
 // NitricRequest - represents a request to trigger a function, with payload and context required to execute that function.
@@ -28,27 +28,21 @@ func (n *NitricRequest) GetStruct(object interface{}) error {
 }
 
 // contextFromHeaders - converts standard nitric HTTP headers into a context struct.
-func contextFromHeaders(h http.Header) NitricContext {
+func contextFromHeaders(h fasthttp.RequestHeader) NitricContext {
 	return NitricContext{
-		requestID:   h.Get("x-nitric-request-id"),
-		sourceType:  sourceTypeFromString(h.Get("x-nitric-source-type")),
-		source:      h.Get("x-nitric-source"),
-		payloadType: h.Get("x-nitric-payload-type"),
+		requestID:   string(h.Peek("x-nitric-request-id")),
+		sourceType:  sourceTypeFromString(string(h.Peek("x-nitric-source-type"))),
+		source:      string(h.Peek("x-nitric-source")),
+		payloadType: string(h.Peek("x-nitric-payload-type")),
 	}
 }
 
 // fromHttpRequest - converts a standard nitric HTTP request into a NitricRequest to be passed to functions.
-func fromHttpRequest(r *http.Request) (*NitricRequest, error) {
-	context := contextFromHeaders(r.Header)
+func fromRequestContext(ctx *fasthttp.RequestCtx) *NitricRequest {
+	context := contextFromHeaders(ctx.Request.Header)
 
-	payload, err := ioutil.ReadAll(r.Body)
-
-	if err == nil {
-		return &NitricRequest{
-			context: context,
-			payload: payload,
-		}, nil
+	return &NitricRequest{
+		context: context,
+		payload: ctx.Request.Body(),
 	}
-
-	return nil, err
 }

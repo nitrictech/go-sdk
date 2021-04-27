@@ -1,6 +1,8 @@
 package faas
 
-import "net/http"
+import (
+	"github.com/valyala/fasthttp"
+)
 
 // NitricResponse - represents the results of calling a function.
 type NitricResponse struct {
@@ -10,10 +12,11 @@ type NitricResponse struct {
 }
 
 // writeHttpResponse - writes a HTTP response from a NitricResponse
-func (n *NitricResponse) writeHTTPResponse(w http.ResponseWriter) {
+func (n *NitricResponse) writeHTTPResponse(ctx *fasthttp.RequestCtx) {
 	for k, v := range n.Headers {
-		w.Header().Add(k, v)
+		ctx.Response.Header.Add(k, v)
 	}
-	w.WriteHeader(n.Status)
-	w.Write(n.Body)
+
+	ctx.SetStatusCode(n.Status)
+	ctx.SetBody(n.Body)
 }
