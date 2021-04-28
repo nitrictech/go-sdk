@@ -12,6 +12,8 @@ jobs:
       uses: actions/setup-go@v2-beta
     - name: Install modules
       run: make install-tools
+    - name: Check License Headers
+      run: make license-header-check
     - name: Run Tests
       run: make test
     - name: Check Licenses
