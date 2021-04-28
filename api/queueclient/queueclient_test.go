@@ -60,7 +60,7 @@ var _ = Describe("Eventclient", func() {
 					res, err := client.SendBatch(&SendBatchOptions{
 						Queue: "test-queue",
 						Tasks: []*Task{
-							&Task{
+							{
 								ID:          requestId,
 								PayloadType: payloadType,
 								Payload:     payload,
@@ -248,7 +248,7 @@ var _ = Describe("Eventclient", func() {
 						Depth: 5,
 					}).Return(&v1.QueueReceiveResponse{
 						Tasks: []*v1.NitricTask{
-							&v1.NitricTask{
+							{
 								Id:          "test-request-id",
 								PayloadType: "test-payload-type",
 								LeaseId:     "test-lease-id",
@@ -297,7 +297,7 @@ var _ = Describe("Eventclient", func() {
 						Depth: 5,
 					}).Return(&v1.QueueReceiveResponse{
 						Tasks: []*v1.NitricTask{
-							&v1.NitricTask{
+							{
 								Id:          "test-request-id",
 								PayloadType: "test-payload-type",
 								Payload: &structpb.Struct{
@@ -307,7 +307,7 @@ var _ = Describe("Eventclient", func() {
 								},
 								LeaseId: "test-lease-id",
 							},
-							&v1.NitricTask{
+							{
 								Id:          "test-request-id2",
 								PayloadType: "test-payload-type",
 								Payload: &structpb.Struct{
