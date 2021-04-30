@@ -18,6 +18,16 @@ lint:
 	@echo Formatting Code
 	@golint ./...
 
+sourcefiles := $(shell find . -type f -name "*.go")
+
+license-header-add:
+	@echo Add License Headers to Source Files
+	@go run github.com/google/addlicense -c "Nitric Pty Ltd." -y "2021" $(sourcefiles)
+
+license-header-check:
+	@echo Checking License Headers to Source Files
+	@go run github.com/google/addlicense -check -c "Nitric Pty Ltd." -y "2021" $(sourcefiles)
+
 license-check: install-tools
 	@echo Checking OSS Licenses
 	@go build -o ./bin/licenses ./licenses.go 
