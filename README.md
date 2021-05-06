@@ -4,7 +4,7 @@
 
 # Nitric SDK for Go
 
-![test status](https://github.com/nitrictech/go-sdk/actions/workflows/test.yml/badge.svg)
+![test status](https://github.com/nitrictech/go-sdk/actions/workflows/test.yaml/badge.svg)
 
 Client libarary for interfacing with the Nitric APIs as well as the creation of golang functions with Nitric.
 
