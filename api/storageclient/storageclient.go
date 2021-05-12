@@ -22,9 +22,36 @@ import (
 	"google.golang.org/grpc"
 )
 
+type ReadOptions struct {
+	Bucket string
+	Key    string
+}
+
+type ReadResult struct {
+	Data []byte
+}
+
+type WriteOptions struct {
+	Bucket string
+	Key    string
+	Data   []byte
+}
+
+// Empty response for forwards compatibility
+type WriteResult struct{}
+
+type DeleteOptions struct {
+	Bucket string
+	Key    string
+}
+
+// Empty response for forwards compatibility
+type DeleteResult struct{}
+
 type StorageClient interface {
-	Read(bucketName string, key string) ([]byte, error)
-	Write(bucketName string, key string, body []byte) error
+	Read(*ReadOptions) (*ReadResult, error)
+	Write(*WriteOptions) (*WriteResult, error)
+	Delete(*DeleteOptions) (*DeleteResult, error)
 }
 
 type NitricStorageClient struct {
@@ -33,28 +60,43 @@ type NitricStorageClient struct {
 }
 
 // Get - retrieves an exist item from a bucket by its key
-func (s NitricStorageClient) Read(bucketName string, key string) ([]byte, error) {
+func (s *NitricStorageClient) Read(opts *ReadOptions) (*ReadResult, error) {
 	res, err := s.c.Read(context.Background(), &v1.StorageReadRequest{
-		BucketName: bucketName,
-		Key:        key,
+		BucketName: opts.Bucket,
+		Key:        opts.Key,
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get content with key [%s] from bucket [%s]: %s", key, bucketName, err)
+		return nil, fmt.Errorf("failed to get content with key [%s] from bucket [%s]: %s", opts.Key, opts.Bucket, err)
 	}
 
-	return res.GetBody(), nil
+	return &ReadResult{
+		Data: res.GetBody(),
+	}, nil
 }
 
 // Put - stores an item in a bucket under the given key.
-func (s NitricStorageClient) Write(bucketName string, key string, body []byte) error {
-	_, err := s.c.Write(context.Background(), &v1.StorageWriteRequest{
-		BucketName: bucketName,
-		Key:        key,
-		Body:       body,
-	})
+func (s *NitricStorageClient) Write(opts *WriteOptions) (*WriteResult, error) {
+	if _, err := s.c.Write(context.Background(), &v1.StorageWriteRequest{
+		BucketName: opts.Bucket,
+		Key:        opts.Key,
+		Body:       opts.Data,
+	}); err != nil {
+		return nil, err
+	}
 
-	return err
+	return &WriteResult{}, nil
+}
+
+func (s *NitricStorageClient) Delete(opts *DeleteOptions) (*DeleteResult, error) {
+	if _, err := s.c.Delete(context.Background(), &v1.StorageDeleteRequest{
+		BucketName: opts.Bucket,
+		Key:        opts.Key,
+	}); err != nil {
+		return nil, err
+	}
+
+	return &DeleteResult{}, nil
 }
 
 func NewStorageClient(conn *grpc.ClientConn) StorageClient {
