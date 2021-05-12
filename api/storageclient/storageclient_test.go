@@ -41,7 +41,11 @@ var _ = Describe("Storageclient", func() {
 					}).Return(&v1.StorageWriteResponse{}, nil)
 
 					client := NewWithClient(mockStorageClient)
-					err := client.Write("test-bucket", "test-key", []byte{})
+					_, err := client.Write(&WriteOptions{
+						Bucket: "test-bucket",
+						Key:    "test-key",
+						Data:   []byte{},
+					})
 
 					By("Not returning an error")
 					Expect(err).ShouldNot(HaveOccurred())
@@ -58,7 +62,11 @@ var _ = Describe("Storageclient", func() {
 					fmt.Errorf("mock error"))
 
 				client := NewWithClient(mockStorageClient)
-				err := client.Write("test-bucket", "test-key", []byte{})
+				_, err := client.Write(&WriteOptions{
+					Bucket: "test-bucket",
+					Key:    "test-key",
+					Data:   []byte{},
+				})
 
 				By("Returning an error")
 				Expect(err).Should(HaveOccurred())
@@ -82,13 +90,16 @@ var _ = Describe("Storageclient", func() {
 					}, nil)
 
 					client := NewWithClient(mockStorageClient)
-					item, err := client.Read("test-bucket", "test-key")
+					item, err := client.Read(&ReadOptions{
+						Bucket: "test-bucket",
+						Key:    "test-key",
+					})
 
 					By("Not returning an error")
 					Expect(err).ShouldNot(HaveOccurred())
 
 					By("Returning the item")
-					Expect(item).To(Equal([]byte{}))
+					Expect(item.Data).To(BeEquivalentTo([]byte{}))
 				})
 			})
 
@@ -108,7 +119,10 @@ var _ = Describe("Storageclient", func() {
 				}).Return(nil, fmt.Errorf("mock error"))
 
 				client := NewWithClient(mockStorageClient)
-				_, err := client.Read("test-bucket", "test-key")
+				_, err := client.Read(&ReadOptions{
+					Bucket: "test-bucket",
+					Key:    "test-key",
+				})
 
 				By("Returning an error")
 				Expect(err).Should(HaveOccurred())
