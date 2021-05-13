@@ -65,9 +65,6 @@ type CompleteOptions struct {
 	Task  *Task
 }
 
-type QueueReceiveResult struct {
-}
-
 type SendResult struct{}
 type ReceiveResult struct {
 	Tasks []*Task
