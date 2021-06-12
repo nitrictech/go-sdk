@@ -51,5 +51,5 @@ func NitricHost() string {
 
 // nitricAddress - constructs the full address i.e. host:port, of the nitric service based on config or defaults
 func NitricAddress() string {
-	return net.JoinHostPort(nitricHost(), nitricPort())
+	return net.JoinHostPort(NitricHost(), NitricPort())
 }

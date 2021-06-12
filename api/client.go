@@ -110,7 +110,7 @@ func (c *Client) Close() {
 // connection information is retrieved from the standard environment variable
 func New() (NitricClient, error) {
 	// Connect to the gRPC Membrane Server
-	conn, err := grpc.Dial(contants.NitricAddress(), grpc.WithInsecure())
+	conn, err := grpc.Dial(constants.NitricAddress(), grpc.WithInsecure())
 	if err != nil {
 		return nil, fmt.Errorf("failed to establish connection to Membrane gRPC server: %s", err)
 	}

@@ -15,62 +15,64 @@
 package faas_test
 
 import (
-	"bytes"
-	"net/http"
+	"fmt"
 
+	"github.com/golang/mock/gomock"
 	"github.com/nitrictech/go-sdk/faas"
+	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 type MockFunctionSpy struct {
-	loggedRequests []*faas.NitricRequest
-	mockResponse   *faas.NitricResponse
+	loggedTriggers           []*faas.NitricTrigger
+	mockResponse             *faas.NitricResponse
+	mockResponseStatus       int
+	mockResponseHeaders      map[string]string
+	mockResponseTopicSuccess bool
+	mockResponseData         []byte
 }
 
 func (m *MockFunctionSpy) reset() {
-	m.loggedRequests = make([]*faas.NitricRequest, 0)
+	m.loggedTriggers = make([]*faas.NitricTrigger, 0)
 }
 
-func (m *MockFunctionSpy) handler(r *faas.NitricRequest) *faas.NitricResponse {
-	if m.loggedRequests == nil {
-		m.loggedRequests = make([]*faas.NitricRequest, 0)
+func (m *MockFunctionSpy) handler(r *faas.NitricTrigger) (*faas.NitricResponse, error) {
+	if m.loggedTriggers == nil {
+		m.loggedTriggers = make([]*faas.NitricTrigger, 0)
 	}
 
-	m.loggedRequests = append(m.loggedRequests, r)
+	m.loggedTriggers = append(m.loggedTriggers, r)
 
-	return m.mockResponse
+	defaultResponse := r.DefaultResponse()
+
+	defaultResponse.SetData(m.mockResponseData)
+
+	if defaultResponse.GetContext().IsHttp() {
+		defaultResponse.GetContext().AsHttp().Headers = m.mockResponseHeaders
+		defaultResponse.GetContext().AsHttp().Status = m.mockResponseStatus
+	} else if defaultResponse.GetContext().IsTopic() {
+		defaultResponse.GetContext().AsTopic().Success = m.mockResponseTopicSuccess
+	}
+
+	return defaultResponse, nil
 }
 
 type MockHttpOptions struct {
-	requestId   string
-	sourceType  string
-	source      string
 	payloadType string
 	body        []byte
-}
-
-func createMockHttpRequest(opts MockHttpOptions) *http.Request {
-	request, _ := http.NewRequest("POST", "http://0.0.0.0:8080", bytes.NewReader(opts.body))
-
-	request.Header.Add("x-nitric-request-id", opts.requestId)
-	request.Header.Add("x-nitric-source-type", opts.sourceType)
-	request.Header.Add("x-nitric-source", opts.source)
-	request.Header.Add("x-nitric-payloadTyp", opts.payloadType)
-
-	return request
 }
 
 var _ = Describe("Faas", func() {
 	Context("Start", func() {
 		mockFunction := &MockFunctionSpy{
-			mockResponse: &faas.NitricResponse{
-				Headers: map[string]string{
-					"Content-Type": "text/plain",
-				},
-				Status: 200,
-				Body:   []byte("Hello"),
+			mockResponseData: []byte("Hello"),
+			mockResponseHeaders: map[string]string{
+				"Content-Type": "text/plain",
 			},
+			mockResponseStatus:       200,
+			mockResponseTopicSuccess: true,
 		}
 
 		BeforeEach(func() {
@@ -81,85 +83,130 @@ var _ = Describe("Faas", func() {
 			faas.Start(mockFunction.handler)
 		})()
 
-		When("Function is called with a Request payload", func() {
+		When("Function is called with a HttpTrigger", func() {
 			BeforeEach(func() {
-				request := createMockHttpRequest(MockHttpOptions{
-					requestId:   "1234",
-					sourceType:  "REQUEST",
-					source:      "test-source",
-					payloadType: "test-payload",
-					body:        []byte("Test"),
-				})
+				// Create the mock faas client here
+				ctrl := gomock.NewController(GinkgoT())
+				mockFaasClient := mock_v1.NewMockFaasClient(ctrl)
+				mockStream := mock_v1.NewMockFaas_TriggerStreamClient(ctrl)
+				mockStream.EXPECT().Recv().Return(
+					&pb.ServerMessage{
+						Id: "test",
+						Content: &pb.ServerMessage_TriggerRequest{
+							TriggerRequest: &pb.TriggerRequest{
+								Data: []byte("test"),
+								Context: &pb.TriggerRequest_Http{
+									Http: &pb.HttpTriggerContext{
+										Method: "POST",
+										Headers: map[string]string{
+											"Content-Type": "text/plain",
+										},
+									},
+								},
+							},
+						},
+					}, nil,
+				)
 
-				http.DefaultClient.Do(request)
+				mockStream.EXPECT().Send(gomock.Any()).AnyTimes().Return(nil)
+
+				mockStream.EXPECT().Recv().Return(
+					nil, fmt.Errorf("EOF"),
+				)
+
+				// The client should be called at least once
+				mockFaasClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
+
+				errchan := make(chan error)
+				go (func(errchan chan error) {
+					// Use error channel for blocking here..
+					err := faas.StartWithClient(mockFunction.handler, mockFaasClient)
+					errchan <- err
+				})(errchan)
+
+				// Wait for the stream to finish
+				<-errchan
 			})
 
 			It("Should receive the correct request", func() {
 				By("Receiving a single request")
-				Expect(mockFunction.loggedRequests).To(HaveLen(1))
+				Expect(mockFunction.loggedTriggers).To(HaveLen(1))
 
-				receivedRequest := mockFunction.loggedRequests[0]
+				receivedRequest := mockFunction.loggedTriggers[0]
 				receivedContext := receivedRequest.GetContext()
 
-				By("Having the provided request id")
-				Expect((&receivedContext).GetRequestID()).To(BeEquivalentTo("1234"))
+				By("Having the trigger data")
+				Expect(receivedRequest.GetData()).To(BeEquivalentTo([]byte("test")))
 
-				//By("Having the provided payload type")
-				//Expect((&receivedContext).GetPayloadType()).To(BeEquivalentTo("test-payload"))
+				By("Recieving a HTTP Request")
+				Expect(receivedContext.IsHttp()).To(BeTrue())
 
-				By("Having the correct source type")
-				Expect((&receivedContext).GetSourceType()).To(BeEquivalentTo(faas.Request))
+				By("Recieving the correct method")
+				Expect(receivedContext.AsHttp().Method).To(Equal("POST"))
 
-				By("Having the provided source")
-				Expect((&receivedContext).GetSource()).To(BeEquivalentTo("test-source"))
+				By("Recieving the correct headers")
+				Expect(receivedContext.AsHttp().Headers).To(BeEquivalentTo(
+					map[string]string{
+						"Content-Type": "text/plain",
+					},
+				))
 			})
 		})
 
-		When("The Function is called with a Subscription payload", func() {
+		When("The Function is called with a TopicTrigger", func() {
 			BeforeEach(func() {
-				request := createMockHttpRequest(MockHttpOptions{
-					requestId:   "1234",
-					sourceType:  "SUBSCRIPTION",
-					source:      "test-source",
-					payloadType: "test-payload",
-					body:        []byte("Test"),
-				})
+				// Create the mock faas client here
+				ctrl := gomock.NewController(GinkgoT())
+				mockFaasClient := mock_v1.NewMockFaasClient(ctrl)
+				mockStream := mock_v1.NewMockFaas_TriggerStreamClient(ctrl)
+				mockStream.EXPECT().Recv().Return(
+					&pb.ServerMessage{
+						Id: "test",
+						Content: &pb.ServerMessage_TriggerRequest{
+							TriggerRequest: &pb.TriggerRequest{
+								Data: []byte("test"),
+								Context: &pb.TriggerRequest_Topic{
+									Topic: &pb.TopicTriggerContext{
+										Topic: "test",
+									},
+								},
+							},
+						},
+					}, nil,
+				)
+				// Close the stream by returning an error
+				mockStream.EXPECT().Recv().Return(
+					nil, fmt.Errorf("EOF"),
+				)
 
-				http.DefaultClient.Do(request)
+				mockStream.EXPECT().Send(gomock.Any()).AnyTimes().Return(nil)
+				// The client should be called at least once
+				mockFaasClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
+
+				errchan := make(chan error)
+				go (func(errchan chan error) {
+					// Use error channel for blocking here..
+					err := faas.StartWithClient(mockFunction.handler, mockFaasClient)
+					errchan <- err
+				})(errchan)
+
+				// Wait for the stream to finish
+				<-errchan
 			})
 
-			It("Should have the supplied sourceType", func() {
-				By("Receiving a single request")
-				Expect(mockFunction.loggedRequests).To(HaveLen(1))
+			It("Should have the supplied topic", func() {
+				By("Receiving a single trigger")
+				Expect(mockFunction.loggedTriggers).To(HaveLen(1))
 
-				receivedRequest := mockFunction.loggedRequests[0]
+				receivedRequest := mockFunction.loggedTriggers[0]
 				receivedContext := receivedRequest.GetContext()
 
-				Expect((&receivedContext).GetSourceType()).To(BeEquivalentTo(faas.Subscription))
-			})
-		})
+				By("Recieving topic context")
+				Expect(receivedContext.IsTopic()).To(BeTrue())
 
-		When("The Function is called with an unknown source type", func() {
-			BeforeEach(func() {
-				request := createMockHttpRequest(MockHttpOptions{
-					requestId:   "1234",
-					sourceType:  "fake-source",
-					source:      "test-source",
-					payloadType: "test-payload",
-					body:        []byte("Test"),
-				})
+				By("Having the correct topic name")
+				Expect(receivedContext.AsTopic().Topic).To(Equal("test"))
 
-				http.DefaultClient.Do(request)
-			})
-
-			It("Should have the supplied sourceType", func() {
-				By("Receiving a single request")
-				Expect(mockFunction.loggedRequests).To(HaveLen(1))
-
-				receivedRequest := mockFunction.loggedRequests[0]
-				receivedContext := receivedRequest.GetContext()
-
-				Expect((&receivedContext).GetSourceType()).To(BeEquivalentTo(faas.Unknown))
 			})
 		})
 	})

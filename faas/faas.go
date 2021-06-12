@@ -92,7 +92,7 @@ func faasLoop(stream pb.Faas_TriggerStreamClient, f NitricFunction, errorCh chan
 }
 
 // Start - Starts accepting requests for the provided NitricFunction
-//
+// Begins streaming using the default Nitric FaaS gRPC client
 // This should be the only method called in the 'main' method of your entrypoint package
 func Start(f NitricFunction) error {
 	conn, err := grpc.Dial(constants.NitricAddress(), grpc.WithInsecure())
@@ -103,13 +103,19 @@ func Start(f NitricFunction) error {
 
 	faasClient := pb.NewFaasClient(conn)
 
+	return StartWithClient(f, faasClient)
+}
+
+func StartWithClient(f NitricFunction, faasClient pb.FaasClient) error {
 	if stream, err := faasClient.TriggerStream(context.TODO()); err == nil {
 		// Let the membrane know the function is ready for initialization
-		if err := stream.Send(&pb.ClientMessage{
+		err := stream.Send(&pb.ClientMessage{
 			Content: &pb.ClientMessage_InitRequest{
 				InitRequest: &pb.InitRequest{},
 			},
-		}); err != nil {
+		})
+
+		if err != nil {
 			return err
 		}
 

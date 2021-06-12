@@ -28,6 +28,10 @@ func (n *NitricResponse) SetData(data []byte) {
 	n.data = data
 }
 
+func (n *NitricResponse) GetContext() *ResponseContext {
+	return n.context
+}
+
 // ToTriggerResponse - Tranlates a Nitric Response for gRPC transport to the memrbane
 func (n *NitricResponse) ToTriggerResponse() *pb.TriggerResponse {
 
