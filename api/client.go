@@ -16,21 +16,13 @@ package api
 
 import (
 	"fmt"
-	"net"
-	"os"
 
 	"github.com/nitrictech/go-sdk/api/eventclient"
 	"github.com/nitrictech/go-sdk/api/kvclient"
 	"github.com/nitrictech/go-sdk/api/queueclient"
 	"github.com/nitrictech/go-sdk/api/storageclient"
+	"github.com/nitrictech/go-sdk/constants"
 	"google.golang.org/grpc"
-)
-
-const (
-	nitricServiceHostDefault    = "127.0.0.1"
-	nitricServicePortDefault    = "50051"
-	nitricServiceHostEnvVarName = "NITRIC_SERVICE_HOST"
-	nitricServicePortEnvVarName = "NITRIC_SERVICE_PORT"
 )
 
 // NitricClient - provider services client
@@ -57,7 +49,7 @@ func (c *Client) ensureGrpcConnection() {
 	if c.connection == nil {
 		// Create a new connection
 		// Let clients naturally return their errors?
-		conn, _ := grpc.Dial(nitricAddress(), grpc.WithInsecure())
+		conn, _ := grpc.Dial(constants.NitricAddress(), grpc.WithInsecure())
 		c.connection = conn
 	}
 }
@@ -114,39 +106,11 @@ func (c *Client) Close() {
 	}
 }
 
-// getEnvWithFallback - Returns an envirable variable's value from its name or a default value if the variable isn't set
-func getEnvWithFallback(varName string, fallback string) string {
-	if v := os.Getenv(varName); v == "" {
-		return fallback
-	} else {
-		return v
-	}
-}
-
-// nitricPort - retrieves the environment variable which specifies the port (e.g. 50051) of the nitric service
-//
-// if the env var isn't set, returns the default port
-func nitricPort() string {
-	return getEnvWithFallback(nitricServicePortEnvVarName, nitricServicePortDefault)
-}
-
-// nitricPort - retrieves the environment variable which specifies the host (e.g. 127.0.0.1) of the nitric service
-//
-// if the env var isn't set, returns the default host
-func nitricHost() string {
-	return getEnvWithFallback(nitricServiceHostEnvVarName, nitricServiceHostDefault)
-}
-
-// nitricAddress - constructs the full address i.e. host:port, of the nitric service based on config or defaults
-func nitricAddress() string {
-	return net.JoinHostPort(nitricHost(), nitricPort())
-}
-
 // New - constructs a new NitricClient with a connection to the nitric service.
 // connection information is retrieved from the standard environment variable
 func New() (NitricClient, error) {
 	// Connect to the gRPC Membrane Server
-	conn, err := grpc.Dial(nitricAddress(), grpc.WithInsecure())
+	conn, err := grpc.Dial(contants.NitricAddress(), grpc.WithInsecure())
 	if err != nil {
 		return nil, fmt.Errorf("failed to establish connection to Membrane gRPC server: %s", err)
 	}

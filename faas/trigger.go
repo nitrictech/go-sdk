@@ -17,46 +17,60 @@ package faas
 import (
 	"encoding/json"
 
-	"github.com/valyala/fasthttp"
+	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
 // NitricRequest - represents a request to trigger a function, with payload and context required to execute that function.
-type NitricRequest struct {
-	context NitricContext
-	payload []byte
+type NitricTrigger struct {
+	context *NitricTriggerContext
+	data    []byte
 }
 
 // GetContext - return the context of a request, with metadata about that request.
-func (n *NitricRequest) GetContext() NitricContext {
+func (n *NitricTrigger) GetContext() *NitricTriggerContext {
 	return n.context
 }
 
 // GetPayload - return the []byte payload of the request.
-func (n *NitricRequest) GetPayload() []byte {
-	return n.payload
+func (n *NitricTrigger) GetData() []byte {
+	return n.data
 }
 
 // GetStruct - Unmarshals the request body from JSON to the provided interface{}
-func (n *NitricRequest) GetStruct(object interface{}) error {
-	return json.Unmarshal(n.payload, object)
+func (n *NitricTrigger) GetDataAsStruct(object interface{}) error {
+	return json.Unmarshal(n.data, object)
 }
 
-// contextFromHeaders - converts standard nitric HTTP headers into a context struct.
-func contextFromHeaders(h fasthttp.RequestHeader) NitricContext {
-	return NitricContext{
-		requestID:   string(h.Peek("x-nitric-request-id")),
-		sourceType:  sourceTypeFromString(string(h.Peek("x-nitric-source-type"))),
-		source:      string(h.Peek("x-nitric-source")),
-		payloadType: string(h.Peek("x-nitric-payload-type")),
+// Default Response - Returns a default response object dependent on the Trigger context
+func (n *NitricTrigger) DefaultResponse() *NitricResponse {
+
+	var context interface{} = nil
+
+	if n.context.IsHttp() {
+		context = &HttpResponseContext{
+			Headers: make(map[string]string),
+			Status:  200,
+		}
+	} else if n.context.IsHttp() {
+		context = &TopicResponseContext{
+			Success: true,
+		}
+	}
+
+	return &NitricResponse{
+		data: nil,
+		context: &ResponseContext{
+			context: context,
+		},
 	}
 }
 
 // fromHttpRequest - converts a standard nitric HTTP request into a NitricRequest to be passed to functions.
-func fromRequestContext(ctx *fasthttp.RequestCtx) *NitricRequest {
-	context := contextFromHeaders(ctx.Request.Header)
+func FromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*NitricTrigger, error) {
+	context := ContextFromTriggerRequest(triggerReq)
 
-	return &NitricRequest{
+	return &NitricTrigger{
 		context: context,
-		payload: ctx.Request.Body(),
-	}
+		data:    triggerReq.GetData(),
+	}, nil
 }
