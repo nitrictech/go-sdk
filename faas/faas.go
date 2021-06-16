@@ -17,6 +17,7 @@ package faas
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/nitrictech/go-sdk/constants"
 	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
@@ -81,9 +82,13 @@ func faasLoop(stream pb.Faas_TriggerStreamClient, f NitricFunction, errorCh chan
 			}
 
 			if err := stream.Send(clientMsg); err != nil {
-				fmt.Println("Failed to send msg", err)
-				errorCh <- err
-				break
+				if err != io.EOF {
+					fmt.Println("Failed to send msg", err)
+					errorCh <- err
+					break
+				}
+				fmt.Println("EOF encountered from server", err)
+				continue
 			}
 		} else if srvrMsg.GetInitResponse() != nil {
 			fmt.Println("Function connected to membrane", err)

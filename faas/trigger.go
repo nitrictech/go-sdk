@@ -22,8 +22,9 @@ import (
 
 // NitricRequest - represents a request to trigger a function, with payload and context required to execute that function.
 type NitricTrigger struct {
-	context *NitricTriggerContext
-	data    []byte
+	context  *NitricTriggerContext
+	data     []byte
+	mimeType string
 }
 
 // GetContext - return the context of a request, with metadata about that request.
@@ -34,6 +35,10 @@ func (n *NitricTrigger) GetContext() *NitricTriggerContext {
 // GetPayload - return the []byte payload of the request.
 func (n *NitricTrigger) GetData() []byte {
 	return n.data
+}
+
+func (n *NitricTrigger) GetMimeType() string {
+	return n.mimeType
 }
 
 // GetStruct - Unmarshals the request body from JSON to the provided interface{}
@@ -70,7 +75,8 @@ func FromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*NitricTrigger, erro
 	context := ContextFromTriggerRequest(triggerReq)
 
 	return &NitricTrigger{
-		context: context,
-		data:    triggerReq.GetData(),
+		context:  context,
+		data:     triggerReq.GetData(),
+		mimeType: triggerReq.GetMimeType(),
 	}, nil
 }
