@@ -32,21 +32,22 @@ func (n *NitricTrigger) GetContext() *NitricTriggerContext {
 	return n.context
 }
 
-// GetPayload - return the []byte payload of the request.
+// GetData - return the []byte data of the request.
 func (n *NitricTrigger) GetData() []byte {
 	return n.data
 }
 
+// GetMimeType - return the mime-type of the data for this trigger
 func (n *NitricTrigger) GetMimeType() string {
 	return n.mimeType
 }
 
-// GetStruct - Unmarshals the request body from JSON to the provided interface{}
+// GetDataAsStruct - Unmarshals the request body from JSON to the provided interface{}
 func (n *NitricTrigger) GetDataAsStruct(object interface{}) error {
 	return json.Unmarshal(n.data, object)
 }
 
-// Default Response - Returns a default response object dependent on the Trigger context
+// DefaultResponse - Returns a default response object dependent on the Trigger context
 func (n *NitricTrigger) DefaultResponse() *NitricResponse {
 
 	var context interface{} = nil
@@ -56,7 +57,7 @@ func (n *NitricTrigger) DefaultResponse() *NitricResponse {
 			Headers: make(map[string]string),
 			Status:  200,
 		}
-	} else if n.context.IsHttp() {
+	} else if n.context.IsTopic() {
 		context = &TopicResponseContext{
 			Success: true,
 		}
@@ -70,7 +71,7 @@ func (n *NitricTrigger) DefaultResponse() *NitricResponse {
 	}
 }
 
-// fromHttpRequest - converts a standard nitric HTTP request into a NitricRequest to be passed to functions.
+// FromGrpcTriggerRequest - converts a standard nitric TriggerRequest request into a Trigger to be passed to functions.
 func FromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*NitricTrigger, error) {
 	context := ContextFromTriggerRequest(triggerReq)
 

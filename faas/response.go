@@ -32,7 +32,7 @@ func (n *NitricResponse) GetContext() *ResponseContext {
 	return n.context
 }
 
-// ToTriggerResponse - Tranlates a Nitric Response for gRPC transport to the memrbane
+// ToTriggerResponse - Tranlates a Nitric Response for gRPC transport to the membrane
 func (n *NitricResponse) ToTriggerResponse() *pb.TriggerResponse {
 
 	triggerResponse := &pb.TriggerResponse{}

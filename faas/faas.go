@@ -28,7 +28,7 @@ type NitricFunction func(*NitricTrigger) (*NitricResponse, error)
 
 func faasLoop(stream pb.Faas_TriggerStreamClient, f NitricFunction, errorCh chan error) {
 	for {
-		// Block recieving a message
+		// Block receiving a message
 		srvrMsg, err := stream.Recv()
 		clientMsg := &pb.ClientMessage{
 			Id: srvrMsg.GetId(),
@@ -47,15 +47,15 @@ func faasLoop(stream pb.Faas_TriggerStreamClient, f NitricFunction, errorCh chan
 			if err != nil {
 				fmt.Println("There was an error reading the TriggerRequest", err)
 				// Return a bad request here...
-
-				continue
+				errorCh <- fmt.Errorf("There was an error reading the TriggerRequest")
+				break
 			}
-			// Let the membrane know the function is ready for initializatio
+			// Let the membrane know the function is ready for initialization
 			// Process this trigger
 			response, err := f(req)
 
 			if err != nil {
-				fmt.Println("Function return an error", err)
+				fmt.Println("Function returned an error", err)
 				// Return an error here...
 				response = req.DefaultResponse()
 				response.SetData([]byte("Internal Error"))
