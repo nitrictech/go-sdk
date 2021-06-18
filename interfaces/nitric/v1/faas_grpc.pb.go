@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FaasClient interface {
-	// Return a list of existing topics in the provider environment
+	// Begin streaming triggers/response to/from the membrane
 	TriggerStream(ctx context.Context, opts ...grpc.CallOption) (Faas_TriggerStreamClient, error)
 }
 
@@ -65,7 +65,7 @@ func (x *faasTriggerStreamClient) Recv() (*ServerMessage, error) {
 // All implementations must embed UnimplementedFaasServer
 // for forward compatibility
 type FaasServer interface {
-	// Return a list of existing topics in the provider environment
+	// Begin streaming triggers/response to/from the membrane
 	TriggerStream(Faas_TriggerStreamServer) error
 	mustEmbedUnimplementedFaasServer()
 }
