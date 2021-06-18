@@ -15,22 +15,46 @@
 package faas
 
 import (
-	"github.com/valyala/fasthttp"
+	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
 // NitricResponse - represents the results of calling a function.
 type NitricResponse struct {
-	Headers map[string]string
-	Status  int
-	Body    []byte
+	context *ResponseContext
+	data    []byte
 }
 
-// writeHttpResponse - writes a HTTP response from a NitricResponse
-func (n *NitricResponse) writeHTTPResponse(ctx *fasthttp.RequestCtx) {
-	for k, v := range n.Headers {
-		ctx.Response.Header.Add(k, v)
+func (n *NitricResponse) SetData(data []byte) {
+	n.data = data
+}
+
+func (n *NitricResponse) GetContext() *ResponseContext {
+	return n.context
+}
+
+// ToTriggerResponse - Tranlates a Nitric Response for gRPC transport to the membrane
+func (n *NitricResponse) ToTriggerResponse() *pb.TriggerResponse {
+
+	triggerResponse := &pb.TriggerResponse{}
+
+	triggerResponse.Data = n.data
+
+	if n.context.IsHttp() {
+		http := n.context.AsHttp()
+		triggerResponse.Context = &pb.TriggerResponse_Http{
+			Http: &pb.HttpResponseContext{
+				Headers: http.Headers,
+				Status:  int32(http.Status),
+			},
+		}
+	} else if n.context.IsTopic() {
+		topic := n.context.AsTopic()
+		triggerResponse.Context = &pb.TriggerResponse_Topic{
+			Topic: &pb.TopicResponseContext{
+				Success: topic.Success,
+			},
+		}
 	}
 
-	ctx.SetStatusCode(n.Status)
-	ctx.SetBody(n.Body)
+	return triggerResponse
 }

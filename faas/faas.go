@@ -15,29 +15,117 @@
 package faas
 
 import (
-	"os"
+	"context"
+	"fmt"
 
-	"github.com/valyala/fasthttp"
+	"github.com/nitrictech/go-sdk/constants"
+	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	"google.golang.org/grpc"
 )
 
 // NitricFunction - a function built using Nitric, to be executed
-type NitricFunction func(*NitricRequest) *NitricResponse
+type NitricFunction func(*NitricTrigger) (*NitricResponse, error)
+
+func faasLoop(stream pb.Faas_TriggerStreamClient, f NitricFunction, errorCh chan error) {
+	for {
+		// Block receiving a message
+		srvrMsg, err := stream.Recv()
+		clientMsg := &pb.ClientMessage{
+			Id: srvrMsg.GetId(),
+		}
+
+		if err != nil {
+			// TODO: Make sure we use the correct kind of error types here
+			errorCh <- err
+			break
+		}
+
+		// We have a trigger
+		if srvrMsg.GetTriggerRequest() != nil {
+			req, err := FromGrpcTriggerRequest(srvrMsg.GetTriggerRequest())
+
+			if err != nil {
+				fmt.Println("There was an error reading the TriggerRequest", err)
+				// Return a bad request here...
+				errorCh <- fmt.Errorf("There was an error reading the TriggerRequest")
+				break
+			}
+			// Let the membrane know the function is ready for initialization
+			// Process this trigger
+			response, err := f(req)
+
+			if err != nil {
+				fmt.Println("Function returned an error", err)
+				// Return an error here...
+				response = req.DefaultResponse()
+				response.SetData([]byte("Internal Error"))
+
+				if response.context.IsHttp() {
+					http := response.context.AsHttp()
+					http.Headers = map[string]string{
+						"Content-Type": "text/plain",
+					}
+					http.Status = 500
+					// internal server error
+				} else if response.context.IsTopic() {
+					topic := response.context.AsTopic()
+					topic.Success = false
+					// mark as unsuccessful here...
+				}
+			}
+
+			triggerResponse := response.ToTriggerResponse()
+
+			clientMsg.Content = &pb.ClientMessage_TriggerResponse{
+				TriggerResponse: triggerResponse,
+			}
+
+			if err := stream.Send(clientMsg); err != nil {
+				fmt.Println("Failed to send msg", err)
+				errorCh <- err
+				break
+			}
+		} else if srvrMsg.GetInitResponse() != nil {
+			fmt.Println("Function connected to membrane", err)
+		}
+	}
+}
 
 // Start - Starts accepting requests for the provided NitricFunction
-//
+// Begins streaming using the default Nitric FaaS gRPC client
 // This should be the only method called in the 'main' method of your entrypoint package
 func Start(f NitricFunction) error {
-	var childAddress = "127.0.0.1:8080"
-	if env, ok := os.LookupEnv("CHILD_ADDRESS"); ok {
-		childAddress = env
+	conn, err := grpc.Dial(constants.NitricAddress(), grpc.WithInsecure())
+
+	if err != nil {
+		return err
 	}
 
-	return fasthttp.ListenAndServe(childAddress, func(ctx *fasthttp.RequestCtx) {
-		nr := fromRequestContext(ctx)
+	faasClient := pb.NewFaasClient(conn)
 
-		response := f(nr)
+	return StartWithClient(f, faasClient)
+}
 
-		// Write the reponse
-		response.writeHTTPResponse(ctx)
-	})
+func StartWithClient(f NitricFunction, faasClient pb.FaasClient) error {
+	if stream, err := faasClient.TriggerStream(context.TODO()); err == nil {
+		// Let the membrane know the function is ready for initialization
+		err := stream.Send(&pb.ClientMessage{
+			Content: &pb.ClientMessage_InitRequest{
+				InitRequest: &pb.InitRequest{},
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		errChan := make(chan error)
+
+		// Start faasLoop in a go routine
+		go faasLoop(stream, f, errChan)
+
+		return <-errChan
+	} else {
+		return err
+	}
 }
