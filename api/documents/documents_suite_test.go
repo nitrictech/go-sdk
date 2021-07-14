@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kvclient_test
+package documents
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestKVclient(t *testing.T) {
+func TestDocuments(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Documentsclient Suite")
+	RunSpecs(t, "Documents Suite")
 }

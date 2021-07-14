@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package events
+package documents
 
-import (
-	"testing"
+import v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
+// DocumentIter - An iterator for lazy document retrieval
+type DocumentIter interface {
+	// Next - Retrieve the next document in the iterator
+	Next() (Document, error)
+}
 
-func TestEvents(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Events Suite")
+type documentIterImpl struct {
+	str v1.DocumentService_QueryStreamClient
+}
+
+func (i *documentIterImpl) Next() (Document, error) {
+	res, err := i.str.Recv()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &documentImpl{
+		content: res.GetDocument().GetContent().AsMap(),
+	}, nil
 }

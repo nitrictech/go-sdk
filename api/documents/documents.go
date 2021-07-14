@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package storage
+package documents
 
 import (
 	"github.com/nitrictech/go-sdk/constants"
@@ -20,25 +20,25 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Storage - Nitric storage API client
-type Storage interface {
-	// Bucket - Get a bucket reference for the provided name
-	Bucket(name string) Bucket
+// Documents
+type Documents interface {
+	// Collection - Create a new collection reference
+	Collection(string) CollectionRef
 }
 
-type storageImpl struct {
-	sc v1.StorageClient
+type documentsImpl struct {
+	dc v1.DocumentServiceClient
 }
 
-func (s *storageImpl) Bucket(name string) Bucket {
-	return &bucketImpl{
-		sc:   s.sc,
-		name: name,
+// Collection - Create a new collection reference
+func (d *documentsImpl) Collection(col string) CollectionRef {
+	return &collectionRefImpl{
+		dc:             d.dc,
+		parentDocument: nil,
 	}
 }
 
-// New - Create a new Storage client with default options
-func New() (Storage, error) {
+func New() (Documents, error) {
 	conn, err := grpc.Dial(
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
@@ -48,9 +48,9 @@ func New() (Storage, error) {
 		return nil, err
 	}
 
-	sClient := v1.NewStorageClient(conn)
+	dc := v1.NewDocumentServiceClient(conn)
 
-	return &storageImpl{
-		sc: sClient,
+	return &documentsImpl{
+		dc: dc,
 	}, nil
 }

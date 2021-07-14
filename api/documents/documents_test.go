@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package queues
+package documents
 
 import (
 	"os"
@@ -23,11 +23,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Queues", func() {
+var _ = Describe("Documents", func() {
 	ctrl := gomock.NewController(GinkgoT())
 
 	Context("New", func() {
-		When("constructing a new queue client without the membrane", func() {
+		When("constructing a new client without the membrane present", func() {
 			os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
 			c, err := New()
 
@@ -39,34 +39,30 @@ var _ = Describe("Queues", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
-
-		PWhen("constructing a new queue client without dial blocking", func() {
-			// TODO: Do mock dial or non-blocking dial test here...
-		})
 	})
 
-	Context("Queue", func() {
-		When("creating a new Queue reference", func() {
-			mockQ := mock_v1.NewMockQueueClient(ctrl)
+	Context("Collection", func() {
+		When("Creating a collection reference", func() {
+			mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
-			queues := &queuesImpl{
-				c: mockQ,
+			dc := &documentsImpl{
+				dc: mdc,
 			}
 
-			q := queues.Queue("test-queue")
+			collection := dc.Collection("test")
 
-			qImpl, ok := q.(*queueImpl)
+			ci, ok := collection.(*collectionRefImpl)
 
-			It("Should have the provided queue name", func() {
-				Expect(q.Name()).To(Equal("test-queue"))
-			})
-
-			It("Should be an instance of queueImpl", func() {
+			It("should return a collectionRefImpl", func() {
 				Expect(ok).To(BeTrue())
 			})
 
-			It("Should share a client with the Queues client", func() {
-				Expect(qImpl.c).To(Equal(mockQ))
+			It("should share a documents client with the documents client", func() {
+				Expect(ci.dc).To(Equal(dc.dc))
+			})
+
+			It("should have a nil parentDocument", func() {
+				Expect(ci.parentDocument).To(BeNil())
 			})
 		})
 	})
