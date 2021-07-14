@@ -29,7 +29,7 @@ var _ = Describe("Object", func() {
 
 	Context("Read", func() {
 		When("The grpc server returns an error", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			obj := &fileImpl{
 				bucket: "test-bucket",
 				key:    "test-object",
@@ -45,7 +45,7 @@ var _ = Describe("Object", func() {
 		})
 
 		When("The read is successful", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			obj := &fileImpl{
 				bucket: "test-bucket",
 				key:    "test-object",
@@ -65,7 +65,7 @@ var _ = Describe("Object", func() {
 
 	Context("Write", func() {
 		When("The grpc server returns an error", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			obj := &fileImpl{
 				bucket: "test-bucket",
 				key:    "test-object",
@@ -81,7 +81,7 @@ var _ = Describe("Object", func() {
 		})
 
 		When("The write is successful", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			obj := &fileImpl{
 				bucket: "test-bucket",
 				key:    "test-object",
@@ -98,7 +98,7 @@ var _ = Describe("Object", func() {
 
 	Context("Delete", func() {
 		When("The grpc server returns an error", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			obj := &fileImpl{
 				bucket: "test-bucket",
 				key:    "test-object",
@@ -114,7 +114,7 @@ var _ = Describe("Object", func() {
 		})
 
 		When("The delete is successful", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			obj := &fileImpl{
 				bucket: "test-bucket",
 				key:    "test-object",

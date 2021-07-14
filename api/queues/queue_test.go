@@ -30,7 +30,7 @@ var _ = Describe("Queue", func() {
 
 	Context("Send", func() {
 		When("the gRPC server returns an error", func() {
-			mockQ := mock_v1.NewMockQueueClient(ctrl)
+			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
 
 			mockQ.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
@@ -40,7 +40,7 @@ var _ = Describe("Queue", func() {
 			}
 
 			_, err := q.Send([]*Task{
-				&Task{
+				{
 					ID:          "1234",
 					PayloadType: "test-payload",
 					Payload: map[string]interface{}{
@@ -56,14 +56,14 @@ var _ = Describe("Queue", func() {
 		})
 
 		When("the task send succeeds", func() {
-			mockQ := mock_v1.NewMockQueueClient(ctrl)
+			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
 			mockStruct, _ := structpb.NewStruct(map[string]interface{}{
 				"test": "test",
 			})
 
 			mockQ.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(&v1.QueueSendBatchResponse{
 				FailedTasks: []*v1.FailedTask{
-					&v1.FailedTask{
+					{
 						Message: "Failed to send task",
 						Task: &v1.NitricTask{
 							Id:          "1234",
@@ -80,7 +80,7 @@ var _ = Describe("Queue", func() {
 			}
 
 			fts, _ := q.Send([]*Task{
-				&Task{
+				{
 					ID:          "1234",
 					PayloadType: "test-payload",
 					Payload: map[string]interface{}{
@@ -118,11 +118,11 @@ var _ = Describe("Queue", func() {
 				mockStruct, _ := structpb.NewStruct(map[string]interface{}{
 					"test": "test",
 				})
-				mockQ := mock_v1.NewMockQueueClient(ctrl)
+				mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
 
 				mockQ.EXPECT().Receive(gomock.Any(), gomock.Any()).Return(&v1.QueueReceiveResponse{
 					Tasks: []*v1.NitricTask{
-						&v1.NitricTask{
+						{
 							Id:          "1234",
 							Payload:     mockStruct,
 							PayloadType: "mock-payload",

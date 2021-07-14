@@ -26,7 +26,7 @@ var _ = Describe("Bucket", func() {
 
 	Context("File", func() {
 		When("creating a new File reference", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
 			bucket := &bucketImpl{
 				name: "test-bucket",

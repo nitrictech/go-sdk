@@ -112,7 +112,7 @@ var _ = Describe("Task", func() {
 
 		Context("Complete", func() {
 			When("the complete succeeds", func() {
-				mockQc := mock_v1.NewMockQueueClient(ctrl)
+				mockQc := mock_v1.NewMockQueueServiceClient(ctrl)
 
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(&v1.QueueCompleteResponse{}, nil)
 
@@ -137,7 +137,7 @@ var _ = Describe("Task", func() {
 			})
 
 			When("the gRPC server returns an error", func() {
-				mockQc := mock_v1.NewMockQueueClient(ctrl)
+				mockQc := mock_v1.NewMockQueueServiceClient(ctrl)
 
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 

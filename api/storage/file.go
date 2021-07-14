@@ -33,7 +33,7 @@ type File interface {
 type fileImpl struct {
 	bucket string
 	key    string
-	sc     v1.StorageClient
+	sc     v1.StorageServiceClient
 }
 
 func (o *fileImpl) Read() ([]byte, error) {

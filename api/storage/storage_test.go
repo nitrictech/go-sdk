@@ -50,7 +50,7 @@ var _ = Describe("Storage", func() {
 
 	Context("Bucket", func() {
 		When("creating a new Bucket reference", func() {
-			mockStorage := mock_v1.NewMockStorageClient(ctrl)
+			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
 			sc := &storageImpl{
 				sc: mockStorage,

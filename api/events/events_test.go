@@ -45,8 +45,8 @@ var _ = Describe("Events", func() {
 
 	Context("Topics", func() {
 		When("the membrane server returns an error", func() {
-			mockEvt := mock_v1.NewMockEventClient(ctrl)
-			mockTopic := mock_v1.NewMockTopicClient(ctrl)
+			mockEvt := mock_v1.NewMockEventServiceClient(ctrl)
+			mockTopic := mock_v1.NewMockTopicServiceClient(ctrl)
 
 			mockTopic.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
@@ -63,8 +63,8 @@ var _ = Describe("Events", func() {
 		})
 
 		When("topics are available", func() {
-			mockEvt := mock_v1.NewMockEventClient(ctrl)
-			mockTopic := mock_v1.NewMockTopicClient(ctrl)
+			mockEvt := mock_v1.NewMockEventServiceClient(ctrl)
+			mockTopic := mock_v1.NewMockTopicServiceClient(ctrl)
 
 			mockTopic.EXPECT().List(gomock.Any(), gomock.Any()).Return(&v1.TopicListResponse{
 				Topics: []*v1.NitricTopic{
@@ -95,7 +95,7 @@ var _ = Describe("Events", func() {
 				Expect(topic.name).To(Equal("test-topic"))
 			})
 
-			It("should have the same eventclient as the base client", func() {
+			It("should have the same EventServiceClient as the base client", func() {
 				Expect(topic.ec).To(Equal(mockEvt))
 			})
 		})
@@ -103,8 +103,8 @@ var _ = Describe("Events", func() {
 
 	Context("Topic", func() {
 		When("directly creating a topic reference", func() {
-			mockEvt := mock_v1.NewMockEventClient(ctrl)
-			mockTopic := mock_v1.NewMockTopicClient(ctrl)
+			mockEvt := mock_v1.NewMockEventServiceClient(ctrl)
+			mockTopic := mock_v1.NewMockTopicServiceClient(ctrl)
 
 			evt := &eventsImpl{
 				ec: mockEvt,
@@ -131,8 +131,8 @@ var _ = Describe("Events", func() {
 
 	Context("Topic.Publish", func() {
 		When("the topic exists", func() {
-			mockEvt := mock_v1.NewMockEventClient(ctrl)
-			mockTopic := mock_v1.NewMockTopicClient(ctrl)
+			mockEvt := mock_v1.NewMockEventServiceClient(ctrl)
+			mockTopic := mock_v1.NewMockTopicServiceClient(ctrl)
 
 			mockEvt.EXPECT().Publish(gomock.Any(), gomock.Any()).Return(&v1.EventPublishResponse{
 				Id: "1234",
@@ -160,8 +160,8 @@ var _ = Describe("Events", func() {
 		})
 
 		When("the topic does not exist", func() {
-			mockEvt := mock_v1.NewMockEventClient(ctrl)
-			mockTopic := mock_v1.NewMockTopicClient(ctrl)
+			mockEvt := mock_v1.NewMockEventServiceClient(ctrl)
+			mockTopic := mock_v1.NewMockTopicServiceClient(ctrl)
 
 			mockEvt.EXPECT().Publish(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 

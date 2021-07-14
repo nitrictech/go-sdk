@@ -47,7 +47,7 @@ var _ = Describe("Queues", func() {
 
 	Context("Queue", func() {
 		When("creating a new Queue reference", func() {
-			mockQ := mock_v1.NewMockQueueClient(ctrl)
+			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
 
 			queues := &queuesImpl{
 				c: mockQ,

@@ -30,7 +30,7 @@ type Topic interface {
 
 type topicImpl struct {
 	name string
-	ec   v1.EventClient
+	ec   v1.EventServiceClient
 }
 
 func (s *topicImpl) Name() string {

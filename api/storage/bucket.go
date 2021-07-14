@@ -22,7 +22,7 @@ type Bucket interface {
 }
 
 type bucketImpl struct {
-	sc   v1.StorageClient
+	sc   v1.StorageServiceClient
 	name string
 }
 

@@ -27,7 +27,7 @@ type Storage interface {
 }
 
 type storageImpl struct {
-	sc v1.StorageClient
+	sc v1.StorageServiceClient
 }
 
 func (s *storageImpl) Bucket(name string) Bucket {
@@ -48,7 +48,7 @@ func New() (Storage, error) {
 		return nil, err
 	}
 
-	sClient := v1.NewStorageClient(conn)
+	sClient := v1.NewStorageServiceClient(conn)
 
 	return &storageImpl{
 		sc: sClient,

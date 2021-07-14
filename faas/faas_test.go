@@ -87,8 +87,8 @@ var _ = Describe("Faas", func() {
 			BeforeEach(func() {
 				// Create the mock faas client here
 				ctrl := gomock.NewController(GinkgoT())
-				mockFaasClient := mock_v1.NewMockFaasClient(ctrl)
-				mockStream := mock_v1.NewMockFaas_TriggerStreamClient(ctrl)
+				mockFaasServiceClient := mock_v1.NewMockFaasServiceClient(ctrl)
+				mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 				mockStream.EXPECT().Recv().Return(
 					&pb.ServerMessage{
 						Id: "test",
@@ -115,12 +115,12 @@ var _ = Describe("Faas", func() {
 				)
 
 				// The client should be called at least once
-				mockFaasClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
+				mockFaasServiceClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
 
 				errchan := make(chan error)
 				go (func(errchan chan error) {
 					// Use error channel for blocking here..
-					err := faas.StartWithClient(mockFunction.handler, mockFaasClient)
+					err := faas.StartWithClient(mockFunction.handler, mockFaasServiceClient)
 					errchan <- err
 				})(errchan)
 
@@ -157,8 +157,8 @@ var _ = Describe("Faas", func() {
 			BeforeEach(func() {
 				// Create the mock faas client here
 				ctrl := gomock.NewController(GinkgoT())
-				mockFaasClient := mock_v1.NewMockFaasClient(ctrl)
-				mockStream := mock_v1.NewMockFaas_TriggerStreamClient(ctrl)
+				mockFaasServiceClient := mock_v1.NewMockFaasServiceClient(ctrl)
+				mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 				mockStream.EXPECT().Recv().Return(
 					&pb.ServerMessage{
 						Id: "test",
@@ -181,12 +181,12 @@ var _ = Describe("Faas", func() {
 
 				mockStream.EXPECT().Send(gomock.Any()).AnyTimes().Return(nil)
 				// The client should be called at least once
-				mockFaasClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
+				mockFaasServiceClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
 
 				errchan := make(chan error)
 				go (func(errchan chan error) {
 					// Use error channel for blocking here..
-					err := faas.StartWithClient(mockFunction.handler, mockFaasClient)
+					err := faas.StartWithClient(mockFunction.handler, mockFaasServiceClient)
 					errchan <- err
 				})(errchan)
 

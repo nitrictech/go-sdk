@@ -31,8 +31,8 @@ type Events interface {
 }
 
 type eventsImpl struct {
-	ec v1.EventClient
-	tc v1.TopicClient
+	ec v1.EventServiceClient
+	tc v1.TopicServiceClient
 }
 
 func (s *eventsImpl) Topic(name string) Topic {
@@ -70,8 +70,8 @@ func New() (Events, error) {
 		return nil, err
 	}
 
-	ec := v1.NewEventClient(conn)
-	tc := v1.NewTopicClient(conn)
+	ec := v1.NewEventServiceClient(conn)
+	tc := v1.NewTopicServiceClient(conn)
 
 	return &eventsImpl{
 		ec: ec,

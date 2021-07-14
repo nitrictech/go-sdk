@@ -33,7 +33,7 @@ type Queue interface {
 
 type queueImpl struct {
 	name string
-	c    v1.QueueClient
+	c    v1.QueueServiceClient
 }
 
 func (q *queueImpl) Name() string {

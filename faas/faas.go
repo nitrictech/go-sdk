@@ -26,7 +26,7 @@ import (
 // NitricFunction - a function built using Nitric, to be executed
 type NitricFunction func(*NitricTrigger) (*NitricResponse, error)
 
-func faasLoop(stream pb.Faas_TriggerStreamClient, f NitricFunction, errorCh chan error) {
+func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, errorCh chan error) {
 	for {
 		// Block receiving a message
 		srvrMsg, err := stream.Recv()
@@ -101,13 +101,13 @@ func Start(f NitricFunction) error {
 		return err
 	}
 
-	faasClient := pb.NewFaasClient(conn)
+	FaasServiceClient := pb.NewFaasServiceClient(conn)
 
-	return StartWithClient(f, faasClient)
+	return StartWithClient(f, FaasServiceClient)
 }
 
-func StartWithClient(f NitricFunction, faasClient pb.FaasClient) error {
-	if stream, err := faasClient.TriggerStream(context.TODO()); err == nil {
+func StartWithClient(f NitricFunction, FaasServiceClient pb.FaasServiceClient) error {
+	if stream, err := FaasServiceClient.TriggerStream(context.TODO()); err == nil {
 		// Let the membrane know the function is ready for initialization
 		err := stream.Send(&pb.ClientMessage{
 			Content: &pb.ClientMessage_InitRequest{

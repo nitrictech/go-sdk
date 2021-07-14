@@ -42,7 +42,7 @@ type RecievedTask interface {
 
 type receivedTaskImpl struct {
 	queue   string
-	qc      v1.QueueClient
+	qc      v1.QueueServiceClient
 	leaseId string
 	task    *Task
 }

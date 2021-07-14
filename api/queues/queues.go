@@ -26,7 +26,7 @@ type Queues interface {
 }
 
 type queuesImpl struct {
-	c v1.QueueClient
+	c v1.QueueServiceClient
 }
 
 func (q *queuesImpl) Queue(name string) Queue {
@@ -47,7 +47,7 @@ func New() (Queues, error) {
 		return nil, err
 	}
 
-	qClient := v1.NewQueueClient(conn)
+	qClient := v1.NewQueueServiceClient(conn)
 
 	return &queuesImpl{
 		c: qClient,
