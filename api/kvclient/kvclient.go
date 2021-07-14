@@ -20,6 +20,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
+	"github.com/nitrictech/go-sdk/constants"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -122,10 +123,19 @@ func (d NitricKVClient) DeleteKey(collection string, key string) error {
 	return err
 }
 
-func NewKVClient(conn *grpc.ClientConn) KVClient {
+func New() (KVClient, error) {
+	conn, err := grpc.Dial(
+		constants.NitricAddress(),
+		constants.DefaultOptions()...,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &NitricKVClient{
 		c: v1.NewKeyValueClient(conn),
-	}
+	}, nil
 }
 
 func NewWithClient(client v1.KeyValueClient) KVClient {
