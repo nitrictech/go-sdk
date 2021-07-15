@@ -18,17 +18,20 @@ Client libarary for interfacing with the Nitric APIs as well as the creation of 
 
 ## Using the Nitric SDK
 
-### Creating a new API client
+### Creating a new API clients
 ```go
-import "github.com/nitrictech/go-sdk/api"
+import "github.com/nitrictech/go-sdk/api/events"
 
 // NitricFunction - Handles individual function requests (http, events, etc.)
 func createNitricClient() {
-  client, err := api.New()
+	ec, err := events.New()
 
   if err != nil {
     // Do something with err
   }
+
+	// use the new events client
+	// ec.Topic("my-topic").Publish(...)
 }
 ```
 
@@ -40,12 +43,12 @@ package main
 import "github.com/nitrictech/go-sdk/faas"
 
 // NitricFunction - Handles individual function requests (http, events, etc.)
-func NitricFunction(request *faas.NitricRequest) *faas.NitricResponse {
-	// Do something interesting...
-	return &faas.NitricResponse{
-		Status: 200,
-		Body:   []byte("Hello Nitric"),
-	}
+func NitricFunction(trigger *faas.NitricTrigger) (*faas.TriggerResponse, error) {
+	// Construct a default response base on the existing trigger context
+	resp := trigger.DefaultResponse()
+	resp.SetData([]byte("Hello Nitric"))
+
+	return resp, nil
 }
 
 func main() {
