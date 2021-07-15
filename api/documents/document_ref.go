@@ -20,6 +20,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // DocumentRef - Represents a reference to a document
@@ -31,7 +32,7 @@ type DocumentRef interface {
 	Get() (Document, error)
 
 	// Set - Sets the value of the document
-	Set(interface{}) error
+	Set(map[string]interface{}) error
 
 	// Delete - Deletes the document
 	Delete() error
@@ -79,12 +80,21 @@ func (d *documentRefImpl) Delete() error {
 	return err
 }
 
-func (d *documentRefImpl) Set(content interface{}) error {
-	_, err := d.dc.Set(context.TODO(), &v1.DocumentSetRequest{
+func (d *documentRefImpl) Set(content map[string]interface{}) error {
+	sv, err := structpb.NewStruct(content)
+
+	fmt.Println("struct", sv)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = d.dc.Set(context.TODO(), &v1.DocumentSetRequest{
 		Key: &v1.Key{
 			Collection: d.col.toWire(),
 			Id:         d.key,
 		},
+		Content: sv,
 	})
 
 	return err
