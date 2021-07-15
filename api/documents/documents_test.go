@@ -57,6 +57,10 @@ var _ = Describe("Documents", func() {
 				Expect(ok).To(BeTrue())
 			})
 
+			It("should have the provided collection name", func() {
+				Expect(ci.name).To(Equal("test"))
+			})
+
 			It("should share a documents client with the documents client", func() {
 				Expect(ci.dc).To(Equal(dc.dc))
 			})

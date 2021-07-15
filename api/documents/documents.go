@@ -34,6 +34,7 @@ type documentsImpl struct {
 func (d *documentsImpl) Collection(col string) CollectionRef {
 	return &collectionRefImpl{
 		dc:             d.dc,
+		name:           col,
 		parentDocument: nil,
 	}
 }
