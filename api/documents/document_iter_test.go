@@ -27,6 +27,7 @@ import (
 
 var _ = Describe("DocumentIter", func() {
 	ctrl := gomock.NewController(GinkgoT())
+	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 	Context("Next", func() {
 		pbstr, _ := structpb.NewStruct(map[string]interface{}{
 			"test": "test",
@@ -36,21 +37,28 @@ var _ = Describe("DocumentIter", func() {
 			strc := mock_v1.NewMockDocumentService_QueryStreamClient(ctrl)
 			strc.EXPECT().Recv().Return(&v1.DocumentQueryStreamResponse{
 				Document: &v1.Document{
+					Key: &v1.Key{
+						Collection: &v1.Collection{
+							Name: "test",
+						},
+						Id: "test",
+					},
 					Content: pbstr,
 				},
 			}, nil)
 
 			di := &documentIterImpl{
+				dc:  mdc,
 				str: strc,
 			}
 
 			doc, err := di.Next()
 
-			It("should not return an error", func() {
-				Expect(err).ToNot(HaveOccurred())
-			})
-
 			It("should contain the returned document context", func() {
+				By("Not returning an error")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Containing the expected content")
 				Expect(doc.Content()).To(Equal(map[string]interface{}{
 					"test": "test",
 				}))
@@ -62,6 +70,7 @@ var _ = Describe("DocumentIter", func() {
 			strc.EXPECT().Recv().Return(nil, fmt.Errorf("mock-error"))
 
 			di := &documentIterImpl{
+				dc:  mdc,
 				str: strc,
 			}
 

@@ -14,7 +14,11 @@
 
 package documents
 
-import v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+import (
+	"fmt"
+
+	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+)
 
 // Collection
 type CollectionRef interface {
@@ -59,4 +63,30 @@ func (c *collectionRefImpl) toWire() *v1.Collection {
 			Name: c.name,
 		}
 	}
+}
+
+// converts a wire collection to a collection reference
+func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (CollectionRef, error) {
+	if dc == nil {
+		return nil, fmt.Errorf("a document client is required for a collection reference")
+	}
+
+	if c.GetParent() == nil {
+		return &collectionRefImpl{
+			name: c.GetName(),
+			dc:   dc,
+		}, nil
+	} else {
+		pd, err := documentRefFromWireKey(dc, c.GetParent())
+		if err != nil {
+			return nil, err
+		}
+
+		return &collectionRefImpl{
+			name:           c.GetName(),
+			dc:             dc,
+			parentDocument: pd,
+		}, nil
+	}
+
 }

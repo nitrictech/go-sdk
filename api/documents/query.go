@@ -106,7 +106,19 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 	docs := make([]Document, 0, len(r.GetDocuments()))
 
 	for _, d := range r.GetDocuments() {
+
+		fmt.Println("testing", d.GetKey())
+		// TODO: Handle error
+		// For now we'll just set the back reference to nil
+		ref, err := documentRefFromWireKey(q.dc, d.GetKey())
+
+		if err != nil {
+			// XXX: Potentially just log an error and continue
+			return nil, fmt.Errorf("Fetch Error: Failed to construct document reference for result (%v)", err)
+		}
+
 		docs = append(docs, &documentImpl{
+			ref:     ref,
 			content: d.Content.AsMap(),
 		})
 	}
@@ -143,6 +155,7 @@ func (q *queryImpl) Stream() (DocumentIter, error) {
 
 	// TODO: Return result iterator
 	return &documentIterImpl{
+		dc:  q.dc,
 		str: r,
 	}, nil
 }

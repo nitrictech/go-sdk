@@ -23,6 +23,7 @@ type DocumentIter interface {
 }
 
 type documentIterImpl struct {
+	dc  v1.DocumentServiceClient
 	str v1.DocumentService_QueryStreamClient
 }
 
@@ -33,7 +34,14 @@ func (i *documentIterImpl) Next() (Document, error) {
 		return nil, err
 	}
 
+	ref, err := documentRefFromWireKey(i.dc, res.GetDocument().GetKey())
+	if err != nil {
+		return nil, err
+	}
+
 	return &documentImpl{
+		//construct document back reference here...
+		ref:     ref,
 		content: res.GetDocument().GetContent().AsMap(),
 	}, nil
 }

@@ -123,6 +123,12 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().Query(gomock.Any(), gomock.Any()).Return(&v1.DocumentQueryResponse{
 						Documents: []*v1.Document{
 							{
+								Key: &v1.Key{
+									Collection: &v1.Collection{
+										Name: "test",
+									},
+									Id: "test",
+								},
 								Content: sv,
 							},
 						},
@@ -143,15 +149,14 @@ var _ = Describe("Query", func() {
 
 					r, err := q.Fetch()
 
-					It("should not return an error", func() {
+					It("should return documents", func() {
+						By("not returning an error")
 						Expect(err).ToNot(HaveOccurred())
-					})
 
-					It("should have the returned documents", func() {
+						By("having the correct number of documents")
 						Expect(r.Documents).To(HaveLen(1))
-					})
 
-					It("should contain the returned document data", func() {
+						By("documents containing the expected data")
 						Expect(r.Documents[0].Content()).To(Equal(map[string]interface{}{
 							"test": "test",
 						}))

@@ -18,6 +18,8 @@ import "github.com/mitchellh/mapstructure"
 
 // Document - Interface for interacing with document API results
 type Document interface {
+	// Ref - Retrieve the original DocumentRef for this document
+	Ref() DocumentRef
 	// Content - Retrieve the documents content as a Map
 	Content() map[string]interface{}
 	// Decode - Decode document content into the given reference
@@ -25,7 +27,12 @@ type Document interface {
 }
 
 type documentImpl struct {
+	ref     DocumentRef
 	content map[string]interface{}
+}
+
+func (d *documentImpl) Ref() DocumentRef {
+	return d.ref
 }
 
 func (d *documentImpl) Content() map[string]interface{} {

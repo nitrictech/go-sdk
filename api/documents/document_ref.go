@@ -50,6 +50,29 @@ type documentRefImpl struct {
 	key string
 }
 
+// Construct a document reference from the wire
+func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef, error) {
+	if dc != nil && k != nil {
+		col, err := collectionRefFromWire(dc, k.GetCollection())
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &documentRefImpl{
+			dc:  dc,
+			col: col,
+			key: k.GetId(),
+		}, nil
+	} else {
+		if dc == nil {
+			return nil, fmt.Errorf("documentRefFromWireKey: missing document client!")
+		}
+
+		return nil, fmt.Errorf("documentRefFromWireKey: missing key reference!")
+	}
+}
+
 func (d *documentRefImpl) toWireKey() *v1.Key {
 	return &v1.Key{
 		Id:         d.key,
@@ -82,8 +105,6 @@ func (d *documentRefImpl) Delete() error {
 
 func (d *documentRefImpl) Set(content map[string]interface{}) error {
 	sv, err := structpb.NewStruct(content)
-
-	fmt.Println("struct", sv)
 
 	if err != nil {
 		return err
@@ -118,6 +139,7 @@ func (d *documentRefImpl) Get() (Document, error) {
 	}
 
 	return &documentImpl{
+		ref:     d,
 		content: res.GetDocument().GetContent().AsMap(),
 	}, nil
 }
