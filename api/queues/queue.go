@@ -27,8 +27,8 @@ type Queue interface {
 	Name() string
 	// Send - Push a number of tasks to a queue
 	Send([]*Task) ([]*FailedTask, error)
-	// Recieve - Retrieve tasks from a queue to a maximum of the given depth
-	Receive(int) ([]RecievedTask, error)
+	// Receive - Retrieve tasks from a queue to a maximum of the given depth
+	Receive(int) ([]ReceivedTask, error)
 }
 
 type queueImpl struct {
@@ -40,7 +40,7 @@ func (q *queueImpl) Name() string {
 	return q.name
 }
 
-func (q *queueImpl) Receive(depth int) ([]RecievedTask, error) {
+func (q *queueImpl) Receive(depth int) ([]ReceivedTask, error) {
 	if depth < 1 {
 		return nil, fmt.Errorf("Depth cannot be less than 1")
 	}
@@ -54,7 +54,7 @@ func (q *queueImpl) Receive(depth int) ([]RecievedTask, error) {
 		return nil, err
 	}
 
-	rts := make([]RecievedTask, len(r.GetTasks()))
+	rts := make([]ReceivedTask, len(r.GetTasks()))
 
 	for i, task := range r.GetTasks() {
 		rts[i] = &receivedTaskImpl{

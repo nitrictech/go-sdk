@@ -61,7 +61,7 @@ var _ = Describe("CollectionRef", func() {
 			})
 
 			It("should have the provided document key", func() {
-				Expect(di.key).To(Equal("test"))
+				Expect(di.id).To(Equal("test"))
 			})
 
 			It("should share a client with it's creating collectionRef", func() {
@@ -90,8 +90,8 @@ var _ = Describe("CollectionRef", func() {
 		When("translating a collection reference with a parent to wire", func() {
 			mpc := &collectionRefImpl{
 				parentDocument: &documentRefImpl{
-					key: "test-parent",
-					dc:  mdc,
+					id: "test-parent",
+					dc: mdc,
 					col: &collectionRefImpl{
 						name: "test-mock-parent",
 						dc:   mdc,

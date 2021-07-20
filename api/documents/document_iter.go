@@ -40,7 +40,6 @@ func (i *documentIterImpl) Next() (Document, error) {
 	}
 
 	return &documentImpl{
-		//construct document back reference here...
 		ref:     ref,
 		content: res.GetDocument().GetContent().AsMap(),
 	}, nil

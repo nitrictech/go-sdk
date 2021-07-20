@@ -31,7 +31,7 @@ type Task struct {
 	Payload map[string]interface{}
 }
 
-type RecievedTask interface {
+type ReceivedTask interface {
 	// Queue - Returns the name of the queue this task was retrieved from
 	Queue() string
 	// Task - Returns the Task data contained in this Recieved Task instance

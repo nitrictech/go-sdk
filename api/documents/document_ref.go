@@ -28,6 +28,10 @@ type DocumentRef interface {
 	// toWireKey - Translate this document ready for on-wire transport
 	toWireKey() *v1.Key
 
+	Parent() CollectionRef
+
+	Id() string
+
 	// Get - Retrieve the value of the document
 	Get() (Document, error)
 
@@ -46,8 +50,8 @@ type documentRefImpl struct {
 	dc v1.DocumentServiceClient
 	// A reference to this documents collection
 	col CollectionRef
-	// The key for this document
-	key string
+	// The id for this document
+	id string
 }
 
 // Construct a document reference from the wire
@@ -62,7 +66,7 @@ func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef
 		return &documentRefImpl{
 			dc:  dc,
 			col: col,
-			key: k.GetId(),
+			id:  k.GetId(),
 		}, nil
 	} else {
 		if dc == nil {
@@ -75,14 +79,25 @@ func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef
 
 func (d *documentRefImpl) toWireKey() *v1.Key {
 	return &v1.Key{
-		Id:         d.key,
+		Id:         d.id,
 		Collection: d.col.toWire(),
 	}
 }
 
+// Id - The documents ID
+func (d *documentRefImpl) Id() string {
+	return d.id
+}
+
+// Parent - Gets the Parent collection reference for this document
+func (d *documentRefImpl) Parent() CollectionRef {
+	return d.col
+}
+
+// Collection - Gets a subcollection for this document
 func (d *documentRefImpl) Collection(c string) (CollectionRef, error) {
 	if d.col.Parent() != nil {
-		return nil, fmt.Errorf("Nested sub-collections are currently not supported")
+		return nil, newCollectionDepthExceededError()
 	}
 
 	return &collectionRefImpl{
@@ -92,17 +107,16 @@ func (d *documentRefImpl) Collection(c string) (CollectionRef, error) {
 	}, nil
 }
 
+// Delete - Deletes the document this reference refers to if it exists
 func (d *documentRefImpl) Delete() error {
 	_, err := d.dc.Delete(context.TODO(), &v1.DocumentDeleteRequest{
-		Key: &v1.Key{
-			Collection: d.col.toWire(),
-			Id:         d.key,
-		},
+		Key: d.toWireKey(),
 	})
 
 	return err
 }
 
+// Set - Sets the contents of the document this reference refers to
 func (d *documentRefImpl) Set(content map[string]interface{}) error {
 	sv, err := structpb.NewStruct(content)
 
@@ -111,10 +125,7 @@ func (d *documentRefImpl) Set(content map[string]interface{}) error {
 	}
 
 	_, err = d.dc.Set(context.TODO(), &v1.DocumentSetRequest{
-		Key: &v1.Key{
-			Collection: d.col.toWire(),
-			Id:         d.key,
-		},
+		Key:     d.toWireKey(),
 		Content: sv,
 	})
 
@@ -125,13 +136,10 @@ type DecodeOption interface {
 	Apply(c *mapstructure.DecoderConfig)
 }
 
-// Get -
+// Get - Retrieves the Document this reference refers to if it exists
 func (d *documentRefImpl) Get() (Document, error) {
 	res, err := d.dc.Get(context.TODO(), &v1.DocumentGetRequest{
-		Key: &v1.Key{
-			Collection: d.col.toWire(),
-			Id:         d.key,
-		},
+		Key: d.toWireKey(),
 	})
 
 	if err != nil {

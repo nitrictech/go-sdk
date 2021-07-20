@@ -31,15 +31,17 @@ type documentImpl struct {
 	content map[string]interface{}
 }
 
+// Ref - Gets the Ref this document is referenced by
 func (d *documentImpl) Ref() DocumentRef {
 	return d.ref
 }
 
+// Content - Gets the raw content of this document as a Map
 func (d *documentImpl) Content() map[string]interface{} {
 	return d.content
 }
 
-// Decode -
+// Decode - Decodes the content of the document into the provided struct
 func (d *documentImpl) Decode(val interface{}, opts ...DecodeOption) error {
 	decoderConfig := mapstructure.DecoderConfig{
 		//DecodeHook:       nil,

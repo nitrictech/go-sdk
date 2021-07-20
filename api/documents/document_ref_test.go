@@ -30,8 +30,8 @@ var _ = Describe("DocumentRef", func() {
 	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 	md := &documentRefImpl{
-		dc:  mdc,
-		key: "test-doc",
+		dc: mdc,
+		id: "test-doc",
 		col: &collectionRefImpl{
 			name: "test-col",
 			dc:   mdc,
@@ -73,14 +73,14 @@ var _ = Describe("DocumentRef", func() {
 			mdp := &documentRefImpl{
 				dc:  mdc,
 				col: mc,
-				key: "test-doc",
+				id:  "test-doc",
 			}
 
 			_, err := mdp.Collection("test-collection")
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Nested sub-collections are currently not supported"))
+				Expect(err.Error()).To(Equal("Maximum collection depth 1 exceeded"))
 			})
 		})
 	})
@@ -95,8 +95,8 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc:  mdc,
-				key: "test-doc",
+				dc: mdc,
+				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
 					dc:   mdc,
@@ -120,8 +120,8 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc:  mdc,
-				key: "test-doc",
+				dc: mdc,
+				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
 					dc:   mdc,
@@ -146,8 +146,8 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc:  mdc,
-				key: "test-doc",
+				dc: mdc,
+				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
 					dc:   mdc,
@@ -173,8 +173,8 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc:  mdc,
-				key: "test-doc",
+				dc: mdc,
+				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
 					dc:   mdc,
@@ -201,8 +201,8 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc:  mdc,
-				key: "test-doc",
+				dc: mdc,
+				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
 					dc:   mdc,
@@ -233,8 +233,8 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc:  mdc,
-				key: "test-doc",
+				dc: mdc,
+				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
 					dc:   mdc,

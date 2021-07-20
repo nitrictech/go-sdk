@@ -23,7 +23,7 @@ import (
 
 // Query - Query interface for Document Service
 type Query interface {
-	// Where - Append an expression to the query
+	// Where - Append one or more expressions to the query
 	Where(...*queryExpression) Query
 
 	// Limit - limit the max result size of the query
@@ -68,8 +68,7 @@ type FetchResult struct {
 	PagingToken interface{}
 }
 
-func (q *queryImpl) Fetch() (*FetchResult, error) {
-	// build the expressions list
+func (q *queryImpl) expressionsToWire() ([]*v1.Expression, error) {
 	expressions := make([]*v1.Expression, 0, len(q.exps))
 
 	for _, e := range q.exps {
@@ -80,6 +79,17 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 		}
 
 		expressions = append(expressions, wexp)
+	}
+
+	return expressions, nil
+}
+
+func (q *queryImpl) Fetch() (*FetchResult, error) {
+	// build the expressions list
+	expressions, err := q.expressionsToWire()
+
+	if err != nil {
+		return nil, err
 	}
 
 	var token map[string]string = nil
@@ -106,10 +116,6 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 	docs := make([]Document, 0, len(r.GetDocuments()))
 
 	for _, d := range r.GetDocuments() {
-
-		fmt.Println("testing", d.GetKey())
-		// TODO: Handle error
-		// For now we'll just set the back reference to nil
 		ref, err := documentRefFromWireKey(q.dc, d.GetKey())
 
 		if err != nil {
@@ -131,16 +137,10 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 
 func (q *queryImpl) Stream() (DocumentIter, error) {
 	// build the expressions list
-	expressions := make([]*v1.Expression, 0, len(q.exps))
+	expressions, err := q.expressionsToWire()
 
-	for _, e := range q.exps {
-		wexp, err := e.toWire()
-
-		if err != nil {
-			return nil, err
-		}
-
-		expressions = append(expressions, wexp)
+	if err != nil {
+		return nil, err
 	}
 
 	r, err := q.dc.QueryStream(context.TODO(), &v1.DocumentQueryStreamRequest{

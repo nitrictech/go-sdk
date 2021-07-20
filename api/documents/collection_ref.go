@@ -22,6 +22,7 @@ import (
 
 // Collection
 type CollectionRef interface {
+	Name() string
 	Doc(string) DocumentRef
 	Query() Query
 	Parent() DocumentRef
@@ -34,19 +35,26 @@ type collectionRefImpl struct {
 	parentDocument DocumentRef
 }
 
+// Query - Returns a Query builder to construct queries against this collection
 func (c *collectionRefImpl) Query() Query {
 	return newQuery(c, c.dc)
+}
+
+// Name - Returns the name of the collection
+func (c *collectionRefImpl) Name() string {
+	return c.name
 }
 
 // Doc - Return a document reference for this collection
 func (c *collectionRefImpl) Doc(key string) DocumentRef {
 	return &documentRefImpl{
-		key: key,
+		id:  key,
 		dc:  c.dc,
 		col: c,
 	}
 }
 
+// Parent - Retrieve the parent document of this collection
 func (c *collectionRefImpl) Parent() DocumentRef {
 	return c.parentDocument
 }
@@ -88,5 +96,4 @@ func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (Colle
 			parentDocument: pd,
 		}, nil
 	}
-
 }
