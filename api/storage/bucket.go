@@ -1,4 +1,4 @@
-// Copyright 2021 Nitric Pty Ltd.
+// Copyright 2021 Nitric Technologies Pty Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package storage
 
-// NOTE:
-// This main package is a workaround for binary license scanning that forces transitive dependencies in
-// Code we're distributing to be analyzed
-import (
-	_ "github.com/nitrictech/go-sdk/api/documents"
-	_ "github.com/nitrictech/go-sdk/api/events"
-	_ "github.com/nitrictech/go-sdk/api/queues"
-	_ "github.com/nitrictech/go-sdk/api/storage"
-	_ "github.com/nitrictech/go-sdk/faas"
-)
+import v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 
-func main() {}
+type Bucket interface {
+	// Object - Get an object reference for in this bucket
+	File(key string) File
+}
+
+type bucketImpl struct {
+	sc   v1.StorageServiceClient
+	name string
+}
+
+func (b *bucketImpl) File(key string) File {
+	return &fileImpl{
+		sc:     b.sc,
+		bucket: b.name,
+		key:    key,
+	}
+}

@@ -4,7 +4,6 @@ package v1
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -15,46 +14,46 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// FaasClient is the client API for Faas service.
+// FaasServiceClient is the client API for FaasService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type FaasClient interface {
+type FaasServiceClient interface {
 	// Begin streaming triggers/response to/from the membrane
-	TriggerStream(ctx context.Context, opts ...grpc.CallOption) (Faas_TriggerStreamClient, error)
+	TriggerStream(ctx context.Context, opts ...grpc.CallOption) (FaasService_TriggerStreamClient, error)
 }
 
-type faasClient struct {
+type faasServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewFaasClient(cc grpc.ClientConnInterface) FaasClient {
-	return &faasClient{cc}
+func NewFaasServiceClient(cc grpc.ClientConnInterface) FaasServiceClient {
+	return &faasServiceClient{cc}
 }
 
-func (c *faasClient) TriggerStream(ctx context.Context, opts ...grpc.CallOption) (Faas_TriggerStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Faas_ServiceDesc.Streams[0], "/nitric.faas.v1.Faas/TriggerStream", opts...)
+func (c *faasServiceClient) TriggerStream(ctx context.Context, opts ...grpc.CallOption) (FaasService_TriggerStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &FaasService_ServiceDesc.Streams[0], "/nitric.faas.v1.FaasService/TriggerStream", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &faasTriggerStreamClient{stream}
+	x := &faasServiceTriggerStreamClient{stream}
 	return x, nil
 }
 
-type Faas_TriggerStreamClient interface {
+type FaasService_TriggerStreamClient interface {
 	Send(*ClientMessage) error
 	Recv() (*ServerMessage, error)
 	grpc.ClientStream
 }
 
-type faasTriggerStreamClient struct {
+type faasServiceTriggerStreamClient struct {
 	grpc.ClientStream
 }
 
-func (x *faasTriggerStreamClient) Send(m *ClientMessage) error {
+func (x *faasServiceTriggerStreamClient) Send(m *ClientMessage) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *faasTriggerStreamClient) Recv() (*ServerMessage, error) {
+func (x *faasServiceTriggerStreamClient) Recv() (*ServerMessage, error) {
 	m := new(ServerMessage)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -62,54 +61,54 @@ func (x *faasTriggerStreamClient) Recv() (*ServerMessage, error) {
 	return m, nil
 }
 
-// FaasServer is the server API for Faas service.
-// All implementations must embed UnimplementedFaasServer
+// FaasServiceServer is the server API for FaasService service.
+// All implementations must embed UnimplementedFaasServiceServer
 // for forward compatibility
-type FaasServer interface {
+type FaasServiceServer interface {
 	// Begin streaming triggers/response to/from the membrane
-	TriggerStream(Faas_TriggerStreamServer) error
-	mustEmbedUnimplementedFaasServer()
+	TriggerStream(FaasService_TriggerStreamServer) error
+	mustEmbedUnimplementedFaasServiceServer()
 }
 
-// UnimplementedFaasServer must be embedded to have forward compatible implementations.
-type UnimplementedFaasServer struct {
+// UnimplementedFaasServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedFaasServiceServer struct {
 }
 
-func (UnimplementedFaasServer) TriggerStream(Faas_TriggerStreamServer) error {
+func (UnimplementedFaasServiceServer) TriggerStream(FaasService_TriggerStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method TriggerStream not implemented")
 }
-func (UnimplementedFaasServer) mustEmbedUnimplementedFaasServer() {}
+func (UnimplementedFaasServiceServer) mustEmbedUnimplementedFaasServiceServer() {}
 
-// UnsafeFaasServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to FaasServer will
+// UnsafeFaasServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to FaasServiceServer will
 // result in compilation errors.
-type UnsafeFaasServer interface {
-	mustEmbedUnimplementedFaasServer()
+type UnsafeFaasServiceServer interface {
+	mustEmbedUnimplementedFaasServiceServer()
 }
 
-func RegisterFaasServer(s grpc.ServiceRegistrar, srv FaasServer) {
-	s.RegisterService(&Faas_ServiceDesc, srv)
+func RegisterFaasServiceServer(s grpc.ServiceRegistrar, srv FaasServiceServer) {
+	s.RegisterService(&FaasService_ServiceDesc, srv)
 }
 
-func _Faas_TriggerStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FaasServer).TriggerStream(&faasTriggerStreamServer{stream})
+func _FaasService_TriggerStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FaasServiceServer).TriggerStream(&faasServiceTriggerStreamServer{stream})
 }
 
-type Faas_TriggerStreamServer interface {
+type FaasService_TriggerStreamServer interface {
 	Send(*ServerMessage) error
 	Recv() (*ClientMessage, error)
 	grpc.ServerStream
 }
 
-type faasTriggerStreamServer struct {
+type faasServiceTriggerStreamServer struct {
 	grpc.ServerStream
 }
 
-func (x *faasTriggerStreamServer) Send(m *ServerMessage) error {
+func (x *faasServiceTriggerStreamServer) Send(m *ServerMessage) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *faasTriggerStreamServer) Recv() (*ClientMessage, error) {
+func (x *faasServiceTriggerStreamServer) Recv() (*ClientMessage, error) {
 	m := new(ClientMessage)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -117,17 +116,17 @@ func (x *faasTriggerStreamServer) Recv() (*ClientMessage, error) {
 	return m, nil
 }
 
-// Faas_ServiceDesc is the grpc.ServiceDesc for Faas service.
+// FaasService_ServiceDesc is the grpc.ServiceDesc for FaasService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Faas_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.faas.v1.Faas",
-	HandlerType: (*FaasServer)(nil),
+var FaasService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "nitric.faas.v1.FaasService",
+	HandlerType: (*FaasServiceServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "TriggerStream",
-			Handler:       _Faas_TriggerStream_Handler,
+			Handler:       _FaasService_TriggerStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

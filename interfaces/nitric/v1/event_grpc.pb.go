@@ -14,176 +14,176 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// EventClient is the client API for Event service.
+// EventServiceClient is the client API for EventService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type EventClient interface {
+type EventServiceClient interface {
 	// Publishes an message to a given topic
 	Publish(ctx context.Context, in *EventPublishRequest, opts ...grpc.CallOption) (*EventPublishResponse, error)
 }
 
-type eventClient struct {
+type eventServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewEventClient(cc grpc.ClientConnInterface) EventClient {
-	return &eventClient{cc}
+func NewEventServiceClient(cc grpc.ClientConnInterface) EventServiceClient {
+	return &eventServiceClient{cc}
 }
 
-func (c *eventClient) Publish(ctx context.Context, in *EventPublishRequest, opts ...grpc.CallOption) (*EventPublishResponse, error) {
+func (c *eventServiceClient) Publish(ctx context.Context, in *EventPublishRequest, opts ...grpc.CallOption) (*EventPublishResponse, error) {
 	out := new(EventPublishResponse)
-	err := c.cc.Invoke(ctx, "/nitric.event.v1.Event/Publish", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/nitric.event.v1.EventService/Publish", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// EventServer is the server API for Event service.
-// All implementations must embed UnimplementedEventServer
+// EventServiceServer is the server API for EventService service.
+// All implementations must embed UnimplementedEventServiceServer
 // for forward compatibility
-type EventServer interface {
+type EventServiceServer interface {
 	// Publishes an message to a given topic
 	Publish(context.Context, *EventPublishRequest) (*EventPublishResponse, error)
-	mustEmbedUnimplementedEventServer()
+	mustEmbedUnimplementedEventServiceServer()
 }
 
-// UnimplementedEventServer must be embedded to have forward compatible implementations.
-type UnimplementedEventServer struct {
+// UnimplementedEventServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedEventServiceServer struct {
 }
 
-func (UnimplementedEventServer) Publish(context.Context, *EventPublishRequest) (*EventPublishResponse, error) {
+func (UnimplementedEventServiceServer) Publish(context.Context, *EventPublishRequest) (*EventPublishResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
-func (UnimplementedEventServer) mustEmbedUnimplementedEventServer() {}
+func (UnimplementedEventServiceServer) mustEmbedUnimplementedEventServiceServer() {}
 
-// UnsafeEventServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to EventServer will
+// UnsafeEventServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to EventServiceServer will
 // result in compilation errors.
-type UnsafeEventServer interface {
-	mustEmbedUnimplementedEventServer()
+type UnsafeEventServiceServer interface {
+	mustEmbedUnimplementedEventServiceServer()
 }
 
-func RegisterEventServer(s grpc.ServiceRegistrar, srv EventServer) {
-	s.RegisterService(&Event_ServiceDesc, srv)
+func RegisterEventServiceServer(s grpc.ServiceRegistrar, srv EventServiceServer) {
+	s.RegisterService(&EventService_ServiceDesc, srv)
 }
 
-func _Event_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EventService_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EventPublishRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EventServer).Publish(ctx, in)
+		return srv.(EventServiceServer).Publish(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.event.v1.Event/Publish",
+		FullMethod: "/nitric.event.v1.EventService/Publish",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventServer).Publish(ctx, req.(*EventPublishRequest))
+		return srv.(EventServiceServer).Publish(ctx, req.(*EventPublishRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Event_ServiceDesc is the grpc.ServiceDesc for Event service.
+// EventService_ServiceDesc is the grpc.ServiceDesc for EventService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Event_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.event.v1.Event",
-	HandlerType: (*EventServer)(nil),
+var EventService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "nitric.event.v1.EventService",
+	HandlerType: (*EventServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Publish",
-			Handler:    _Event_Publish_Handler,
+			Handler:    _EventService_Publish_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "event/v1/event.proto",
 }
 
-// TopicClient is the client API for Topic service.
+// TopicServiceClient is the client API for TopicService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TopicClient interface {
+type TopicServiceClient interface {
 	// Return a list of existing topics in the provider environment
 	List(ctx context.Context, in *TopicListRequest, opts ...grpc.CallOption) (*TopicListResponse, error)
 }
 
-type topicClient struct {
+type topicServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewTopicClient(cc grpc.ClientConnInterface) TopicClient {
-	return &topicClient{cc}
+func NewTopicServiceClient(cc grpc.ClientConnInterface) TopicServiceClient {
+	return &topicServiceClient{cc}
 }
 
-func (c *topicClient) List(ctx context.Context, in *TopicListRequest, opts ...grpc.CallOption) (*TopicListResponse, error) {
+func (c *topicServiceClient) List(ctx context.Context, in *TopicListRequest, opts ...grpc.CallOption) (*TopicListResponse, error) {
 	out := new(TopicListResponse)
-	err := c.cc.Invoke(ctx, "/nitric.event.v1.Topic/List", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/nitric.event.v1.TopicService/List", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// TopicServer is the server API for Topic service.
-// All implementations must embed UnimplementedTopicServer
+// TopicServiceServer is the server API for TopicService service.
+// All implementations must embed UnimplementedTopicServiceServer
 // for forward compatibility
-type TopicServer interface {
+type TopicServiceServer interface {
 	// Return a list of existing topics in the provider environment
 	List(context.Context, *TopicListRequest) (*TopicListResponse, error)
-	mustEmbedUnimplementedTopicServer()
+	mustEmbedUnimplementedTopicServiceServer()
 }
 
-// UnimplementedTopicServer must be embedded to have forward compatible implementations.
-type UnimplementedTopicServer struct {
+// UnimplementedTopicServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedTopicServiceServer struct {
 }
 
-func (UnimplementedTopicServer) List(context.Context, *TopicListRequest) (*TopicListResponse, error) {
+func (UnimplementedTopicServiceServer) List(context.Context, *TopicListRequest) (*TopicListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
-func (UnimplementedTopicServer) mustEmbedUnimplementedTopicServer() {}
+func (UnimplementedTopicServiceServer) mustEmbedUnimplementedTopicServiceServer() {}
 
-// UnsafeTopicServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TopicServer will
+// UnsafeTopicServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TopicServiceServer will
 // result in compilation errors.
-type UnsafeTopicServer interface {
-	mustEmbedUnimplementedTopicServer()
+type UnsafeTopicServiceServer interface {
+	mustEmbedUnimplementedTopicServiceServer()
 }
 
-func RegisterTopicServer(s grpc.ServiceRegistrar, srv TopicServer) {
-	s.RegisterService(&Topic_ServiceDesc, srv)
+func RegisterTopicServiceServer(s grpc.ServiceRegistrar, srv TopicServiceServer) {
+	s.RegisterService(&TopicService_ServiceDesc, srv)
 }
 
-func _Topic_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TopicService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TopicListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TopicServer).List(ctx, in)
+		return srv.(TopicServiceServer).List(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nitric.event.v1.Topic/List",
+		FullMethod: "/nitric.event.v1.TopicService/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TopicServer).List(ctx, req.(*TopicListRequest))
+		return srv.(TopicServiceServer).List(ctx, req.(*TopicListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Topic_ServiceDesc is the grpc.ServiceDesc for Topic service.
+// TopicService_ServiceDesc is the grpc.ServiceDesc for TopicService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Topic_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "nitric.event.v1.Topic",
-	HandlerType: (*TopicServer)(nil),
+var TopicService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "nitric.event.v1.TopicService",
+	HandlerType: (*TopicServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "List",
-			Handler:    _Topic_List_Handler,
+			Handler:    _TopicService_List_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

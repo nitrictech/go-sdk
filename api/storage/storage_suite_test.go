@@ -1,4 +1,4 @@
-// Copyright 2021 Nitric Pty Ltd.
+// Copyright 2021 Nitric Technologies Pty Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package storage
 
-// NOTE:
-// This main package is a workaround for binary license scanning that forces transitive dependencies in
-// Code we're distributing to be analyzed
 import (
-	_ "github.com/nitrictech/go-sdk/api/documents"
-	_ "github.com/nitrictech/go-sdk/api/events"
-	_ "github.com/nitrictech/go-sdk/api/queues"
-	_ "github.com/nitrictech/go-sdk/api/storage"
-	_ "github.com/nitrictech/go-sdk/faas"
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func main() {}
+func TestStorage(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Storage Suite")
+}
