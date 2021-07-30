@@ -2,9 +2,11 @@
   <img src="./docs/assets/dot_matrix_logo_go.png" alt="Nitric Logo"/>
 </p>
 
-# Nitric SDK for Go
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/nitrictech/go-sdk)](https://goreportcard.com/report/github.com/nitrictech/go-sdk)
 ![test status](https://github.com/nitrictech/go-sdk/actions/workflows/test.yaml/badge.svg?branch=main)
+[![codecov](https://codecov.io/gh/nitrictech/go-sdk/branch/main/graph/badge.svg?token=TYH4QAZI07)](https://codecov.io/gh/nitrictech/go-sdk)
+
+# Nitric SDK for Go
 
 Client libarary for interfacing with the Nitric APIs as well as the creation of golang functions with Nitric.
 
