@@ -47,7 +47,11 @@ generate-mocks:
 	@echo Generating Mock RPC Clients
 	@go run github.com/golang/mock/mockgen github.com/nitrictech/go-sdk/interfaces/nitric/v1 DocumentServiceClient,EventServiceClient,TopicServiceClient,QueueServiceClient,StorageServiceClient,FaasServiceClient,FaasService_TriggerStreamClient,DocumentService_QueryStreamClient,SecretServiceClient > mocks/clients.go
 
+# Runs tests for coverage upload to codecov.io
+test-ci: generate-mocks
+	@echo Testing Nitric Go SDK
+	@go run github.com/onsi/ginkgo/ginkgo -cover -outputdir=./ -coverprofile=all.coverprofile ./...
+
 test: generate-mocks
 	@echo Testing Nitric Go SDK
-	@go run github.com/onsi/ginkgo/ginkgo -cover ./api/...
-	@go run github.com/onsi/ginkgo/ginkgo -cover ./faas/...
+	@go run github.com/onsi/ginkgo/ginkgo -cover ./...
