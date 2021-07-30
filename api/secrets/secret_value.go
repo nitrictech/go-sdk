@@ -16,8 +16,8 @@ package secrets
 
 // SecretValue - Interface
 type SecretValue interface {
-	// SecretVersionRef - Returns a reference to the version of this value
-	Ref() SecretVersionRef
+	// Version - Returns a reference to the version of this value
+	Version() SecretVersionRef
 	// AsBytes - Returns the secret value as bytes
 	AsBytes() []byte
 	// AsString - Returns the secret value as a string
@@ -29,7 +29,7 @@ type secretValueImpl struct {
 	val     []byte
 }
 
-func (s *secretValueImpl) Ref() SecretVersionRef {
+func (s *secretValueImpl) Version() SecretVersionRef {
 	return s.version
 }
 
