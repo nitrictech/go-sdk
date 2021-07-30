@@ -33,7 +33,7 @@ var _ = Describe("secretValueImpl", func() {
 			}
 
 			It("should return it's internal version field", func() {
-				Expect(svi.Ref()).To(Equal(svi.version))
+				Expect(svi.Version()).To(Equal(svi.version))
 			})
 		})
 	})
