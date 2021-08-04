@@ -17,6 +17,7 @@ package secrets
 import (
 	"context"
 
+	"github.com/nitrictech/go-sdk/api/errors"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -46,7 +47,7 @@ func (s *secretRefImpl) Put(sec []byte) (SecretVersionRef, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	return &secretVersionRefImpl{

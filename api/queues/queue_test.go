@@ -51,7 +51,7 @@ var _ = Describe("Queue", func() {
 
 			It("should pass through the error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("mock error"))
+				Expect(err.Error()).To(Equal("Unknown: mock error"))
 			})
 		})
 
@@ -110,7 +110,7 @@ var _ = Describe("Queue", func() {
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(Equal("Depth cannot be less than 1"))
+					Expect(err.Error()).To(Equal("Invalid Argument: Queue.Receive: depth cannot be less than 1"))
 				})
 			})
 

@@ -82,7 +82,9 @@ var _ = Describe("DocumentRef", func() {
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Maximum collection depth 1 exceeded"))
+				Expect(err.Error()).To(Equal(
+					"Invalid Argument: DocumentRef.Collection: Maximum collection depth: 1 exceeded",
+				))
 			})
 		})
 	})

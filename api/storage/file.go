@@ -17,6 +17,7 @@ package storage
 import (
 	"context"
 
+	"github.com/nitrictech/go-sdk/api/errors"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -43,27 +44,31 @@ func (o *fileImpl) Read() ([]byte, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	return r.GetBody(), nil
 }
 
 func (o *fileImpl) Write(content []byte) error {
-	_, err := o.sc.Write(context.TODO(), &v1.StorageWriteRequest{
+	if _, err := o.sc.Write(context.TODO(), &v1.StorageWriteRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 		Body:       content,
-	})
+	}); err != nil {
+		return errors.FromGrpcError(err)
+	}
 
-	return err
+	return nil
 }
 
 func (o *fileImpl) Delete() error {
-	_, err := o.sc.Delete(context.TODO(), &v1.StorageDeleteRequest{
+	if _, err := o.sc.Delete(context.TODO(), &v1.StorageDeleteRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
-	})
+	}); err != nil {
+		return errors.FromGrpcError(err)
+	}
 
-	return err
+	return nil
 }

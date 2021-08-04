@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
 	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
@@ -36,7 +38,7 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, error
 
 		if err != nil {
 			// TODO: Make sure we use the correct kind of error types here
-			errorCh <- err
+			errorCh <- errors.FromGrpcError(err)
 			break
 		}
 
@@ -47,7 +49,11 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, error
 			if err != nil {
 				fmt.Println("There was an error reading the TriggerRequest", err)
 				// Return a bad request here...
-				errorCh <- fmt.Errorf("There was an error reading the TriggerRequest")
+				errorCh <- errors.NewWithCause(
+					codes.Internal,
+					"faasLoop: error reading the TriggerRequest",
+					err,
+				)
 				break
 			}
 			// Let the membrane know the function is ready for initialization
@@ -82,7 +88,7 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, error
 
 			if err := stream.Send(clientMsg); err != nil {
 				fmt.Println("Failed to send msg", err)
-				errorCh <- err
+				errorCh <- errors.FromGrpcError(err)
 				break
 			}
 		} else if srvrMsg.GetInitResponse() != nil {
@@ -95,10 +101,17 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, error
 // Begins streaming using the default Nitric FaaS gRPC client
 // This should be the only method called in the 'main' method of your entrypoint package
 func Start(f NitricFunction) error {
-	conn, err := grpc.Dial(constants.NitricAddress(), grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		constants.NitricAddress(),
+		constants.DefaultOptions()...,
+	)
 
 	if err != nil {
-		return err
+		return errors.NewWithCause(
+			codes.Unavailable,
+			"faas.Start: Unable to reach FaasServiceServer",
+			err,
+		)
 	}
 
 	FaasServiceClient := pb.NewFaasServiceClient(conn)

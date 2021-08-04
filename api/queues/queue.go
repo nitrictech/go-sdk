@@ -16,8 +16,9 @@ package queues
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -42,7 +43,7 @@ func (q *queueImpl) Name() string {
 
 func (q *queueImpl) Receive(depth int) ([]ReceivedTask, error) {
 	if depth < 1 {
-		return nil, fmt.Errorf("Depth cannot be less than 1")
+		return nil, errors.New(codes.InvalidArgument, "Queue.Receive: depth cannot be less than 1")
 	}
 
 	r, err := q.c.Receive(context.TODO(), &v1.QueueReceiveRequest{
@@ -51,7 +52,7 @@ func (q *queueImpl) Receive(depth int) ([]ReceivedTask, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	rts := make([]ReceivedTask, len(r.GetTasks()))
@@ -74,7 +75,11 @@ func (q *queueImpl) Send(tasks []*Task) ([]*FailedTask, error) {
 	for i, task := range tasks {
 		wireTask, err := taskToWire(task)
 		if err != nil {
-			return nil, err
+			return nil, errors.NewWithCause(
+				codes.Internal,
+				"Queue.Send: Unable to send tasks",
+				err,
+			)
 		}
 		wireTasks[i] = wireTask
 	}
@@ -85,7 +90,7 @@ func (q *queueImpl) Send(tasks []*Task) ([]*FailedTask, error) {
 		Tasks: wireTasks,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	// Convert the gRPC Failed Tasks to SDK Failed Task objects

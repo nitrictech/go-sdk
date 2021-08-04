@@ -16,6 +16,7 @@ package documents
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -104,7 +105,10 @@ func (d *documentRefImpl) Parent() CollectionRef {
 // Collection - Gets a subcollection for this document
 func (d *documentRefImpl) Collection(c string) (CollectionRef, error) {
 	if d.col.Parent() != nil {
-		return nil, newCollectionDepthExceededError()
+		return nil, errors.New(
+			codes.InvalidArgument,
+			fmt.Sprintf("DocumentRef.Collection: Maximum collection depth: %d exceeded", MaxCollectionDepth),
+		)
 	}
 
 	return &collectionRefImpl{

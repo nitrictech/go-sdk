@@ -17,6 +17,8 @@ package faas
 import (
 	"encoding/json"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -44,7 +46,15 @@ func (n *NitricTrigger) GetMimeType() string {
 
 // GetDataAsStruct - Unmarshals the request body from JSON to the provided interface{}
 func (n *NitricTrigger) GetDataAsStruct(object interface{}) error {
-	return json.Unmarshal(n.data, object)
+	if err := json.Unmarshal(n.data, object); err != nil {
+		return errors.NewWithCause(
+			codes.InvalidArgument,
+			"NitricTrigger.GetDataAsStruct",
+			err,
+		)
+	}
+
+	return nil
 }
 
 // DefaultResponse - Returns a default response object dependent on the Trigger context
