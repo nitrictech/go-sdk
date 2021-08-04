@@ -22,6 +22,8 @@ import (
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -142,7 +144,7 @@ var _ = Describe("DocumentRef", func() {
 
 			mdc.EXPECT().Set(gomock.Any(), gomock.Any()).Return(
 				nil,
-				fmt.Errorf("mock-error"),
+				status.Error(codes.Unimplemented, "mock-error"),
 			)
 
 			md := &documentRefImpl{
@@ -158,9 +160,9 @@ var _ = Describe("DocumentRef", func() {
 				"test": "test",
 			})
 
-			It("should pass through the returned error", func() {
+			It("should unwrap the returned error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("mock-error"))
+				Expect(err.Error()).To(Equal("Unimplemented: mock-error"))
 			})
 		})
 
@@ -213,7 +215,7 @@ var _ = Describe("DocumentRef", func() {
 
 			It("should pass through the returned error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("mock-error"))
+				Expect(err.Error()).To(Equal("Unknown: mock-error"))
 			})
 		})
 

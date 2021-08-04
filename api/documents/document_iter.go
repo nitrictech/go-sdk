@@ -14,7 +14,13 @@
 
 package documents
 
-import v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+import (
+	"io"
+
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
+	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+)
 
 // DocumentIter - An iterator for lazy document retrieval
 type DocumentIter interface {
@@ -27,16 +33,19 @@ type documentIterImpl struct {
 	str v1.DocumentService_QueryStreamClient
 }
 
+// Next - Returns the next document in the iterator or io.EOF when done
 func (i *documentIterImpl) Next() (Document, error) {
 	res, err := i.str.Recv()
 
-	if err != nil {
-		return nil, err
+	if err != nil && err != io.EOF {
+		return nil, errors.FromGrpcError(err)
+	} else if err == io.EOF {
+		return nil, io.EOF
 	}
 
 	ref, err := documentRefFromWireKey(i.dc, res.GetDocument().GetKey())
 	if err != nil {
-		return nil, err
+		return nil, errors.NewWithCause(codes.Internal, "DocumentIter.Next", err)
 	}
 
 	return &documentImpl{

@@ -15,8 +15,8 @@
 package documents
 
 import (
-	"fmt"
-
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -81,5 +81,5 @@ func (v *value) toWire() (*v1.ExpressionValue, error) {
 		}, nil
 	}
 
-	return nil, fmt.Errorf("Invalid query value")
+	return nil, errors.New(codes.InvalidArgument, "value.toWire: Invalid Query Value")
 }

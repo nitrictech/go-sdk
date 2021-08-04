@@ -16,9 +16,10 @@ package documents
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -70,10 +71,16 @@ func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef
 		}, nil
 	} else {
 		if dc == nil {
-			return nil, fmt.Errorf("documentRefFromWireKey: missing document client!")
+			return nil, errors.New(
+				codes.Internal,
+				"documentRefFromWireKey: provide non-nil DocumentServiceClient",
+			)
 		}
 
-		return nil, fmt.Errorf("documentRefFromWireKey: missing key reference!")
+		return nil, errors.New(
+			codes.Internal,
+			"documentRefFromWireKey: provide non-nil Key",
+		)
 	}
 }
 
@@ -121,15 +128,21 @@ func (d *documentRefImpl) Set(content map[string]interface{}) error {
 	sv, err := structpb.NewStruct(content)
 
 	if err != nil {
-		return err
+		return errors.NewWithCause(
+			codes.Internal,
+			"DocumentRef.Set: Unable to create protobuf struct",
+			err,
+		)
 	}
 
-	_, err = d.dc.Set(context.TODO(), &v1.DocumentSetRequest{
+	if _, err = d.dc.Set(context.TODO(), &v1.DocumentSetRequest{
 		Key:     d.toWireKey(),
 		Content: sv,
-	})
+	}); err != nil {
+		return errors.FromGrpcError(err)
+	}
 
-	return err
+	return nil
 }
 
 type DecodeOption interface {
@@ -143,7 +156,7 @@ func (d *documentRefImpl) Get() (Document, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	return &documentImpl{

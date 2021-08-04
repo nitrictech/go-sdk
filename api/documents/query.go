@@ -16,8 +16,9 @@ package documents
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -97,7 +98,7 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 		t, ok := q.pt.(map[string]string)
 
 		if !ok {
-			return nil, fmt.Errorf("Invalid paging token provided!")
+			return nil, errors.New(codes.InvalidArgument, "Query.Fetch: Paging Token invalid")
 		}
 		token = t
 	}
@@ -110,7 +111,7 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	docs := make([]Document, 0, len(r.GetDocuments()))
@@ -120,7 +121,7 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 
 		if err != nil {
 			// XXX: Potentially just log an error and continue
-			return nil, fmt.Errorf("Fetch Error: Failed to construct document reference for result (%v)", err)
+			return nil, err
 		}
 
 		docs = append(docs, &documentImpl{
@@ -150,7 +151,7 @@ func (q *queryImpl) Stream() (DocumentIter, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	// TODO: Return result iterator

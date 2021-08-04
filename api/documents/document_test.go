@@ -89,9 +89,9 @@ var _ = Describe("Document", func() {
 				Expect(test).To(BeNil())
 			})
 
-			It("should not return an error", func() {
+			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("result must be addressable (a pointer)"))
+				Expect(err.Error()).To(Equal("Internal: Document.Decode: \n result must be addressable (a pointer)"))
 			})
 		})
 	})

@@ -164,7 +164,7 @@ var _ = Describe("QueryValue", func() {
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(Equal("Invalid query value"))
+					Expect(err.Error()).To(Equal("Invalid Argument: value.toWire: Invalid Query Value"))
 				})
 			})
 		})

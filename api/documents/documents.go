@@ -15,6 +15,8 @@
 package documents
 
 import (
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
@@ -46,7 +48,7 @@ func New() (Documents, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.NewWithCause(codes.Internal, "documents.New", err)
 	}
 
 	dc := v1.NewDocumentServiceClient(conn)
