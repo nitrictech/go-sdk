@@ -107,7 +107,7 @@ func (x *documentServiceQueryStreamClient) Recv() (*DocumentQueryStreamResponse,
 }
 
 // DocumentServiceServer is the server API for DocumentService service.
-// All implementations must embed UnimplementedDocumentServiceServer
+// All implementations should embed UnimplementedDocumentServiceServer
 // for forward compatibility
 type DocumentServiceServer interface {
 	// Get an existing document
@@ -120,10 +120,9 @@ type DocumentServiceServer interface {
 	Query(context.Context, *DocumentQueryRequest) (*DocumentQueryResponse, error)
 	// Query the document collection (supports streaming)
 	QueryStream(*DocumentQueryStreamRequest, DocumentService_QueryStreamServer) error
-	mustEmbedUnimplementedDocumentServiceServer()
 }
 
-// UnimplementedDocumentServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedDocumentServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedDocumentServiceServer struct {
 }
 
@@ -142,7 +141,6 @@ func (UnimplementedDocumentServiceServer) Query(context.Context, *DocumentQueryR
 func (UnimplementedDocumentServiceServer) QueryStream(*DocumentQueryStreamRequest, DocumentService_QueryStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method QueryStream not implemented")
 }
-func (UnimplementedDocumentServiceServer) mustEmbedUnimplementedDocumentServiceServer() {}
 
 // UnsafeDocumentServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to DocumentServiceServer will

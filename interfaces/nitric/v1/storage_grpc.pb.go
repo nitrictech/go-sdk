@@ -62,7 +62,7 @@ func (c *storageServiceClient) Delete(ctx context.Context, in *StorageDeleteRequ
 }
 
 // StorageServiceServer is the server API for StorageService service.
-// All implementations must embed UnimplementedStorageServiceServer
+// All implementations should embed UnimplementedStorageServiceServer
 // for forward compatibility
 type StorageServiceServer interface {
 	// Retrieve an item from a bucket
@@ -71,10 +71,9 @@ type StorageServiceServer interface {
 	Write(context.Context, *StorageWriteRequest) (*StorageWriteResponse, error)
 	// Delete an item from a bucket
 	Delete(context.Context, *StorageDeleteRequest) (*StorageDeleteResponse, error)
-	mustEmbedUnimplementedStorageServiceServer()
 }
 
-// UnimplementedStorageServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedStorageServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedStorageServiceServer struct {
 }
 
@@ -87,7 +86,6 @@ func (UnimplementedStorageServiceServer) Write(context.Context, *StorageWriteReq
 func (UnimplementedStorageServiceServer) Delete(context.Context, *StorageDeleteRequest) (*StorageDeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedStorageServiceServer) mustEmbedUnimplementedStorageServiceServer() {}
 
 // UnsafeStorageServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to StorageServiceServer will

@@ -40,18 +40,23 @@ clean:
 generate-proto: clean
 	@echo Generating Proto Sources
 	@mkdir -p ./interfaces/
-	@protoc --go_out=./interfaces/ --go-grpc_out=./interfaces/ -I ./contracts/proto/ ./contracts/proto/*/**/*.proto
+	@protoc --go_out=./interfaces/ --go-grpc_out=require_unimplemented_servers=false:./interfaces/ -I ./contracts/proto/ ./contracts/proto/*/**/*.proto
 
 # Generate mock implementations
 generate-mocks:
 	@echo Generating Mock RPC Clients
 	@go run github.com/golang/mock/mockgen github.com/nitrictech/go-sdk/interfaces/nitric/v1 DocumentServiceClient,EventServiceClient,TopicServiceClient,QueueServiceClient,StorageServiceClient,FaasServiceClient,FaasService_TriggerStreamClient,DocumentService_QueryStreamClient,SecretServiceClient > mocks/clients.go
+	@go run github.com/golang/mock/mockgen github.com/nitrictech/go-sdk/interfaces/nitric/v1 DocumentServiceServer,EventServiceServer,TopicServiceServer,QueueServiceServer,StorageServiceServer,FaasServiceServer,FaasService_TriggerStreamServer,DocumentService_QueryStreamServer,SecretServiceServer > mocks/servers.go
 
 # Runs tests for coverage upload to codecov.io
 test-ci: generate-mocks
 	@echo Testing Nitric Go SDK
-	@go run github.com/onsi/ginkgo/ginkgo -cover -outputdir=./ -coverprofile=all.coverprofile ./...
+	@go run github.com/onsi/ginkgo/ginkgo -cover -outputdir=./ -coverprofile=all.coverprofile ./api/... ./faas/...
+
+test-examples: generate-mocks
+	@echo Testing Nitric Go SDK Examples
+	@go test -timeout 30s ./examples/...
 
 test: generate-mocks
 	@echo Testing Nitric Go SDK
-	@go run github.com/onsi/ginkgo/ginkgo -cover ./...
+	@go run github.com/onsi/ginkgo/ginkgo -cover ./api/... ./faas/...

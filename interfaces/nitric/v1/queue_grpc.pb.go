@@ -73,7 +73,7 @@ func (c *queueServiceClient) Complete(ctx context.Context, in *QueueCompleteRequ
 }
 
 // QueueServiceServer is the server API for QueueService service.
-// All implementations must embed UnimplementedQueueServiceServer
+// All implementations should embed UnimplementedQueueServiceServer
 // for forward compatibility
 type QueueServiceServer interface {
 	// Send a single event to a queue
@@ -84,10 +84,9 @@ type QueueServiceServer interface {
 	Receive(context.Context, *QueueReceiveRequest) (*QueueReceiveResponse, error)
 	// Complete an event previously popped from a queue
 	Complete(context.Context, *QueueCompleteRequest) (*QueueCompleteResponse, error)
-	mustEmbedUnimplementedQueueServiceServer()
 }
 
-// UnimplementedQueueServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedQueueServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedQueueServiceServer struct {
 }
 
@@ -103,7 +102,6 @@ func (UnimplementedQueueServiceServer) Receive(context.Context, *QueueReceiveReq
 func (UnimplementedQueueServiceServer) Complete(context.Context, *QueueCompleteRequest) (*QueueCompleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Complete not implemented")
 }
-func (UnimplementedQueueServiceServer) mustEmbedUnimplementedQueueServiceServer() {}
 
 // UnsafeQueueServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to QueueServiceServer will
