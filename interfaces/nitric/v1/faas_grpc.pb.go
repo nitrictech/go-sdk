@@ -62,22 +62,20 @@ func (x *faasServiceTriggerStreamClient) Recv() (*ServerMessage, error) {
 }
 
 // FaasServiceServer is the server API for FaasService service.
-// All implementations must embed UnimplementedFaasServiceServer
+// All implementations should embed UnimplementedFaasServiceServer
 // for forward compatibility
 type FaasServiceServer interface {
 	// Begin streaming triggers/response to/from the membrane
 	TriggerStream(FaasService_TriggerStreamServer) error
-	mustEmbedUnimplementedFaasServiceServer()
 }
 
-// UnimplementedFaasServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedFaasServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedFaasServiceServer struct {
 }
 
 func (UnimplementedFaasServiceServer) TriggerStream(FaasService_TriggerStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method TriggerStream not implemented")
 }
-func (UnimplementedFaasServiceServer) mustEmbedUnimplementedFaasServiceServer() {}
 
 // UnsafeFaasServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to FaasServiceServer will

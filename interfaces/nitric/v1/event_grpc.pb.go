@@ -40,22 +40,20 @@ func (c *eventServiceClient) Publish(ctx context.Context, in *EventPublishReques
 }
 
 // EventServiceServer is the server API for EventService service.
-// All implementations must embed UnimplementedEventServiceServer
+// All implementations should embed UnimplementedEventServiceServer
 // for forward compatibility
 type EventServiceServer interface {
 	// Publishes an message to a given topic
 	Publish(context.Context, *EventPublishRequest) (*EventPublishResponse, error)
-	mustEmbedUnimplementedEventServiceServer()
 }
 
-// UnimplementedEventServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedEventServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedEventServiceServer struct {
 }
 
 func (UnimplementedEventServiceServer) Publish(context.Context, *EventPublishRequest) (*EventPublishResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
-func (UnimplementedEventServiceServer) mustEmbedUnimplementedEventServiceServer() {}
 
 // UnsafeEventServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to EventServiceServer will
@@ -128,22 +126,20 @@ func (c *topicServiceClient) List(ctx context.Context, in *TopicListRequest, opt
 }
 
 // TopicServiceServer is the server API for TopicService service.
-// All implementations must embed UnimplementedTopicServiceServer
+// All implementations should embed UnimplementedTopicServiceServer
 // for forward compatibility
 type TopicServiceServer interface {
 	// Return a list of existing topics in the provider environment
 	List(context.Context, *TopicListRequest) (*TopicListResponse, error)
-	mustEmbedUnimplementedTopicServiceServer()
 }
 
-// UnimplementedTopicServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedTopicServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedTopicServiceServer struct {
 }
 
 func (UnimplementedTopicServiceServer) List(context.Context, *TopicListRequest) (*TopicListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
-func (UnimplementedTopicServiceServer) mustEmbedUnimplementedTopicServiceServer() {}
 
 // UnsafeTopicServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to TopicServiceServer will

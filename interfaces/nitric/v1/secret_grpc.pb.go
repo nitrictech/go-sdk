@@ -51,17 +51,16 @@ func (c *secretServiceClient) Access(ctx context.Context, in *SecretAccessReques
 }
 
 // SecretServiceServer is the server API for SecretService service.
-// All implementations must embed UnimplementedSecretServiceServer
+// All implementations should embed UnimplementedSecretServiceServer
 // for forward compatibility
 type SecretServiceServer interface {
 	// Updates a secret, creating a new one if it doesn't already exist
 	Put(context.Context, *SecretPutRequest) (*SecretPutResponse, error)
 	// Gets a secret from a Secret Store
 	Access(context.Context, *SecretAccessRequest) (*SecretAccessResponse, error)
-	mustEmbedUnimplementedSecretServiceServer()
 }
 
-// UnimplementedSecretServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedSecretServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedSecretServiceServer struct {
 }
 
@@ -71,7 +70,6 @@ func (UnimplementedSecretServiceServer) Put(context.Context, *SecretPutRequest) 
 func (UnimplementedSecretServiceServer) Access(context.Context, *SecretAccessRequest) (*SecretAccessResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Access not implemented")
 }
-func (UnimplementedSecretServiceServer) mustEmbedUnimplementedSecretServiceServer() {}
 
 // UnsafeSecretServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to SecretServiceServer will
