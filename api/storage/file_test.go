@@ -40,7 +40,7 @@ var _ = Describe("Object", func() {
 			It("should pass through the returned error", func() {
 				_, err := obj.Read()
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("mock error"))
+				Expect(err.Error()).To(Equal("Unknown: mock error"))
 			})
 		})
 
@@ -76,7 +76,7 @@ var _ = Describe("Object", func() {
 			It("should pass through the returned error", func() {
 				err := obj.Write([]byte("test"))
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("mock error"))
+				Expect(err.Error()).To(Equal("Unknown: mock error"))
 			})
 		})
 
@@ -109,7 +109,7 @@ var _ = Describe("Object", func() {
 			It("should pass through the returned error", func() {
 				err := obj.Delete()
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("mock error"))
+				Expect(err.Error()).To(Equal("Unknown: mock error"))
 			})
 		})
 

@@ -16,8 +16,9 @@ package events
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -41,7 +42,7 @@ func (s *topicImpl) Publish(evt *Event) (*Event, error) {
 	// Convert payload to Protobuf Struct
 	payloadStruct, err := structpb.NewStruct(evt.Payload)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize payload: %s", err)
+		return nil, errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
 	}
 
 	r, err := s.ec.Publish(context.TODO(), &v1.EventPublishRequest{
@@ -54,7 +55,7 @@ func (s *topicImpl) Publish(evt *Event) (*Event, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.FromGrpcError(err)
 	}
 
 	// Return a reference to a new event with a populated ID

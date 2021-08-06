@@ -14,7 +14,11 @@
 
 package documents
 
-import "github.com/mitchellh/mapstructure"
+import (
+	"github.com/mitchellh/mapstructure"
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
+)
 
 // Document - Interface for interacing with document API results
 type Document interface {
@@ -62,7 +66,13 @@ func (d *documentImpl) Decode(val interface{}, opts ...DecodeOption) error {
 	// Decode the value into the object
 	decoder, err := mapstructure.NewDecoder(&decoderConfig)
 	if err != nil {
-		return err
+		return errors.NewWithCause(codes.Internal, "Document.Decode", err)
 	}
-	return decoder.Decode(d.content)
+	err = decoder.Decode(d.content)
+
+	if err != nil {
+		return errors.NewWithCause(codes.Internal, "Document.Decode", err)
+	}
+
+	return nil
 }

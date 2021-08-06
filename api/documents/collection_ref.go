@@ -15,8 +15,8 @@
 package documents
 
 import (
-	"fmt"
-
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -76,7 +76,7 @@ func (c *collectionRefImpl) toWire() *v1.Collection {
 // converts a wire collection to a collection reference
 func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (CollectionRef, error) {
 	if dc == nil {
-		return nil, fmt.Errorf("a document client is required for a collection reference")
+		return nil, errors.New(codes.Internal, "collectionRefFromWire: missing DocumentServiceClient")
 	}
 
 	if c.GetParent() == nil {
@@ -87,7 +87,7 @@ func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (Colle
 	} else {
 		pd, err := documentRefFromWireKey(dc, c.GetParent())
 		if err != nil {
-			return nil, err
+			return nil, errors.NewWithCause(codes.Internal, "collectionRefFromWire", err)
 		}
 
 		return &collectionRefImpl{

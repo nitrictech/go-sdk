@@ -17,6 +17,8 @@ package documents
 import (
 	"fmt"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
@@ -38,7 +40,10 @@ func (o queryOp) IsValid() error {
 	case queryOp_EQ, queryOp_GT, queryOp_GE, queryOp_LT, queryOp_LE, queryOp_StartsWith:
 		return nil
 	default:
-		return fmt.Errorf("Invalid Query Operation: %s", o)
+		return errors.New(
+			codes.InvalidArgument,
+			fmt.Sprintf("queryOp.IsValid: invalid query operation (%s)", o),
+		)
 	}
 }
 
@@ -50,7 +55,10 @@ type queryExpression struct {
 
 func (q *queryExpression) toWire() (*v1.Expression, error) {
 	if q.field == "" {
-		return nil, fmt.Errorf("field must not be blank")
+		return nil, errors.New(
+			codes.InvalidArgument,
+			"queryExpress.toWire: provide non-blank field name",
+		)
 	}
 
 	if err := q.op.IsValid(); err != nil {

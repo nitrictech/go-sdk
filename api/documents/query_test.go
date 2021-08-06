@@ -20,6 +20,8 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
@@ -94,7 +96,7 @@ var _ = Describe("Query", func() {
 			When("fetching with valid options", func() {
 				When("the gRPC server returns an error", func() {
 					mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
-					mdc.EXPECT().Query(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock-error"))
+					mdc.EXPECT().Query(gomock.Any(), gomock.Any()).Return(nil, status.Error(codes.Unimplemented, "mock-error"))
 
 					q := newQuery(&collectionRefImpl{
 						name: "test",
@@ -109,9 +111,9 @@ var _ = Describe("Query", func() {
 
 					_, err := q.Fetch()
 
-					It("should pass through the gRPC error", func() {
+					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
-						Expect(err.Error()).To(Equal("mock-error"))
+						Expect(err.Error()).To(Equal("Unimplemented: mock-error"))
 					})
 				})
 
@@ -178,7 +180,7 @@ var _ = Describe("Query", func() {
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(Equal("Invalid paging token provided!"))
+					Expect(err.Error()).To(Equal("Invalid Argument: Query.Fetch: Paging Token invalid"))
 				})
 			})
 
@@ -219,9 +221,9 @@ var _ = Describe("Query", func() {
 
 					_, err := q.Stream()
 
-					It("should pass through the gRPC error", func() {
+					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
-						Expect(err.Error()).To(Equal("mock-error"))
+						Expect(err.Error()).To(Equal("Unknown: mock-error"))
 					})
 				})
 

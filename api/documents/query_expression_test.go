@@ -35,7 +35,7 @@ var _ = Describe("QueryExpression", func() {
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(Equal("Invalid Query Operation: test"))
+					Expect(err.Error()).To(Equal("Invalid Argument: queryOp.IsValid: invalid query operation (test)"))
 				})
 			})
 		})
@@ -78,7 +78,7 @@ var _ = Describe("QueryExpression", func() {
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("field must not be blank"))
+				Expect(err.Error()).To(Equal("Invalid Argument: queryExpress.toWire: provide non-blank field name"))
 			})
 		})
 
@@ -93,7 +93,7 @@ var _ = Describe("QueryExpression", func() {
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Invalid Query Operation: blah"))
+				Expect(err.Error()).To(Equal("Invalid Argument: queryOp.IsValid: invalid query operation (blah)"))
 			})
 		})
 
@@ -108,7 +108,7 @@ var _ = Describe("QueryExpression", func() {
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Invalid query value"))
+				Expect(err.Error()).To(Equal("Invalid Argument: value.toWire: Invalid Query Value"))
 			})
 		})
 	})

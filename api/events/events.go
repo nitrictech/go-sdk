@@ -17,6 +17,8 @@ package events
 import (
 	"context"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
@@ -67,7 +69,7 @@ func New() (Events, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.NewWithCause(codes.Unavailable, "Unable to dial Events service", err)
 	}
 
 	ec := v1.NewEventServiceClient(conn)

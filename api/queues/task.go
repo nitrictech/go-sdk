@@ -16,8 +16,9 @@ package queues
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -75,7 +76,11 @@ func taskToWire(task *Task) (*v1.NitricTask, error) {
 	// Convert payload to Protobuf Struct
 	payloadStruct, err := structpb.NewStruct(task.Payload)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize payload: %s", err)
+		return nil, errors.NewWithCause(
+			codes.Internal,
+			"taskToWire: failed to serialize payload: %s",
+			err,
+		)
 	}
 
 	return &v1.NitricTask{

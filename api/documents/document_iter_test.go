@@ -15,13 +15,13 @@
 package documents
 
 import (
-	"fmt"
-
 	"github.com/golang/mock/gomock"
 	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -67,7 +67,7 @@ var _ = Describe("DocumentIter", func() {
 
 		When("the stream returns an error", func() {
 			strc := mock_v1.NewMockDocumentService_QueryStreamClient(ctrl)
-			strc.EXPECT().Recv().Return(nil, fmt.Errorf("mock-error"))
+			strc.EXPECT().Recv().Return(nil, status.Error(codes.Aborted, "mock-error"))
 
 			di := &documentIterImpl{
 				dc:  mdc,
@@ -78,7 +78,7 @@ var _ = Describe("DocumentIter", func() {
 
 			It("should pass through the error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("mock-error"))
+				Expect(err.Error()).To(Equal("Aborted: mock-error"))
 			})
 		})
 
