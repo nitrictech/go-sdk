@@ -14,9 +14,12 @@
 
 package queues_examples
 
+// [START import]
 import (
 	"github.com/nitrictech/go-sdk/api/queues"
 )
+
+// [END import]
 
 func receive() {
 	// [START snippet]
@@ -35,4 +38,5 @@ func receive() {
 			// handle completion error
 		}
 	}
+	// [END snippet]
 }
