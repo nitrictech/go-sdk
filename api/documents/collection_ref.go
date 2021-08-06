@@ -26,6 +26,7 @@ type CollectionRef interface {
 	Doc(string) DocumentRef
 	Query() Query
 	Parent() DocumentRef
+	Collection(string) CollectionGroupRef
 	toWire() *v1.Collection
 }
 
@@ -57,6 +58,15 @@ func (c *collectionRefImpl) Doc(key string) DocumentRef {
 // Parent - Retrieve the parent document of this collection
 func (c *collectionRefImpl) Parent() DocumentRef {
 	return c.parentDocument
+}
+
+// Collection - Creates a collection group reference from a collection
+func (c *collectionRefImpl) Collection(name string) CollectionGroupRef {
+	return &collectionGroupRefImpl{
+		parent: fromColRef(c, c.dc),
+		dc:     c.dc,
+		name:   name,
+	}
 }
 
 // toWire - tranlates a Collection for on-wire transport
