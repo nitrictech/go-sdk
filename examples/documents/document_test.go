@@ -34,7 +34,7 @@ func TestDeleteDocument(t *testing.T) {
 	ms.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(&v1.DocumentDeleteResponse{}, nil).Times(1)
 	ms.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&v1.DocumentGetResponse{}, nil).Times(1)
 	ms.EXPECT().Set(gomock.Any(), gomock.Any()).Return(&v1.DocumentSetResponse{}, nil).Times(1)
-	ms.EXPECT().Query(gomock.Any(), gomock.Any()).Return(&v1.DocumentQueryResponse{}, nil).Times(4)
+	ms.EXPECT().Query(gomock.Any(), gomock.Any()).Return(&v1.DocumentQueryResponse{}, nil).Times(5)
 
 	// Start the gRPC server with the mock instance and await for it
 	// to be called
@@ -50,6 +50,7 @@ func TestDeleteDocument(t *testing.T) {
 	queryFilter()
 	queryLimit()
 	subDocQuery()
+	subColQuery()
 	// Cleanup
 	grpcServer.Stop()
 	lis.Close()
