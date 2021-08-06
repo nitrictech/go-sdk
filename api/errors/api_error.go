@@ -27,6 +27,10 @@ type ApiError struct {
 	cause error
 }
 
+func (a *ApiError) Unwrap() error {
+	return a.cause
+}
+
 func (a *ApiError) Error() string {
 	if a.cause != nil {
 		// If the wrapped error is an ApiError than these should unwrap
@@ -75,4 +79,5 @@ func NewWithCause(c codes.Code, msg string, cause error) error {
 		msg:   msg,
 		cause: cause,
 	}
+
 }
