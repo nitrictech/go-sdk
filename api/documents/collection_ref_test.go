@@ -74,6 +74,20 @@ var _ = Describe("CollectionRef", func() {
 		})
 	})
 
+	Context("Collection", func() {
+		When("retrieving a collection group reference from a collection", func() {
+			colgroup := mc.Collection("test")
+
+			It("should have the provided collection name", func() {
+				Expect(colgroup.Name()).To(Equal("test"))
+			})
+
+			It("should have the name of the parent collection", func() {
+				Expect(colgroup.Parent().Name()).To(Equal(mc.name))
+			})
+		})
+	})
+
 	Context("toWire", func() {
 		When("translating a collection without a parent reference to wire", func() {
 			wc := mc.toWire()
