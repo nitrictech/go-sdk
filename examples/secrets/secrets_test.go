@@ -46,6 +46,7 @@ func TestQueues(t *testing.T) {
 	// call the functions to test
 	put()
 	access()
+	latest()
 	// Cleanup
 	grpcServer.Stop()
 	lis.Close()

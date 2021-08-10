@@ -12,14 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package secrets_examples
 
+// [START import]
 import (
-	_ "github.com/golang/protobuf/protoc-gen-go"
-	//_ "github.com/google/addlicense"
-	_ "github.com/onsi/ginkgo/ginkgo"
-	_ "github.com/uw-labs/lichen"
-	_ "golang.org/x/lint/golint"
-	_ "golang.org/x/tools/cmd/goimports"
-	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
+	"fmt"
+
+	"github.com/nitrictech/go-sdk/api/secrets"
 )
+
+// [END import]
+
+func latest() {
+	// [START snippet]
+	sc, _ := secrets.New()
+
+	// Access the latest secret
+	latestSecret := sc.Secret("my-secret").Latest()
+
+	// Note: This does not contain any secrets it just references a version of a secret
+	// regardless of whether it exists
+	fmt.Println("latest secret ref: ", latestSecret)
+	// [END snippet]
+}
