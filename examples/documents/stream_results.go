@@ -12,14 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package documents_examples
 
+// [START import]
 import (
-	_ "github.com/golang/protobuf/protoc-gen-go"
-	//_ "github.com/google/addlicense"
-	_ "github.com/onsi/ginkgo/ginkgo"
-	_ "github.com/uw-labs/lichen"
-	_ "golang.org/x/lint/golint"
-	_ "golang.org/x/tools/cmd/goimports"
-	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
+	"fmt"
+	"io"
+
+	"github.com/nitrictech/go-sdk/api/documents"
 )
+
+// [END import]
+
+func stream() {
+	// [START snippet]
+	docs, _ := documents.New()
+
+	query := docs.Collection("Customers").Query()
+	itr, _ := query.Stream()
+
+	for d, err := itr.Next(); err != io.EOF; d, err = itr.Next() {
+		if err != nil {
+			// handle error...
+		}
+
+		fmt.Println("document: ", d)
+	}
+	// [END snippet]
+}
