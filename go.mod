@@ -3,9 +3,10 @@ module github.com/nitrictech/go-sdk
 go 1.15
 
 require (
+	github.com/envoyproxy/protoc-gen-validate v0.6.1 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/addlicense v0.0.0-20210809195240-d43bb61fdfda // indirect
+	github.com/google/addlicense v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1

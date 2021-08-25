@@ -64,7 +64,7 @@ func (n *NitricTrigger) DefaultResponse() *NitricResponse {
 
 	if n.context.IsHttp() {
 		context = &HttpResponseContext{
-			Headers: make(map[string]string),
+			Headers: make(map[string][]string),
 			Status:  200,
 		}
 	} else if n.context.IsTopic() {

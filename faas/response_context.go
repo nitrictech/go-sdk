@@ -48,7 +48,7 @@ func (c *ResponseContext) AsTopic() *TopicResponseContext {
 }
 
 type HttpResponseContext struct {
-	Headers map[string]string
+	Headers map[string][]string
 	Status  int
 }
 

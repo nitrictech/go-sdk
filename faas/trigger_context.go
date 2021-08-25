@@ -59,7 +59,7 @@ func (c *NitricTriggerContext) AsTopic() *NitricTopicTriggerContext {
 
 type NitricHttpTriggerContext struct {
 	Method      string
-	Headers     map[string]string
+	Headers     map[string][]string
 	Path        string
 	QueryParams map[string]string
 }
@@ -75,9 +75,16 @@ func ContextFromTriggerRequest(grpcTrigger *pb.TriggerRequest) *NitricTriggerCon
 	if grpcTrigger.GetHttp() != nil {
 		http := grpcTrigger.GetHttp()
 
+		headers := make(map[string][]string)
+		if http.GetHeaders() != nil {
+			for key, val := range http.GetHeaders() {
+				headers[key] = val.Value
+			}
+		}
+
 		triggerCtx.context = &NitricHttpTriggerContext{
 			Method:      http.GetMethod(),
-			Headers:     http.GetHeaders(),
+			Headers:     headers,
 			Path:        http.GetPath(),
 			QueryParams: http.GetQueryParams(),
 		}
