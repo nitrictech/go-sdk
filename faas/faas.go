@@ -68,8 +68,8 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, error
 
 				if response.context.IsHttp() {
 					http := response.context.AsHttp()
-					http.Headers = map[string]string{
-						"Content-Type": "text/plain",
+					http.Headers = map[string][]string{
+						"Content-Type": {"text/plain"},
 					}
 					http.Status = 500
 					// internal server error

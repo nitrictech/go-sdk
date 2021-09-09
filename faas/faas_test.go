@@ -29,7 +29,7 @@ type MockFunctionSpy struct {
 	loggedTriggers           []*faas.NitricTrigger
 	mockResponse             *faas.NitricResponse
 	mockResponseStatus       int
-	mockResponseHeaders      map[string]string
+	mockResponseHeaders      map[string][]string
 	mockResponseTopicSuccess bool
 	mockResponseData         []byte
 }
@@ -68,8 +68,8 @@ var _ = Describe("Faas", func() {
 	Context("Start", func() {
 		mockFunction := &MockFunctionSpy{
 			mockResponseData: []byte("Hello"),
-			mockResponseHeaders: map[string]string{
-				"Content-Type": "text/plain",
+			mockResponseHeaders: map[string][]string{
+				"Content-Type": {"text/plain"},
 			},
 			mockResponseStatus:       200,
 			mockResponseTopicSuccess: true,
@@ -89,6 +89,12 @@ var _ = Describe("Faas", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockFaasServiceClient := mock_v1.NewMockFaasServiceClient(ctrl)
 				mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
+
+				mockheaders := make(map[string]*pb.HeaderValue)
+				mockheaders["Content-Type"] = &pb.HeaderValue{
+					Value: []string{"text/plain"},
+				}
+
 				mockStream.EXPECT().Recv().Return(
 					&pb.ServerMessage{
 						Id: "test",
@@ -97,10 +103,8 @@ var _ = Describe("Faas", func() {
 								Data: []byte("test"),
 								Context: &pb.TriggerRequest_Http{
 									Http: &pb.HttpTriggerContext{
-										Method: "POST",
-										Headers: map[string]string{
-											"Content-Type": "text/plain",
-										},
+										Method:  "POST",
+										Headers: mockheaders,
 									},
 								},
 							},
@@ -146,8 +150,8 @@ var _ = Describe("Faas", func() {
 
 				By("Recieving the correct headers")
 				Expect(receivedContext.AsHttp().Headers).To(BeEquivalentTo(
-					map[string]string{
-						"Content-Type": "text/plain",
+					map[string][]string{
+						"Content-Type": {"text/plain"},
 					},
 				))
 			})

@@ -41,9 +41,16 @@ func (n *NitricResponse) ToTriggerResponse() *pb.TriggerResponse {
 
 	if n.context.IsHttp() {
 		http := n.context.AsHttp()
+		headers := make(map[string]*pb.HeaderValue)
+		for k, v := range http.Headers {
+			headers[k] = &pb.HeaderValue{
+				Value: v,
+			}
+		}
+
 		triggerResponse.Context = &pb.TriggerResponse_Http{
 			Http: &pb.HttpResponseContext{
-				Headers: http.Headers,
+				Headers: headers,
 				Status:  int32(http.Status),
 			},
 		}
