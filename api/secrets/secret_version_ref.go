@@ -17,8 +17,8 @@ package secrets
 import (
 	"context"
 
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
-	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
 // SecretVersionRef - A reference to a secret version

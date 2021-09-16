@@ -15,7 +15,7 @@
 package faas
 
 import (
-	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	pb "github.com/nitrictech/apis/go/nitric/v1"
 )
 
 // NitricTriggerContext - Represents the contextual metadata for a Nitric function request.
