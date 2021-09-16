@@ -17,9 +17,9 @@ package faas
 import (
 	"encoding/json"
 
+	pb "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
 // NitricRequest - represents a request to trigger a function, with payload and context required to execute that function.

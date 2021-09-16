@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 
+	pb "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
 )
 
@@ -29,6 +29,7 @@ import (
 type NitricFunction func(*NitricTrigger) (*NitricResponse, error)
 
 func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, errorCh chan error) {
+
 	for {
 		// Block receiving a message
 		srvrMsg, err := stream.Recv()

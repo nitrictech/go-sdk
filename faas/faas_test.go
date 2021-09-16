@@ -18,8 +18,8 @@ import (
 	"fmt"
 
 	"github.com/golang/mock/gomock"
+	pb "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/faas"
-	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

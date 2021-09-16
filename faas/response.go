@@ -15,7 +15,7 @@
 package faas
 
 import (
-	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	pb "github.com/nitrictech/apis/go/nitric/v1"
 )
 
 // NitricResponse - represents the results of calling a function.

@@ -14,7 +14,7 @@
 
 package storage
 
-import v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+import v1 "github.com/nitrictech/apis/go/nitric/v1"
 
 type Bucket interface {
 	// Object - Get an object reference for in this bucket
