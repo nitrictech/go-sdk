@@ -49,7 +49,7 @@ var _ = Describe("Faas", func() {
 				impl.Http(mware)
 
 				It("should set the private http field", func() {
-					Expect(reflect.ValueOf(impl.http).Pointer()).To(Equal(reflect.ValueOf(mware).Pointer()))
+					Expect(impl.Http()).ToNot(BeNil())
 				})
 
 				When("Getting the Http Middleware", func() {
@@ -72,7 +72,7 @@ var _ = Describe("Faas", func() {
 				impl.Event(mware)
 
 				It("should set the private event field", func() {
-					Expect(reflect.ValueOf(impl.event).Pointer()).To(Equal(reflect.ValueOf(mware).Pointer()))
+					Expect(impl.event).ToNot(BeNil())
 				})
 
 				When("Getting the Event Middleware", func() {
@@ -95,7 +95,7 @@ var _ = Describe("Faas", func() {
 				impl.Default(mware)
 
 				It("should set the private trig field", func() {
-					Expect(reflect.ValueOf(impl.trig).Pointer()).To(Equal(reflect.ValueOf(mware).Pointer()))
+					Expect(impl.trig).ToNot(BeNil())
 				})
 
 				When("Getting the Default Middleware", func() {

@@ -26,9 +26,9 @@ import (
 )
 
 type HandlerBuilder interface {
-	Http(HttpMiddleware) HandlerBuilder
-	Event(EventMiddleware) HandlerBuilder
-	Default(TriggerMiddleware) HandlerBuilder
+	Http(...HttpMiddleware) HandlerBuilder
+	Event(...EventMiddleware) HandlerBuilder
+	Default(...TriggerMiddleware) HandlerBuilder
 	Start() error
 }
 
@@ -44,8 +44,8 @@ type faasClientImpl struct {
 	trig  TriggerMiddleware
 }
 
-func (f *faasClientImpl) Http(hndlr HttpMiddleware) HandlerBuilder {
-	f.http = hndlr
+func (f *faasClientImpl) Http(mwares ...HttpMiddleware) HandlerBuilder {
+	f.http = ComposeHttpMiddlware(mwares...)
 	return f
 }
 
@@ -53,8 +53,8 @@ func (f *faasClientImpl) GetHttp() HttpMiddleware {
 	return f.http
 }
 
-func (f *faasClientImpl) Event(hndlr EventMiddleware) HandlerBuilder {
-	f.event = hndlr
+func (f *faasClientImpl) Event(mwares ...EventMiddleware) HandlerBuilder {
+	f.event = ComposeEventMiddleware(mwares...)
 	return f
 }
 
@@ -62,8 +62,8 @@ func (f *faasClientImpl) GetEvent() EventMiddleware {
 	return f.event
 }
 
-func (f *faasClientImpl) Default(hndlr TriggerMiddleware) HandlerBuilder {
-	f.trig = hndlr
+func (f *faasClientImpl) Default(mwares ...TriggerMiddleware) HandlerBuilder {
+	f.trig = ComposeTriggerMiddleware(mwares...)
 	return f
 }
 

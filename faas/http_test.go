@@ -20,10 +20,10 @@ import (
 )
 
 var _ = Describe("Http", func() {
-	Context("CreateHttpHandler", func() {
+	Context("ComposeHttpMiddleware", func() {
 
 		When("Creating a function with a single handler", func() {
-			hndlr := CreateHttpHandler(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+			hndlr := ComposeHttpMiddlware(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 				ctx.Response.Body = []byte("hello!")
 
 				return next(ctx)
@@ -42,7 +42,7 @@ var _ = Describe("Http", func() {
 		When("Creating a function from multiple handlers", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := CreateHttpHandler(
+			hndlr := ComposeHttpMiddlware(
 				func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -65,7 +65,7 @@ var _ = Describe("Http", func() {
 		When("Creating a function from multiple nested middlewares", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := CreateHttpHandler(CreateHttpHandler(
+			hndlr := ComposeHttpMiddlware(ComposeHttpMiddlware(
 				func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -74,7 +74,7 @@ var _ = Describe("Http", func() {
 					callOrder = append(callOrder, "2")
 					return next(ctx)
 				},
-			), CreateHttpHandler(
+			), ComposeHttpMiddlware(
 				func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					callOrder = append(callOrder, "3")
 					return ctx, nil

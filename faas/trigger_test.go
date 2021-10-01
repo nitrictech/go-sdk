@@ -20,10 +20,10 @@ import (
 )
 
 var _ = Describe("Trigger", func() {
-	Context("CreateTriggerHandler", func() {
+	Context("ComposeTriggerMiddleware", func() {
 
 		When("Creating a function with a single handler", func() {
-			hndlr := CreateTriggerHandler(func(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
+			hndlr := ComposeTriggerMiddleware(func(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
 				ctx.Http().Response.Status = 201
 
 				return next(ctx)
@@ -46,7 +46,7 @@ var _ = Describe("Trigger", func() {
 		When("Creating a function from multiple handlers", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := CreateTriggerHandler(
+			hndlr := ComposeTriggerMiddleware(
 				func(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -67,7 +67,7 @@ var _ = Describe("Trigger", func() {
 		When("Creating a function from multiple nested middlewares", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := CreateTriggerHandler(CreateTriggerHandler(
+			hndlr := ComposeTriggerMiddleware(ComposeTriggerMiddleware(
 				func(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -76,7 +76,7 @@ var _ = Describe("Trigger", func() {
 					callOrder = append(callOrder, "2")
 					return next(ctx)
 				},
-			), CreateTriggerHandler(
+			), ComposeTriggerMiddleware(
 				func(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
 					callOrder = append(callOrder, "3")
 					return ctx, nil

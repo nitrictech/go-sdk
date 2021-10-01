@@ -48,8 +48,8 @@ func (h *httpMiddlewareChain) invoke(ctx *HttpContext, next HttpHandler) (*HttpC
 	return h.chain[0].invoke(ctx)
 }
 
-// CreateHttpHandler - Chains HTTP middleware functions together to single handler
-func CreateHttpHandler(funcs ...HttpMiddleware) HttpMiddleware {
+// ComposeHttpMiddleware - Composes an array of middleware into a single middleware
+func ComposeHttpMiddlware(funcs ...HttpMiddleware) HttpMiddleware {
 	mwareChain := &httpMiddlewareChain{
 		chain: make([]*chainedHttpMiddleware, len(funcs)),
 	}

@@ -46,8 +46,8 @@ func (h *triggerMiddlewareChain) invoke(ctx TriggerContext, next TriggerHandler)
 	return h.chain[0].invoke(ctx)
 }
 
-// CreateTriggerHandler - Chains Trigger middleware functions together to single handler
-func CreateTriggerHandler(funcs ...TriggerMiddleware) TriggerMiddleware {
+// CreateTriggerMiddleware - Chains Trigger middleware functions together to single handler
+func ComposeTriggerMiddleware(funcs ...TriggerMiddleware) TriggerMiddleware {
 	mwareChain := &triggerMiddlewareChain{
 		chain: make([]*chainedTriggerMiddleware, len(funcs)),
 	}

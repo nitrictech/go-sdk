@@ -20,10 +20,10 @@ import (
 )
 
 var _ = Describe("Event", func() {
-	Context("CreateEventHandler", func() {
+	Context("ComposeEventMiddleware", func() {
 
 		When("Creating a function with a single handler", func() {
-			hndlr := CreateEventHandler(func(ctx *EventContext, next EventHandler) (*EventContext, error) {
+			hndlr := ComposeEventMiddleware(func(ctx *EventContext, next EventHandler) (*EventContext, error) {
 				ctx.Response.Success = false
 
 				return next(ctx)
@@ -42,7 +42,7 @@ var _ = Describe("Event", func() {
 		When("Creating a function from multiple handlers", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := CreateEventHandler(
+			hndlr := ComposeEventMiddleware(
 				func(ctx *EventContext, next EventHandler) (*EventContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -65,7 +65,7 @@ var _ = Describe("Event", func() {
 		When("Creating a function from multiple nested middlewares", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := CreateEventHandler(CreateEventHandler(
+			hndlr := ComposeEventMiddleware(ComposeEventMiddleware(
 				func(ctx *EventContext, next EventHandler) (*EventContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -74,7 +74,7 @@ var _ = Describe("Event", func() {
 					callOrder = append(callOrder, "2")
 					return next(ctx)
 				},
-			), CreateEventHandler(
+			), ComposeEventMiddleware(
 				func(ctx *EventContext, next EventHandler) (*EventContext, error) {
 					callOrder = append(callOrder, "3")
 					return ctx, nil

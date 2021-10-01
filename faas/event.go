@@ -46,8 +46,8 @@ func (h *eventMiddlewareChain) invoke(ctx *EventContext, next EventHandler) (*Ev
 	return h.chain[0].invoke(ctx)
 }
 
-// CreateHttpHandler - Chains HTTP middleware functions together to single handler
-func CreateEventHandler(funcs ...EventMiddleware) EventMiddleware {
+// ComposeEventMiddleware - Composes an array of middleware into a single middleware
+func ComposeEventMiddleware(funcs ...EventMiddleware) EventMiddleware {
 	mwareChain := &eventMiddlewareChain{
 		chain: make([]*chainedEventMiddleware, len(funcs)),
 	}
