@@ -79,6 +79,9 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 				},
 				Body: []byte("Success"),
 			},
+			extraContext: &extraContext{
+				Extras: make(map[string]interface{}),
+			},
 		}
 	} else if triggerReq.GetTopic() != nil {
 		topic := triggerReq.GetTopic()
@@ -92,6 +95,9 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 			},
 			Response: &EventResponse{
 				Success: true,
+			},
+			extraContext: &extraContext{
+				Extras: make(map[string]interface{}),
 			},
 		}
 	} else {
@@ -139,12 +145,18 @@ func triggerContextToGrpcTriggerResponse(trig *triggerContextImpl) (*pb.TriggerR
 	return nil, fmt.Errorf("unsupported trigger context type")
 }
 
+type extraContext struct {
+	Extras map[string]interface{}
+}
+
 type HttpContext struct {
 	Request  HttpRequest
 	Response *HttpResponse
+	*extraContext
 }
 
 type EventContext struct {
 	Request  EventRequest
 	Response *EventResponse
+	*extraContext
 }

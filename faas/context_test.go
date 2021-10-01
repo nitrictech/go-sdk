@@ -85,6 +85,10 @@ var _ = Describe("Faas", func() {
 					"q": {"my-query"},
 				}))
 			})
+
+			It("should have initialized extra context", func() {
+				Expect(ctx.Http().Extras).To(BeEquivalentTo(map[string]interface{}{}))
+			})
 		})
 
 		When("Translating a Topic request", func() {
@@ -112,6 +116,10 @@ var _ = Describe("Faas", func() {
 
 			It("should have the provided topic name", func() {
 				Expect(ctx.Event().Request.Topic()).To(Equal("test-topic"))
+			})
+
+			It("should have initialized extra context", func() {
+				Expect(ctx.Event().Extras).To(BeEquivalentTo(map[string]interface{}{}))
 			})
 		})
 	})
