@@ -88,8 +88,9 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f HandlerProvider, erro
 			}
 
 			if funcErr != nil {
+				fmt.Printf("an error was returned by the handler function: %s\n", funcErr.Error())
 				if ctx.http != nil {
-					ctx.http.Response.Body = []byte(funcErr.Error())
+					ctx.http.Response.Body = []byte("Internal Server Error")
 					ctx.http.Response.Headers = map[string][]string{
 						"Content-Type": {"text/plain"},
 					}
