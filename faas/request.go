@@ -16,14 +16,20 @@ package faas
 
 type DataRequest interface {
 	Data() []byte
+	MimeType() string
 }
 
 type dataRequestImpl struct {
-	data []byte
+	data     []byte
+	mimeType string
 }
 
 func (d *dataRequestImpl) Data() []byte {
 	return d.data
+}
+
+func (d *dataRequestImpl) MimeType() string {
+	return d.mimeType
 }
 
 type HttpRequest interface {

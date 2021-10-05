@@ -65,7 +65,8 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 		trigCtx.http = &HttpContext{
 			Request: &httpRequestImpl{
 				dataRequestImpl: dataRequestImpl{
-					data: triggerReq.GetData(),
+					data:     triggerReq.GetData(),
+					mimeType: triggerReq.GetMimeType(),
 				},
 				method:  httpTrig.GetMethod(),
 				headers: headers,
@@ -89,7 +90,8 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 		trigCtx.event = &EventContext{
 			Request: &eventRequestImpl{
 				dataRequestImpl: dataRequestImpl{
-					data: triggerReq.GetData(),
+					data:     triggerReq.GetData(),
+					mimeType: triggerReq.GetMimeType(),
 				},
 				topic: topic.GetTopic(),
 			},
