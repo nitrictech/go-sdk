@@ -13,7 +13,7 @@ require (
 	github.com/onsi/gomega v1.10.5
 	github.com/uw-labs/lichen v0.1.4
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
-	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420 // indirect
+	golang.org/x/net v0.0.0-20211005001312-d4b1ae081e3b // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/tools v0.1.5
 	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f // indirect
