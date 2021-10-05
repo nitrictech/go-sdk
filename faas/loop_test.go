@@ -188,7 +188,7 @@ var _ = Describe("look", func() {
 						Id: "1234",
 						Content: &v1.ClientMessage_TriggerResponse{
 							TriggerResponse: &v1.TriggerResponse{
-								Data: []byte("no handler available for trigger type"),
+								Data: []byte("Internal Server Error"),
 								Context: &v1.TriggerResponse_Http{
 									Http: &v1.HttpResponseContext{
 										Status: 500,
