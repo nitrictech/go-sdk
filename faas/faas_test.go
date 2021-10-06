@@ -12,205 +12,152 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package faas_test
+package faas
 
 import (
-	"fmt"
+	"io"
+	"reflect"
 
 	"github.com/golang/mock/gomock"
 	pb "github.com/nitrictech/apis/go/nitric/v1"
-	"github.com/nitrictech/go-sdk/faas"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-type MockFunctionSpy struct {
-	loggedTriggers           []*faas.NitricTrigger
-	mockResponse             *faas.NitricResponse
-	mockResponseStatus       int
-	mockResponseHeaders      map[string][]string
-	mockResponseTopicSuccess bool
-	mockResponseData         []byte
-}
-
-func (m *MockFunctionSpy) reset() {
-	m.loggedTriggers = make([]*faas.NitricTrigger, 0)
-}
-
-func (m *MockFunctionSpy) handler(r *faas.NitricTrigger) (*faas.NitricResponse, error) {
-	if m.loggedTriggers == nil {
-		m.loggedTriggers = make([]*faas.NitricTrigger, 0)
-	}
-
-	m.loggedTriggers = append(m.loggedTriggers, r)
-
-	defaultResponse := r.DefaultResponse()
-
-	defaultResponse.SetData(m.mockResponseData)
-
-	if defaultResponse.GetContext().IsHttp() {
-		defaultResponse.GetContext().AsHttp().Headers = m.mockResponseHeaders
-		defaultResponse.GetContext().AsHttp().Status = m.mockResponseStatus
-	} else if defaultResponse.GetContext().IsTopic() {
-		defaultResponse.GetContext().AsTopic().Success = m.mockResponseTopicSuccess
-	}
-
-	return defaultResponse, nil
-}
-
-type MockHttpOptions struct {
-	payloadType string
-	body        []byte
-}
-
 var _ = Describe("Faas", func() {
-	Context("Start", func() {
-		mockFunction := &MockFunctionSpy{
-			mockResponseData: []byte("Hello"),
-			mockResponseHeaders: map[string][]string{
-				"Content-Type": {"text/plain"},
-			},
-			mockResponseStatus:       200,
-			mockResponseTopicSuccess: true,
-		}
+	Context("New", func() {
+		When("Creating a new HandlerBuilder", func() {
+			fs := New()
 
-		BeforeEach(func() {
-			mockFunction.reset()
+			It("Should be an instance of *faasClientImpl", func() {
+				_, ok := fs.(*faasClientImpl)
+
+				Expect(ok).To(BeTrue())
+			})
 		})
+	})
 
-		go (func() {
-			faas.Start(mockFunction.handler)
-		})()
-
-		When("Function is called with a HttpTrigger", func() {
-			BeforeEach(func() {
-				// Create the mock faas client here
-				ctrl := gomock.NewController(GinkgoT())
-				mockFaasServiceClient := mock_v1.NewMockFaasServiceClient(ctrl)
-				mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
-
-				mockheaders := make(map[string]*pb.HeaderValue)
-				mockheaders["Content-Type"] = &pb.HeaderValue{
-					Value: []string{"text/plain"},
+	Context("faasClientImpl", func() {
+		Context("Http", func() {
+			When("Setting the Http Middleware", func() {
+				mware := func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+					return ctx, nil
 				}
 
-				mockStream.EXPECT().Recv().Return(
-					&pb.ServerMessage{
-						Id: "test",
-						Content: &pb.ServerMessage_TriggerRequest{
-							TriggerRequest: &pb.TriggerRequest{
-								Data: []byte("test"),
-								Context: &pb.TriggerRequest_Http{
-									Http: &pb.HttpTriggerContext{
-										Method:  "POST",
-										Headers: mockheaders,
-									},
-								},
-							},
-						},
-					}, nil,
-				)
+				impl := &faasClientImpl{}
+				impl.Http(mware)
 
-				mockStream.EXPECT().Send(gomock.Any()).AnyTimes().Return(nil)
+				It("should set the private http field", func() {
+					Expect(impl.Http()).ToNot(BeNil())
+				})
 
-				mockStream.EXPECT().Recv().Return(
-					nil, fmt.Errorf("EOF"),
-				)
+				When("Getting the Http Middleware", func() {
+					mw := impl.GetHttp()
 
-				// The client should be called at least once
-				mockFaasServiceClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
-
-				errchan := make(chan error)
-				go (func(errchan chan error) {
-					// Use error channel for blocking here..
-					err := faas.StartWithClient(mockFunction.handler, mockFaasServiceClient)
-					errchan <- err
-				})(errchan)
-
-				// Wait for the stream to finish
-				<-errchan
-			})
-
-			It("Should receive the correct request", func() {
-				By("Receiving a single request")
-				Expect(mockFunction.loggedTriggers).To(HaveLen(1))
-
-				receivedRequest := mockFunction.loggedTriggers[0]
-				receivedContext := receivedRequest.GetContext()
-
-				By("Having the trigger data")
-				Expect(receivedRequest.GetData()).To(BeEquivalentTo([]byte("test")))
-
-				By("Recieving a HTTP Request")
-				Expect(receivedContext.IsHttp()).To(BeTrue())
-
-				By("Recieving the correct method")
-				Expect(receivedContext.AsHttp().Method).To(Equal("POST"))
-
-				By("Recieving the correct headers")
-				Expect(receivedContext.AsHttp().Headers).To(BeEquivalentTo(
-					map[string][]string{
-						"Content-Type": {"text/plain"},
-					},
-				))
+					It("should return the internal http field", func() {
+						Expect(reflect.ValueOf(impl.http).Pointer()).To(Equal(reflect.ValueOf(mw).Pointer()))
+					})
+				})
 			})
 		})
 
-		When("The Function is called with a TopicTrigger", func() {
-			BeforeEach(func() {
-				// Create the mock faas client here
-				ctrl := gomock.NewController(GinkgoT())
-				mockFaasServiceClient := mock_v1.NewMockFaasServiceClient(ctrl)
-				mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
-				mockStream.EXPECT().Recv().Return(
-					&pb.ServerMessage{
-						Id: "test",
-						Content: &pb.ServerMessage_TriggerRequest{
-							TriggerRequest: &pb.TriggerRequest{
-								Data: []byte("test"),
-								Context: &pb.TriggerRequest_Topic{
-									Topic: &pb.TopicTriggerContext{
-										Topic: "test",
-									},
-								},
-							},
-						},
-					}, nil,
-				)
-				// Close the stream by returning an error
-				mockStream.EXPECT().Recv().Return(
-					nil, fmt.Errorf("EOF"),
-				)
+		Context("Event", func() {
+			When("Setting the Event Middleware", func() {
+				mware := func(ctx *EventContext, next EventHandler) (*EventContext, error) {
+					return ctx, nil
+				}
 
-				mockStream.EXPECT().Send(gomock.Any()).AnyTimes().Return(nil)
-				// The client should be called at least once
-				mockFaasServiceClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
+				impl := &faasClientImpl{}
+				impl.Event(mware)
 
-				errchan := make(chan error)
-				go (func(errchan chan error) {
-					// Use error channel for blocking here..
-					err := faas.StartWithClient(mockFunction.handler, mockFaasServiceClient)
-					errchan <- err
-				})(errchan)
+				It("should set the private event field", func() {
+					Expect(impl.event).ToNot(BeNil())
+				})
 
-				// Wait for the stream to finish
-				<-errchan
+				When("Getting the Event Middleware", func() {
+					mw := impl.GetEvent()
+
+					It("should return the internal event field", func() {
+						Expect(reflect.ValueOf(impl.event).Pointer()).To(Equal(reflect.ValueOf(mw).Pointer()))
+					})
+				})
+			})
+		})
+
+		Context("Default", func() {
+			When("Setting the Default Middleware", func() {
+				mware := func(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
+					return ctx, nil
+				}
+
+				impl := &faasClientImpl{}
+				impl.Default(mware)
+
+				It("should set the private trig field", func() {
+					Expect(impl.trig).ToNot(BeNil())
+				})
+
+				When("Getting the Default Middleware", func() {
+					mw := impl.GetDefault()
+
+					It("should return the internal trig field", func() {
+						Expect(reflect.ValueOf(impl.trig).Pointer()).To(Equal(reflect.ValueOf(mw).Pointer()))
+					})
+				})
+			})
+		})
+	})
+
+	Context("Start", func() {
+		impl := &faasClientImpl{}
+		When("No FaasServiceServer is available", func() {
+			err := impl.Start()
+
+			It("should return an error", func() {
+				Expect(err).Should(HaveOccurred())
+			})
+		})
+
+		When("A FaasServiceServer is available", func() {
+			ctrl := gomock.NewController(GinkgoT())
+			mockClient := mock_v1.NewMockFaasServiceClient(ctrl)
+			mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
+			When("no valid handlers are provided", func() {
+				err := impl.startWithClient(mockClient)
+
+				It("should return an error", func() {
+					Expect(err).Should(HaveOccurred())
+				})
 			})
 
-			It("Should have the supplied topic", func() {
-				By("Receiving a single trigger")
-				Expect(mockFunction.loggedTriggers).To(HaveLen(1))
+			When("a valid handler is provided", func() {
+				impl.Http(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+					return ctx, nil
+				})
 
-				receivedRequest := mockFunction.loggedTriggers[0]
-				receivedContext := receivedRequest.GetContext()
+				It("should start the faas loop", func() {
+					By("Opening a stream with the Faas server")
+					mockClient.EXPECT().TriggerStream(gomock.Any()).Return(mockStream, nil)
 
-				By("Recieving topic context")
-				Expect(receivedContext.IsTopic()).To(BeTrue())
+					By("Sending an InitRequest")
+					mockStream.EXPECT().Send(&pb.ClientMessage{
+						Content: &pb.ClientMessage_InitRequest{
+							InitRequest: &pb.InitRequest{},
+						},
+					}).Return(nil)
 
-				By("Having the correct topic name")
-				Expect(receivedContext.AsTopic().Topic).To(Equal("test"))
+					By("The stream closing on first message")
+					mockStream.EXPECT().Recv().Return(nil, io.EOF)
 
+					err := impl.startWithClient(mockClient)
+
+					By("Returning the stream close error")
+					Expect(err).Should(HaveOccurred())
+
+					// assert prior exprects were called
+					ctrl.Finish()
+				})
 			})
 		})
 	})

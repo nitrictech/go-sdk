@@ -14,47 +14,47 @@
 
 package faas
 
-type TriggerHandler = func(TriggerContext) (TriggerContext, error)
-type TriggerMiddleware = func(TriggerContext, TriggerHandler) (TriggerContext, error)
+type EventHandler = func(*EventContext) (*EventContext, error)
+type EventMiddleware = func(*EventContext, EventHandler) (*EventContext, error)
 
-func triggerDummy(ctx TriggerContext) (TriggerContext, error) {
+func eventDummy(ctx *EventContext) (*EventContext, error) {
 	return ctx, nil
 }
 
-type chainedTriggerMiddleware struct {
-	fun      TriggerMiddleware
-	nextFunc TriggerHandler
+type chainedEventMiddleware struct {
+	fun      EventMiddleware
+	nextFunc EventHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedTriggerMiddleware) invoke(ctx TriggerContext) (TriggerContext, error) {
+func (c *chainedEventMiddleware) invoke(ctx *EventContext) (*EventContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = triggerDummy
+		c.nextFunc = eventDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type triggerMiddlewareChain struct {
-	chain []*chainedTriggerMiddleware
+type eventMiddlewareChain struct {
+	chain []*chainedEventMiddleware
 }
 
-func (h *triggerMiddlewareChain) invoke(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
+func (h *eventMiddlewareChain) invoke(ctx *EventContext, next EventHandler) (*EventContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// CreateTriggerMiddleware - Chains Trigger middleware functions together to single handler
-func ComposeTriggerMiddleware(funcs ...TriggerMiddleware) TriggerMiddleware {
-	mwareChain := &triggerMiddlewareChain{
-		chain: make([]*chainedTriggerMiddleware, len(funcs)),
+// ComposeEventMiddleware - Composes an array of middleware into a single middleware
+func ComposeEventMiddleware(funcs ...EventMiddleware) EventMiddleware {
+	mwareChain := &eventMiddlewareChain{
+		chain: make([]*chainedEventMiddleware, len(funcs)),
 	}
 
-	var nextFunc TriggerHandler = nil
+	var nextFunc EventHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedTriggerMiddleware{
+		cm := &chainedEventMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}
