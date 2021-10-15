@@ -21,6 +21,13 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 )
 
+type Mode = int
+
+const (
+	ModeRead  Mode = 0
+	ModeWrite Mode = 1
+)
+
 // File - A file reference for a bucket
 type File interface {
 	// Read - Read this object
@@ -29,6 +36,8 @@ type File interface {
 	Write([]byte) error
 	// Delete - Delete this object
 	Delete() error
+	// PresignUrl - Creates a presigned Url for this file reference
+	PresignUrl(Mode) (string, error)
 }
 
 type fileImpl struct {
@@ -71,4 +80,24 @@ func (o *fileImpl) Delete() error {
 	}
 
 	return nil
+}
+
+func (o *fileImpl) PresignUrl(mode Mode) (string, error) {
+	op := v1.StoragePreSignUrlRequest_READ
+
+	if mode == ModeWrite {
+		op = v1.StoragePreSignUrlRequest_WRITE
+	}
+
+	r, err := o.sc.PreSignUrl(context.TODO(), &v1.StoragePreSignUrlRequest{
+		BucketName: o.bucket,
+		Key:        o.key,
+		Operation:  op,
+	})
+
+	if err != nil {
+		return "", errors.FromGrpcError(err)
+	}
+
+	return r.Url, nil
 }
