@@ -183,7 +183,7 @@ var _ = Describe("Object", func() {
 			})
 		})
 
-		When("The delete is successful", func() {
+		When("presignUrl is successful", func() {
 			It("should not return an error", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
