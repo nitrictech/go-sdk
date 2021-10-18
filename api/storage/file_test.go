@@ -158,6 +158,22 @@ var _ = Describe("Object", func() {
 	})
 
 	Context("PresignUrl", func() {
+		When("Invalid mode is provided", func() {
+			It("should return an error", func() {
+				obj := &fileImpl{
+					bucket: "test-bucket",
+					key:    "test-object",
+				}
+
+				_, err := obj.PresignUrl(PresignUrlOptions{
+					Mode: 7,
+				})
+				Expect(err).Should(HaveOccurred())
+
+				Expect(err.Error()).To(Equal("Invalid Argument: invalid options: \n invalid mode: 7"))
+			})
+		})
+
 		When("The grpc server returns an error", func() {
 			It("should pass through the returned error", func() {
 				ctrl := gomock.NewController(GinkgoT())
@@ -175,7 +191,7 @@ var _ = Describe("Object", func() {
 					Operation:  v1.StoragePreSignUrlRequest_READ,
 				}).Return(nil, fmt.Errorf("mock error"))
 
-				_, err := obj.PresignUrl(ModeRead)
+				_, err := obj.PresignUrl(PresignUrlOptions{})
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("Unknown: mock error"))
 
@@ -202,7 +218,7 @@ var _ = Describe("Object", func() {
 					Url: "http://example.com",
 				}, nil)
 
-				url, err := obj.PresignUrl(ModeWrite)
+				url, err := obj.PresignUrl(PresignUrlOptions{Mode: ModeWrite})
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(url).To(Equal("http://example.com"))

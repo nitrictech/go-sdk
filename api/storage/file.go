@@ -16,16 +16,18 @@ package storage
 
 import (
 	"context"
+	"fmt"
 
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
 
-type Mode = int
+type Mode int
 
 const (
-	ModeRead  Mode = 0
-	ModeWrite Mode = 1
+	ModeRead Mode = iota
+	ModeWrite
 )
 
 // File - A file reference for a bucket
@@ -37,7 +39,7 @@ type File interface {
 	// Delete - Delete this object
 	Delete() error
 	// PresignUrl - Creates a presigned Url for this file reference
-	PresignUrl(Mode) (string, error)
+	PresignUrl(PresignUrlOptions) (string, error)
 }
 
 type fileImpl struct {
@@ -82,10 +84,27 @@ func (o *fileImpl) Delete() error {
 	return nil
 }
 
-func (o *fileImpl) PresignUrl(mode Mode) (string, error) {
+type PresignUrlOptions struct {
+	Mode   Mode
+	Expiry int
+}
+
+func (p PresignUrlOptions) isValid() error {
+	if p.Mode != ModeRead && p.Mode != ModeWrite {
+		return fmt.Errorf("invalid mode: %d", p.Mode)
+	}
+
+	return nil
+}
+
+func (o *fileImpl) PresignUrl(opts PresignUrlOptions) (string, error) {
+	if err := opts.isValid(); err != nil {
+		return "", errors.NewWithCause(codes.InvalidArgument, "invalid options", err)
+	}
+
 	op := v1.StoragePreSignUrlRequest_READ
 
-	if mode == ModeWrite {
+	if opts.Mode == ModeWrite {
 		op = v1.StoragePreSignUrlRequest_WRITE
 	}
 
@@ -93,6 +112,7 @@ func (o *fileImpl) PresignUrl(mode Mode) (string, error) {
 		BucketName: o.bucket,
 		Key:        o.key,
 		Operation:  op,
+		Expiry:     uint32(opts.Expiry),
 	})
 
 	if err != nil {
