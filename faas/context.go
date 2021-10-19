@@ -58,6 +58,10 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 		query := make(map[string][]string)
 		if httpTrig.GetQueryParams() != nil {
 			for k, v := range httpTrig.GetQueryParams() {
+				query[k] = v.Value
+			}
+		} else if httpTrig.GetQueryParamsOld() != nil {
+			for k, v := range httpTrig.GetQueryParamsOld() {
 				query[k] = []string{v}
 			}
 		}

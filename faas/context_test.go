@@ -47,8 +47,8 @@ var _ = Describe("Faas", func() {
 								Value: []string{"text/plain"},
 							},
 						},
-						QueryParams: map[string]string{
-							"q": "my-query",
+						QueryParams: map[string]*v1.QueryValue{
+							"q": {Value: []string{"my-query"}},
 						},
 					},
 				},
