@@ -15,7 +15,7 @@
 package events
 
 type Event struct {
-	Payload     map[string]interface{}
-	PayloadType string
-	ID          string
+	Payload     map[string]interface{} `json:"payload"`
+	PayloadType string                 `json:"payloadType"`
+	ID          string                 `json:"id"`
 }
