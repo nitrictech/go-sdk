@@ -5,11 +5,13 @@ go 1.15
 require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/addlicense v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/uuid v1.3.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/nitrictech/apis v0.12.0-rc.21
-	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.10.5
 	github.com/uw-labs/lichen v0.1.4
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
