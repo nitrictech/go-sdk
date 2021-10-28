@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package events_examples
+package faas_examples
 
 import (
+	"io"
 	"net"
 	"testing"
 
@@ -24,26 +25,52 @@ import (
 	"google.golang.org/grpc"
 )
 
-func TestPublishTopic(t *testing.T) {
+func newMockStream(ctrl *gomock.Controller, msgs []*v1.ServerMessage) func(stream v1.FaasService_TriggerStreamServer) error {
+	return func(stream v1.FaasService_TriggerStreamServer) error {
+		for _, m := range msgs {
+			stream.Send(m)
+		}
+
+		return io.EOF
+	}
+}
+
+func TestFaasSnippets(t *testing.T) {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	// Create a mock storage service server...
 	ctrl := gomock.NewController(t)
-	mec := mock_v1.NewMockEventServiceServer(ctrl)
-	mtc := mock_v1.NewMockTopicServiceServer(ctrl)
-	// Assert was called with the proper payload
-	mec.EXPECT().Publish(gomock.Any(), gomock.Any()).Return(&v1.EventPublishResponse{}, nil).Times(2)
+	ms := mock_v1.NewMockFaasServiceServer(ctrl)
+
+	// Return the mock trigger stream when called
+	gomock.InOrder(
+		// Return the stream for the evts snippet test
+		ms.EXPECT().TriggerStream(gomock.Any()).Do(newMockStream(ctrl, []*v1.ServerMessage{
+			{
+				Id: "1234",
+				Content: &v1.ServerMessage_TriggerRequest{
+					TriggerRequest: &v1.TriggerRequest{
+						Data: []byte("{\"payload\": {\"test\": \"test\"}}"),
+						Context: &v1.TriggerRequest_Topic{
+							Topic: &v1.TopicTriggerContext{
+								Topic: "mock-topic",
+							},
+						},
+					},
+				},
+			},
+		})).Return(nil).Times(1),
+	)
 
 	// Start the gRPC server with the mock instance and await for it
 	// to be called
 	lis, _ := net.Listen("tcp", ":50051")
 
-	v1.RegisterEventServiceServer(grpcServer, mec)
-	v1.RegisterTopicServiceServer(grpcServer, mtc)
+	v1.RegisterFaasServiceServer(grpcServer, ms)
 	go grpcServer.Serve(lis)
-	// call the function to test
-	publishEvent()
-	publishEventId()
+	// call the snippets to test
+	evts()
+
 	// Cleanup
 	grpcServer.Stop()
 	lis.Close()

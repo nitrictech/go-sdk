@@ -17,9 +17,9 @@ package documents
 import (
 	"fmt"
 
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 )
 
 // QueryOp - Enum for query operations

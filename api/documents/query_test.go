@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 

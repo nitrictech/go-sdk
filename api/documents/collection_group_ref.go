@@ -14,7 +14,7 @@
 
 package documents
 
-import v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+import v1 "github.com/nitrictech/apis/go/nitric/v1"
 
 // CollectionGroupRef - A reference to a chain of collections not tied to document keys for building sub collection queries
 type CollectionGroupRef interface {

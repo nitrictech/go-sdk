@@ -12,32 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package queues_examples
+package faas_examples
 
 // [START import]
 import (
-	"github.com/nitrictech/go-sdk/api/queues"
+	"encoding/json"
+	"fmt"
+
+	"github.com/nitrictech/go-sdk/api/events"
+	"github.com/nitrictech/go-sdk/faas"
 )
 
 // [END import]
 
-func send() {
+func evts() {
 	// [START snippet]
-	qc, _ := queues.New()
+	faas.New().Event(func(ctx *faas.EventContext, next faas.EventHandler) (*faas.EventContext, error) {
+		var evt events.Event
 
-	_, err := qc.Queue("my-queue").Send([]*queues.Task{
-		{
-			ID:          "1234",
-			PayloadType: "test-payload",
-			Payload: map[string]interface{}{
-				"example": "payload",
-			},
-		},
-	})
+		// Unmarshal a nitric event from an event payload (assuming it was published with the nitric events api)
+		if err := json.Unmarshal(ctx.Request.Data(), &evt); err != nil {
+			// Failed to handle the event
+			ctx.Response.Success = false
+			fmt.Println(err.Error())
+		}
 
-	if err != nil {
-		// handle error...
-	}
+		fmt.Printf("Received nitric event: %v\n", evt.Payload)
 
+		return ctx, nil
+	}).Start()
 	// [END snippet]
 }

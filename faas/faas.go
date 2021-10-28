@@ -18,89 +18,61 @@ import (
 	"context"
 	"fmt"
 
+	pb "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
 	"google.golang.org/grpc"
 )
 
-// NitricFunction - a function built using Nitric, to be executed
-type NitricFunction func(*NitricTrigger) (*NitricResponse, error)
-
-func faasLoop(stream pb.FaasService_TriggerStreamClient, f NitricFunction, errorCh chan error) {
-	for {
-		// Block receiving a message
-		srvrMsg, err := stream.Recv()
-		clientMsg := &pb.ClientMessage{
-			Id: srvrMsg.GetId(),
-		}
-
-		if err != nil {
-			// TODO: Make sure we use the correct kind of error types here
-			errorCh <- errors.FromGrpcError(err)
-			break
-		}
-
-		// We have a trigger
-		if srvrMsg.GetTriggerRequest() != nil {
-			req, err := FromGrpcTriggerRequest(srvrMsg.GetTriggerRequest())
-
-			if err != nil {
-				fmt.Println("There was an error reading the TriggerRequest", err)
-				// Return a bad request here...
-				errorCh <- errors.NewWithCause(
-					codes.Internal,
-					"faasLoop: error reading the TriggerRequest",
-					err,
-				)
-				break
-			}
-			// Let the membrane know the function is ready for initialization
-			// Process this trigger
-			response, err := f(req)
-
-			if err != nil {
-				fmt.Println("Function returned an error", err)
-				// Return an error here...
-				response = req.DefaultResponse()
-				response.SetData([]byte("Internal Error"))
-
-				if response.context.IsHttp() {
-					http := response.context.AsHttp()
-					http.Headers = map[string][]string{
-						"Content-Type": {"text/plain"},
-					}
-					http.Status = 500
-					// internal server error
-				} else if response.context.IsTopic() {
-					topic := response.context.AsTopic()
-					topic.Success = false
-					// mark as unsuccessful here...
-				}
-			}
-
-			triggerResponse := response.ToTriggerResponse()
-
-			clientMsg.Content = &pb.ClientMessage_TriggerResponse{
-				TriggerResponse: triggerResponse,
-			}
-
-			if err := stream.Send(clientMsg); err != nil {
-				fmt.Println("Failed to send msg", err)
-				errorCh <- errors.FromGrpcError(err)
-				break
-			}
-		} else if srvrMsg.GetInitResponse() != nil {
-			fmt.Println("Function connected to membrane", err)
-		}
-	}
+type HandlerBuilder interface {
+	Http(...HttpMiddleware) HandlerBuilder
+	Event(...EventMiddleware) HandlerBuilder
+	Default(...TriggerMiddleware) HandlerBuilder
+	Start() error
 }
 
-// Start - Starts accepting requests for the provided NitricFunction
-// Begins streaming using the default Nitric FaaS gRPC client
-// This should be the only method called in the 'main' method of your entrypoint package
-func Start(f NitricFunction) error {
+type HandlerProvider interface {
+	GetHttp() HttpMiddleware
+	GetEvent() EventMiddleware
+	GetDefault() TriggerMiddleware
+}
+
+type faasClientImpl struct {
+	http  HttpMiddleware
+	event EventMiddleware
+	trig  TriggerMiddleware
+}
+
+func (f *faasClientImpl) Http(mwares ...HttpMiddleware) HandlerBuilder {
+	f.http = ComposeHttpMiddlware(mwares...)
+	return f
+}
+
+func (f *faasClientImpl) GetHttp() HttpMiddleware {
+	return f.http
+}
+
+func (f *faasClientImpl) Event(mwares ...EventMiddleware) HandlerBuilder {
+	f.event = ComposeEventMiddleware(mwares...)
+	return f
+}
+
+func (f *faasClientImpl) GetEvent() EventMiddleware {
+	return f.event
+}
+
+func (f *faasClientImpl) Default(mwares ...TriggerMiddleware) HandlerBuilder {
+	f.trig = ComposeTriggerMiddleware(mwares...)
+	return f
+}
+
+func (f *faasClientImpl) GetDefault() TriggerMiddleware {
+	return f.trig
+}
+
+func (f *faasClientImpl) Start() error {
+	// Fail if no handlers were provided
 	conn, err := grpc.Dial(
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
@@ -114,13 +86,17 @@ func Start(f NitricFunction) error {
 		)
 	}
 
-	FaasServiceClient := pb.NewFaasServiceClient(conn)
+	fsc := pb.NewFaasServiceClient(conn)
 
-	return StartWithClient(f, FaasServiceClient)
+	return f.startWithClient(fsc)
 }
 
-func StartWithClient(f NitricFunction, FaasServiceClient pb.FaasServiceClient) error {
-	if stream, err := FaasServiceClient.TriggerStream(context.TODO()); err == nil {
+func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
+	if f.http == nil && f.event == nil && f.trig == nil {
+		return fmt.Errorf("no valid handlers provided")
+	}
+
+	if stream, err := fsc.TriggerStream(context.TODO()); err == nil {
 		// Let the membrane know the function is ready for initialization
 		err := stream.Send(&pb.ClientMessage{
 			Content: &pb.ClientMessage_InitRequest{
@@ -141,4 +117,9 @@ func StartWithClient(f NitricFunction, FaasServiceClient pb.FaasServiceClient) e
 	} else {
 		return err
 	}
+}
+
+// Creates a new HandlerBuilder
+func New() HandlerBuilder {
+	return &faasClientImpl{}
 }

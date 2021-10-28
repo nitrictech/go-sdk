@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	"google.golang.org/grpc"
 )
@@ -39,7 +39,7 @@ func TestQueues(t *testing.T) {
 			},
 		},
 	}, nil).Times(1)
-	ms.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(&v1.QueueSendBatchResponse{}, nil).Times(1)
+	ms.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(&v1.QueueSendBatchResponse{}, nil).Times(2)
 	ms.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(&v1.QueueCompleteResponse{}, nil).Times(1)
 	// Start the gRPC server with the mock instance and await for it
 	// to be called
@@ -50,6 +50,7 @@ func TestQueues(t *testing.T) {
 	// call the functions to test
 	send()
 	receive()
+	failed()
 	// Cleanup
 	grpcServer.Stop()
 	lis.Close()

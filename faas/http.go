@@ -14,47 +14,49 @@
 
 package faas
 
-type TriggerHandler = func(TriggerContext) (TriggerContext, error)
-type TriggerMiddleware = func(TriggerContext, TriggerHandler) (TriggerContext, error)
+type HttpHandler = func(*HttpContext) (*HttpContext, error)
+type HttpMiddleware = func(*HttpContext, HttpHandler) (*HttpContext, error)
 
-func triggerDummy(ctx TriggerContext) (TriggerContext, error) {
+func httpDummy(ctx *HttpContext) (*HttpContext, error) {
 	return ctx, nil
 }
 
-type chainedTriggerMiddleware struct {
-	fun      TriggerMiddleware
-	nextFunc TriggerHandler
+type chainedHttpMiddleware struct {
+	fun      HttpMiddleware
+	nextFunc HttpHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedTriggerMiddleware) invoke(ctx TriggerContext) (TriggerContext, error) {
+func (c *chainedHttpMiddleware) invoke(ctx *HttpContext) (*HttpContext, error) {
+	// Chains are left open-ended so middleware can continue to be linked
+	// If the chain is incomplete, set a chained dummy handler for safety
 	if c.nextFunc == nil {
-		c.nextFunc = triggerDummy
+		c.nextFunc = httpDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type triggerMiddlewareChain struct {
-	chain []*chainedTriggerMiddleware
+type httpMiddlewareChain struct {
+	chain []*chainedHttpMiddleware
 }
 
-func (h *triggerMiddlewareChain) invoke(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
+func (h *httpMiddlewareChain) invoke(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// CreateTriggerMiddleware - Chains Trigger middleware functions together to single handler
-func ComposeTriggerMiddleware(funcs ...TriggerMiddleware) TriggerMiddleware {
-	mwareChain := &triggerMiddlewareChain{
-		chain: make([]*chainedTriggerMiddleware, len(funcs)),
+// ComposeHttpMiddleware - Composes an array of middleware into a single middleware
+func ComposeHttpMiddlware(funcs ...HttpMiddleware) HttpMiddleware {
+	mwareChain := &httpMiddlewareChain{
+		chain: make([]*chainedHttpMiddleware, len(funcs)),
 	}
 
-	var nextFunc TriggerHandler = nil
+	var nextFunc HttpHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedTriggerMiddleware{
+		cm := &chainedHttpMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}

@@ -14,54 +14,12 @@
 
 package faas
 
-import (
-	pb "github.com/nitrictech/go-sdk/interfaces/nitric/v1"
-)
-
-// NitricResponse - represents the results of calling a function.
-type NitricResponse struct {
-	context *ResponseContext
-	data    []byte
+type HttpResponse struct {
+	Status  int
+	Headers map[string][]string
+	Body    []byte
 }
 
-func (n *NitricResponse) SetData(data []byte) {
-	n.data = data
-}
-
-func (n *NitricResponse) GetContext() *ResponseContext {
-	return n.context
-}
-
-// ToTriggerResponse - Tranlates a Nitric Response for gRPC transport to the membrane
-func (n *NitricResponse) ToTriggerResponse() *pb.TriggerResponse {
-
-	triggerResponse := &pb.TriggerResponse{}
-
-	triggerResponse.Data = n.data
-
-	if n.context.IsHttp() {
-		http := n.context.AsHttp()
-		headers := make(map[string]*pb.HeaderValue)
-		for k, v := range http.Headers {
-			headers[k] = &pb.HeaderValue{
-				Value: v,
-			}
-		}
-
-		triggerResponse.Context = &pb.TriggerResponse_Http{
-			Http: &pb.HttpResponseContext{
-				Headers: headers,
-				Status:  int32(http.Status),
-			},
-		}
-	} else if n.context.IsTopic() {
-		topic := n.context.AsTopic()
-		triggerResponse.Context = &pb.TriggerResponse_Topic{
-			Topic: &pb.TopicResponseContext{
-				Success: topic.Success,
-			},
-		}
-	}
-
-	return triggerResponse
+type EventResponse struct {
+	Success bool
 }
