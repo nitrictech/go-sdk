@@ -23,7 +23,7 @@ import (
 
 // [END import]
 
-func presignUrl() {
+func presignUrlRead() {
 	// [START snippet]
 	// Create a new storage client
 	sc, err := storage.New()
@@ -34,7 +34,7 @@ func presignUrl() {
 
 	url, err := sc.Bucket("my-bucket").File("path/to/file").PresignUrl(storage.PresignUrlOptions{
 		Mode:   storage.ModeRead,
-		Expiry: 120,
+		Expiry: 3600,
 	})
 
 	if err != nil {
