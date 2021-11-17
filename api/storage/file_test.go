@@ -157,7 +157,7 @@ var _ = Describe("Object", func() {
 		})
 	})
 
-	Context("PresignUrl", func() {
+	Context("SignUrl", func() {
 		When("Invalid mode is provided", func() {
 			It("should return an error", func() {
 				obj := &fileImpl{
@@ -165,7 +165,7 @@ var _ = Describe("Object", func() {
 					key:    "test-object",
 				}
 
-				_, err := obj.PresignUrl(PresignUrlOptions{
+				_, err := obj.SignUrl(PresignUrlOptions{
 					Mode: 7,
 				})
 				Expect(err).Should(HaveOccurred())
@@ -191,7 +191,7 @@ var _ = Describe("Object", func() {
 					Operation:  v1.StoragePreSignUrlRequest_READ,
 				}).Return(nil, fmt.Errorf("mock error"))
 
-				_, err := obj.PresignUrl(PresignUrlOptions{})
+				_, err := obj.SignUrl(PresignUrlOptions{})
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("Unknown: mock error"))
 
@@ -199,7 +199,7 @@ var _ = Describe("Object", func() {
 			})
 		})
 
-		When("presignUrl is successful", func() {
+		When("SignUrl is successful", func() {
 			It("should not return an error", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
@@ -218,7 +218,7 @@ var _ = Describe("Object", func() {
 					Url: "http://example.com",
 				}, nil)
 
-				url, err := obj.PresignUrl(PresignUrlOptions{Mode: ModeWrite})
+				url, err := obj.SignUrl(PresignUrlOptions{Mode: ModeWrite})
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(url).To(Equal("http://example.com"))

@@ -23,7 +23,7 @@ import (
 
 // [END import]
 
-func presignUrlWrite() {
+func signUrlWrite() {
 	// [START snippet]
 	// Create a new storage client
 	sc, err := storage.New()
@@ -32,7 +32,7 @@ func presignUrlWrite() {
 		// handle client creation error...
 	}
 
-	url, err := sc.Bucket("my-bucket").File("path/to/file").PresignUrl(storage.PresignUrlOptions{
+	url, err := sc.Bucket("my-bucket").File("path/to/file").SignUrl(storage.PresignUrlOptions{
 		Mode:   storage.ModeWrite,
 		Expiry: 3600,
 	})

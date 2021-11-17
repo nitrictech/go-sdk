@@ -45,8 +45,8 @@ func TestStorage(t *testing.T) {
 	readFile()
 	writeFile()
 	deleteFile()
-	presignUrlRead()
-	presignUrlWrite()
+	signUrlRead()
+	signUrlWrite()
 	// Cleanup
 	grpcServer.Stop()
 	lis.Close()
