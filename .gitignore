@@ -20,7 +20,4 @@ bin/
 
 *.coverprofile
 
-# Ignore auto-generated mock files
-/mocks/*.go
-
 .vscode/
