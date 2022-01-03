@@ -34,7 +34,7 @@ func TestStorage(t *testing.T) {
 	mc.EXPECT().Write(gomock.Any(), gomock.Any()).Return(&v1.StorageWriteResponse{}, nil).Times(1)
 	mc.EXPECT().Read(gomock.Any(), gomock.Any()).Return(&v1.StorageReadResponse{}, nil).Times(1)
 	mc.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(&v1.StorageDeleteResponse{}, nil).Times(1)
-
+	mc.EXPECT().PreSignUrl(gomock.Any(), gomock.Any()).Return(&v1.StoragePreSignUrlResponse{}, nil).Times(2)
 	// Start the gRPC server with the mock instance and await for it
 	// to be called
 	lis, _ := net.Listen("tcp", ":50051")
@@ -45,6 +45,8 @@ func TestStorage(t *testing.T) {
 	readFile()
 	writeFile()
 	deleteFile()
+	signUrlRead()
+	signUrlWrite()
 	// Cleanup
 	grpcServer.Stop()
 	lis.Close()

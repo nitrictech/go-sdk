@@ -64,7 +64,12 @@ func TestFaasSnippets(t *testing.T) {
 
 	// Start the gRPC server with the mock instance and await for it
 	// to be called
-	lis, _ := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":50051")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	v1.RegisterFaasServiceServer(grpcServer, ms)
 	go grpcServer.Serve(lis)

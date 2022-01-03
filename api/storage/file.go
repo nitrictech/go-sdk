@@ -38,8 +38,8 @@ type File interface {
 	Write([]byte) error
 	// Delete - Delete this object
 	Delete() error
-	// PresignUrl - Creates a presigned Url for this file reference
-	PresignUrl(PresignUrlOptions) (string, error)
+	// SignUrl - Creates a signed Url for this file reference
+	SignUrl(PresignUrlOptions) (string, error)
 }
 
 type fileImpl struct {
@@ -97,7 +97,7 @@ func (p PresignUrlOptions) isValid() error {
 	return nil
 }
 
-func (o *fileImpl) PresignUrl(opts PresignUrlOptions) (string, error) {
+func (o *fileImpl) SignUrl(opts PresignUrlOptions) (string, error) {
 	if err := opts.isValid(); err != nil {
 		return "", errors.NewWithCause(codes.InvalidArgument, "invalid options", err)
 	}
