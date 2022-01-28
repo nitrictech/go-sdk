@@ -26,10 +26,17 @@ import (
 	"github.com/nitrictech/go-sdk/constants"
 )
 
+type ApiWorkerOptions struct {
+	ApiName     string
+	Path        string
+	HttpMethods []string
+}
+
 type HandlerBuilder interface {
 	Http(...HttpMiddleware) HandlerBuilder
 	Event(...EventMiddleware) HandlerBuilder
 	Default(...TriggerMiddleware) HandlerBuilder
+	WithApiWorkerOpts(ApiWorkerOptions) HandlerBuilder
 	Start() error
 }
 
@@ -40,9 +47,10 @@ type HandlerProvider interface {
 }
 
 type faasClientImpl struct {
-	http  HttpMiddleware
-	event EventMiddleware
-	trig  TriggerMiddleware
+	http          HttpMiddleware
+	apiWorkerOpts ApiWorkerOptions
+	event         EventMiddleware
+	trig          TriggerMiddleware
 }
 
 func (f *faasClientImpl) Http(mwares ...HttpMiddleware) HandlerBuilder {
@@ -98,13 +106,24 @@ func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
 	}
 
 	if stream, err := fsc.TriggerStream(context.TODO()); err == nil {
+		initRequest := &pb.InitRequest{}
+
+		if len(f.apiWorkerOpts.HttpMethods) > 0 {
+			initRequest.Worker = &pb.InitRequest_Api{
+				Api: &pb.ApiWorker{
+					Api:     f.apiWorkerOpts.ApiName,
+					Path:    f.apiWorkerOpts.Path,
+					Methods: f.apiWorkerOpts.HttpMethods,
+				},
+			}
+		}
+
 		// Let the membrane know the function is ready for initialization
 		err := stream.Send(&pb.ClientMessage{
 			Content: &pb.ClientMessage_InitRequest{
-				InitRequest: &pb.InitRequest{},
+				InitRequest: initRequest,
 			},
 		})
-
 		if err != nil {
 			return err
 		}
@@ -123,4 +142,9 @@ func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
 // Creates a new HandlerBuilder
 func New() HandlerBuilder {
 	return &faasClientImpl{}
+}
+
+func (f *faasClientImpl) WithApiWorkerOpts(opts ApiWorkerOptions) HandlerBuilder {
+	f.apiWorkerOpts = opts
+	return f
 }
