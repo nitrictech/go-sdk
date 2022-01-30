@@ -49,8 +49,8 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 			for key, val := range httpTrig.GetHeaders() {
 				headers[key] = val.Value
 			}
-		} else if httpTrig.GetHeadersOld() != nil {
-			for key, val := range httpTrig.GetHeadersOld() {
+		} else if httpTrig.GetHeadersOld() != nil { //nolint:staticcheck
+			for key, val := range httpTrig.GetHeadersOld() { //nolint:staticcheck
 				headers[key] = []string{val}
 			}
 		}
@@ -60,8 +60,8 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 			for k, v := range httpTrig.GetQueryParams() {
 				query[k] = v.Value
 			}
-		} else if httpTrig.GetQueryParamsOld() != nil {
-			for k, v := range httpTrig.GetQueryParamsOld() {
+		} else if httpTrig.GetQueryParamsOld() != nil { //nolint:staticcheck
+			for k, v := range httpTrig.GetQueryParamsOld() { //nolint:staticcheck
 				query[k] = []string{v}
 			}
 		}
@@ -115,7 +115,6 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 
 func triggerContextToGrpcTriggerResponse(trig *triggerContextImpl) (*pb.TriggerResponse, error) {
 	if trig.http != nil {
-
 		headers := make(map[string]*pb.HeaderValue)
 		headersOld := make(map[string]string)
 

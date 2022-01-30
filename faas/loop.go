@@ -23,7 +23,6 @@ import (
 )
 
 func faasLoop(stream pb.FaasService_TriggerStreamClient, f HandlerProvider, errorCh chan error) {
-
 	for {
 		// Block receiving a message
 		srvrMsg, err := stream.Recv()
@@ -71,7 +70,7 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f HandlerProvider, erro
 				}
 			} else if f.GetDefault() != nil {
 				// handle trigger
-				var newCtx TriggerContext = nil
+				var newCtx TriggerContext
 				newCtx, funcErr = f.GetDefault()(ctx, triggerDummy)
 				if newCtx != nil {
 					// Update response context

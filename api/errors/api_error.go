@@ -17,8 +17,9 @@ package errors
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
 
 type ApiError struct {
@@ -79,5 +80,4 @@ func NewWithCause(c codes.Code, msg string, cause error) error {
 		msg:   msg,
 		cause: cause,
 	}
-
 }

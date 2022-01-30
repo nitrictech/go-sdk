@@ -17,10 +17,11 @@ package queues
 import (
 	"context"
 
+	"google.golang.org/protobuf/types/known/structpb"
+
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type Task struct {
@@ -35,7 +36,7 @@ type Task struct {
 type ReceivedTask interface {
 	// Queue - Returns the name of the queue this task was retrieved from
 	Queue() string
-	// Task - Returns the Task data contained in this Recieved Task instance
+	// Task - Returns the Task data contained in this Received Task instance
 	Task() *Task
 	// Complete - Completes the task removing it from the queue
 	Complete() error

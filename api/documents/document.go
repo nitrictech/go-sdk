@@ -16,6 +16,7 @@ package documents
 
 import (
 	"github.com/mitchellh/mapstructure"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 )

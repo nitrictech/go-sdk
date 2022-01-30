@@ -16,13 +16,14 @@ package documents
 
 import (
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("DocumentIter", func() {

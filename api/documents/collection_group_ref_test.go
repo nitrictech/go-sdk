@@ -16,9 +16,10 @@ package documents
 
 import (
 	"github.com/golang/mock/gomock"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("CollectionGroupRef", func() {
@@ -54,7 +55,7 @@ var _ = Describe("CollectionGroupRef", func() {
 				Expect(ok).To(BeTrue())
 			})
 
-			It("should contain the sub collection refernce", func() {
+			It("should contain the sub collection references", func() {
 				Expect(qi.col.Name()).To(Equal("test-mock"))
 			})
 

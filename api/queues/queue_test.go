@@ -18,11 +18,12 @@ import (
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("Queue", func() {
@@ -89,7 +90,7 @@ var _ = Describe("Queue", func() {
 				},
 			})
 
-			It("should recieve the failed tasks from the QueueSendBatchResponse", func() {
+			It("should receive the failed tasks from the QueueSendBatchResponse", func() {
 				Expect(fts).To(HaveLen(1))
 				Expect(fts[0].Reason).To(Equal("Failed to send task"))
 				Expect(fts[0].Task.ID).To(Equal("1234"))
@@ -138,7 +139,7 @@ var _ = Describe("Queue", func() {
 
 				t, _ := q.Receive(1)
 
-				It("should recieve a single task", func() {
+				It("should receive a single task", func() {
 					Expect(t).To(HaveLen(1))
 				})
 
