@@ -18,10 +18,12 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc"
-
 	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/documents"
+	"github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/errors/codes"
+	"github.com/nitrictech/go-sdk/constants"
+	"google.golang.org/grpc"
 )
 
 type CollectionPermission string
@@ -37,7 +39,12 @@ var (
 )
 
 func NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
-	rsc := nitricv1.NewResourceServiceClient(&grpc.ClientConn{})
+	conn, err := grpc.Dial(constants.NitricAddress(), constants.DefaultOptions()...)
+	if err != nil {
+		return nil, errors.NewWithCause(codes.Unavailable, "Unable to dial Collection service", err)
+	}
+
+	rsc := nitricv1.NewResourceServiceClient(conn)
 
 	colRes := &nitricv1.Resource{
 		Type: nitricv1.ResourceType_Collection,
@@ -49,7 +56,7 @@ func NewCollection(name string, permissions ...CollectionPermission) (documents.
 		Config: &nitricv1.ResourceDeclareRequest_Collection{
 			Collection: &nitricv1.CollectionResource{},
 		}}
-	_, err := rsc.Declare(context.Background(), dr)
+	_, err = rsc.Declare(context.Background(), dr)
 	if err != nil {
 		return nil, err
 	}
