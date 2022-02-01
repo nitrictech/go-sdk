@@ -9,7 +9,8 @@ require (
 	github.com/google/addlicense v1.0.0
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/nitrictech/apis v0.13.0-rc.12
-	github.com/onsi/ginkgo v1.16.4
+	github.com/nitrictech/newcli v1.0.0-develop.5
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/uw-labs/lichen v0.1.4
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616

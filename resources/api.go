@@ -14,14 +14,18 @@
 
 package resources
 
-import "github.com/nitrictech/go-sdk/faas"
+import (
+	"path"
+
+	"github.com/nitrictech/go-sdk/faas"
+)
 
 type Route interface {
-	Get(handler ...faas.HttpMiddleware) error
-	Patch(handler ...faas.HttpMiddleware) error
-	Put(handler ...faas.HttpMiddleware) error
-	Post(handler ...faas.HttpMiddleware) error
-	Delete(handler ...faas.HttpMiddleware) error
+	Get(handler ...faas.HttpMiddleware)
+	Patch(handler ...faas.HttpMiddleware)
+	Put(handler ...faas.HttpMiddleware)
+	Post(handler ...faas.HttpMiddleware)
+	Delete(handler ...faas.HttpMiddleware)
 }
 
 type route struct {
@@ -29,14 +33,21 @@ type route struct {
 	handlerBuilder faas.HandlerBuilder
 }
 
-func NewRoute(apiName, path string) Route {
+func NewRoute(apiName, apiPath string) Route {
+	return run.NewRoute(apiName, apiPath)
+}
+
+func (m *manager) NewRoute(apiName, apiPath string) Route {
+	f := faas.New()
+	m.addStarter("route:"+path.Join(apiName, apiPath), f)
+
 	return &route{
 		opts: faas.ApiWorkerOptions{
 			ApiName:     apiName,
-			Path:        path,
+			Path:        apiPath,
 			HttpMethods: []string{},
 		},
-		handlerBuilder: faas.New(),
+		handlerBuilder: f,
 	}
 }
 
@@ -45,24 +56,24 @@ func (r *route) optsWithMethod(method string) faas.ApiWorkerOptions {
 	return r.opts
 }
 
-func (r *route) Get(handlers ...faas.HttpMiddleware) error {
-	return r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("GET")).Start()
+func (r *route) Get(handlers ...faas.HttpMiddleware) {
+	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("GET"))
 }
 
-func (r *route) Post(handlers ...faas.HttpMiddleware) error {
-	return r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("POST")).Start()
+func (r *route) Post(handlers ...faas.HttpMiddleware) {
+	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("POST"))
 }
 
-func (r *route) Put(handlers ...faas.HttpMiddleware) error {
-	return r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("PUT")).Start()
+func (r *route) Put(handlers ...faas.HttpMiddleware) {
+	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("PUT"))
 }
 
-func (r *route) Patch(handlers ...faas.HttpMiddleware) error {
-	return r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("PATCH")).Start()
+func (r *route) Patch(handlers ...faas.HttpMiddleware) {
+	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("PATCH"))
 }
 
-func (r *route) Delete(handlers ...faas.HttpMiddleware) error {
-	return r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("DELETE")).Start()
+func (r *route) Delete(handlers ...faas.HttpMiddleware) {
+	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("DELETE"))
 }
 
 //	mainApi := nitric.Api("main")
@@ -74,11 +85,11 @@ func (r *route) Delete(handlers ...faas.HttpMiddleware) error {
 //	})
 
 type Api interface {
-	Get(string, ...faas.HttpMiddleware) error
-	Put(string, ...faas.HttpMiddleware) error
-	Patch(string, ...faas.HttpMiddleware) error
-	Post(string, ...faas.HttpMiddleware) error
-	Delete(string, ...faas.HttpMiddleware) error
+	Get(string, ...faas.HttpMiddleware)
+	Put(string, ...faas.HttpMiddleware)
+	Patch(string, ...faas.HttpMiddleware)
+	Post(string, ...faas.HttpMiddleware)
+	Delete(string, ...faas.HttpMiddleware)
 }
 
 type api struct {
@@ -86,49 +97,53 @@ type api struct {
 	routes map[string]Route
 }
 
-func NewApi(name string) Api {
+func (m *manager) NewApi(name string) Api {
 	return &api{
 		name:   name,
 		routes: map[string]Route{},
 	}
 }
 
-func (a *api) Get(match string, handlers ...faas.HttpMiddleware) error {
-	r, ok := a.routes[match]
-	if !ok {
-		r = NewRoute(a.name, match)
-	}
-	return r.Get(handlers...)
+func NewApi(name string) Api {
+	return run.NewApi(name)
 }
 
-func (a *api) Post(match string, handlers ...faas.HttpMiddleware) error {
+func (a *api) Get(match string, handlers ...faas.HttpMiddleware) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	return r.Post(handlers...)
+	r.Get(handlers...)
 }
 
-func (a *api) Patch(match string, handlers ...faas.HttpMiddleware) error {
+func (a *api) Post(match string, handlers ...faas.HttpMiddleware) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	return r.Patch(handlers...)
+	r.Post(handlers...)
 }
 
-func (a *api) Put(match string, handlers ...faas.HttpMiddleware) error {
+func (a *api) Patch(match string, handlers ...faas.HttpMiddleware) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	return r.Put(handlers...)
+	r.Patch(handlers...)
 }
 
-func (a *api) Delete(match string, handlers ...faas.HttpMiddleware) error {
+func (a *api) Put(match string, handlers ...faas.HttpMiddleware) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	return r.Delete(handlers...)
+	r.Put(handlers...)
+}
+
+func (a *api) Delete(match string, handlers ...faas.HttpMiddleware) {
+	r, ok := a.routes[match]
+	if !ok {
+		r = NewRoute(a.name, match)
+	}
+	r.Delete(handlers...)
 }

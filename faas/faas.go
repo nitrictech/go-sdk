@@ -18,12 +18,11 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc"
-
 	pb "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
+	"google.golang.org/grpc"
 )
 
 type ApiWorkerOptions struct {
@@ -32,11 +31,27 @@ type ApiWorkerOptions struct {
 	HttpMethods []string
 }
 
+type Frequency string //= "days" | "hours" | "minutes";
+
+var Frequencies = []Frequency{"days", "hours", "minutes"}
+
+type RateWorkerOptions struct {
+	Description string
+	Rate        int
+	Frequency   Frequency
+}
+
+type SubscriptionWorkerOptions struct {
+	Topic string
+}
+
 type HandlerBuilder interface {
 	Http(...HttpMiddleware) HandlerBuilder
 	Event(...EventMiddleware) HandlerBuilder
 	Default(...TriggerMiddleware) HandlerBuilder
 	WithApiWorkerOpts(ApiWorkerOptions) HandlerBuilder
+	WithRateWorkerOpts(RateWorkerOptions) HandlerBuilder
+	WithSubscriptionWorkerOpts(SubscriptionWorkerOptions) HandlerBuilder
 	Start() error
 }
 
@@ -47,10 +62,12 @@ type HandlerProvider interface {
 }
 
 type faasClientImpl struct {
-	http          HttpMiddleware
-	apiWorkerOpts ApiWorkerOptions
-	event         EventMiddleware
-	trig          TriggerMiddleware
+	http                   HttpMiddleware
+	apiWorkerOpts          ApiWorkerOptions
+	event                  EventMiddleware
+	rateWorkerOpts         RateWorkerOptions
+	subscriptionWorkerOpts SubscriptionWorkerOptions
+	trig                   TriggerMiddleware
 }
 
 func (f *faasClientImpl) Http(mwares ...HttpMiddleware) HandlerBuilder {
@@ -101,6 +118,7 @@ func (f *faasClientImpl) Start() error {
 }
 
 func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
+	// Fail if no handlers were provided
 	if f.http == nil && f.event == nil && f.trig == nil {
 		return fmt.Errorf("no valid handlers provided")
 	}
@@ -114,6 +132,25 @@ func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
 					Api:     f.apiWorkerOpts.ApiName,
 					Path:    f.apiWorkerOpts.Path,
 					Methods: f.apiWorkerOpts.HttpMethods,
+				},
+			}
+		}
+		if f.rateWorkerOpts.Rate > 0 {
+			initRequest.Worker = &pb.InitRequest_Schedule{
+				Schedule: &pb.ScheduleWorker{
+					Key: f.rateWorkerOpts.Description,
+					Cadence: &pb.ScheduleWorker_Rate{
+						Rate: &pb.ScheduleRate{
+							Rate: fmt.Sprintf("%d %s", f.rateWorkerOpts.Rate, string(f.rateWorkerOpts.Frequency)),
+						},
+					},
+				},
+			}
+		}
+		if len(f.subscriptionWorkerOpts.Topic) > 0 {
+			initRequest.Worker = &pb.InitRequest_Subscription{
+				Subscription: &pb.SubscriptionWorker{
+					Topic: f.subscriptionWorkerOpts.Topic,
 				},
 			}
 		}
@@ -146,5 +183,15 @@ func New() HandlerBuilder {
 
 func (f *faasClientImpl) WithApiWorkerOpts(opts ApiWorkerOptions) HandlerBuilder {
 	f.apiWorkerOpts = opts
+	return f
+}
+
+func (f *faasClientImpl) WithRateWorkerOpts(opts RateWorkerOptions) HandlerBuilder {
+	f.rateWorkerOpts = opts
+	return f
+}
+
+func (f *faasClientImpl) WithSubscriptionWorkerOpts(opts SubscriptionWorkerOptions) HandlerBuilder {
+	f.subscriptionWorkerOpts = opts
 	return f
 }

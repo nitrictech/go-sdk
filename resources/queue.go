@@ -19,40 +19,39 @@ import (
 	"fmt"
 
 	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
-	"github.com/nitrictech/go-sdk/api/documents"
+	"github.com/nitrictech/go-sdk/api/queues"
 )
 
-type CollectionPermission string
+type QueuePermission string
 
 const (
-	CollectionReading  CollectionPermission = "reading"
-	CollectionWriting  CollectionPermission = "writing"
-	CollectionDeleting CollectionPermission = "deleting"
+	QueueSending  QueuePermission = "sending"
+	QueueReceving QueuePermission = "receiving"
 )
 
 var (
-	CollectionEverything []CollectionPermission = []CollectionPermission{CollectionReading, CollectionWriting, CollectionDeleting}
+	QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceving}
 )
 
-func NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
-	return run.NewCollection(name, permissions...)
+func NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
+	return run.NewQueue(name, permissions...)
 }
 
-func (m *manager) NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
+func (m *manager) NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
 	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
 
 	colRes := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Collection,
+		Type: nitricv1.ResourceType_Queue,
 		Name: name,
 	}
 
 	dr := &nitricv1.ResourceDeclareRequest{
 		Resource: colRes,
-		Config: &nitricv1.ResourceDeclareRequest_Collection{
-			Collection: &nitricv1.CollectionResource{},
+		Config: &nitricv1.ResourceDeclareRequest_Queue{
+			Queue: &nitricv1.QueueResource{},
 		}}
 	_, err = rsc.Declare(context.Background(), dr)
 	if err != nil {
@@ -62,14 +61,12 @@ func (m *manager) NewCollection(name string, permissions ...CollectionPermission
 	actions := []nitricv1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case CollectionReading:
-			actions = append(actions, nitricv1.Action_CollectionDocumentRead, nitricv1.Action_CollectionList, nitricv1.Action_CollectionQuery)
-		case CollectionWriting:
-			actions = append(actions, nitricv1.Action_CollectionDocumentWrite)
-		case CollectionDeleting:
-			actions = append(actions, nitricv1.Action_CollectionDocumentDelete)
+		case QueueReceving:
+			actions = append(actions, nitricv1.Action_QueueReceive)
+		case QueueSending:
+			actions = append(actions, nitricv1.Action_QueueSend)
 		default:
-			return nil, fmt.Errorf("collectionPermission %s unknown", perm)
+			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
 		}
 	}
 
@@ -78,10 +75,10 @@ func (m *manager) NewCollection(name string, permissions ...CollectionPermission
 		return nil, err
 	}
 
-	dc, err := documents.New()
+	qs, err := queues.New()
 	if err != nil {
 		return nil, err
 	}
 
-	return dc.Collection(name), nil
+	return qs.Queue(name), nil
 }

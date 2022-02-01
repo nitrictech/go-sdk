@@ -18,9 +18,10 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/golang/mock/gomock"
 
 	pb "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
@@ -136,6 +137,7 @@ var _ = Describe("Faas", func() {
 				impl.Http(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					return ctx, nil
 				})
+				impl.WithApiWorkerOpts(ApiWorkerOptions{ApiName: "test", Path: "apples", HttpMethods: []string{"GET"}})
 
 				It("should start the faas loop", func() {
 					By("Opening a stream with the Faas server")
@@ -144,7 +146,15 @@ var _ = Describe("Faas", func() {
 					By("Sending an InitRequest")
 					mockStream.EXPECT().Send(&pb.ClientMessage{
 						Content: &pb.ClientMessage_InitRequest{
-							InitRequest: &pb.InitRequest{},
+							InitRequest: &pb.InitRequest{
+								Worker: &pb.InitRequest_Api{
+									Api: &pb.ApiWorker{
+										Api:     "test",
+										Path:    "apples",
+										Methods: []string{"GET"},
+									},
+								},
+							},
 						},
 					}).Return(nil)
 

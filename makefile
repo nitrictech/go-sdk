@@ -53,13 +53,15 @@ clean:
 # Generate mock implementations
 generate-mocks:
 	@echo Generating Mock RPC Clients
-	@go run github.com/golang/mock/mockgen github.com/nitrictech/apis/go/nitric/v1 DocumentServiceClient,EventServiceClient,TopicServiceClient,QueueServiceClient,StorageServiceClient,FaasServiceClient,FaasService_TriggerStreamClient,DocumentService_QueryStreamClient,SecretServiceClient > mocks/clients.go
+	@go run github.com/golang/mock/mockgen github.com/nitrictech/apis/go/nitric/v1 DocumentServiceClient,EventServiceClient,TopicServiceClient,QueueServiceClient,StorageServiceClient,FaasServiceClient,FaasService_TriggerStreamClient,DocumentService_QueryStreamClient,SecretServiceClient,ResourceServiceClient > mocks/clients.go
 	@go run github.com/golang/mock/mockgen github.com/nitrictech/apis/go/nitric/v1 DocumentServiceServer,EventServiceServer,TopicServiceServer,QueueServiceServer,StorageServiceServer,FaasServiceServer,FaasService_TriggerStreamServer,DocumentService_QueryStreamServer,SecretServiceServer > mocks/servers.go
+	@go run github.com/golang/mock/mockgen -package mock_v1 google.golang.org/grpc ClientConnInterface > mocks/grpc_clientconn.go
+	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/storage Storage > mocks/mockapi/storage.go
 
 # Runs tests for coverage upload to codecov.io
 test-ci: generate-mocks
 	@echo Testing Nitric Go SDK
-	@go run github.com/onsi/ginkgo/ginkgo -cover -outputdir=./ -coverprofile=all.coverprofile ./api/... ./faas/...
+	@go run github.com/onsi/ginkgo/ginkgo -cover -outputdir=./ -coverprofile=all.coverprofile ./resources/... ./api/... ./faas/...
 
 test-examples: generate-mocks
 	@echo Testing Nitric Go SDK Examples
@@ -68,4 +70,4 @@ test-examples: generate-mocks
 .PHONY: test
 test: generate-mocks
 	@echo Testing Nitric Go SDK
-	@go run github.com/onsi/ginkgo/ginkgo -cover ./api/... ./faas/...
+	@go run github.com/onsi/ginkgo/ginkgo -cover ./resources/... ./api/... ./faas/...
