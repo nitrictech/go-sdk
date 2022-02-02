@@ -27,7 +27,7 @@ type CollectionRef interface {
 	Query() Query
 	Parent() DocumentRef
 	Collection(string) CollectionGroupRef
-	toWire() *v1.Collection
+	ToWire() *v1.Collection
 }
 
 type collectionRefImpl struct {
@@ -69,8 +69,8 @@ func (c *collectionRefImpl) Collection(name string) CollectionGroupRef {
 	}
 }
 
-// toWire - tranlates a Collection for on-wire transport
-func (c *collectionRefImpl) toWire() *v1.Collection {
+// ToWire - tranlates a Collection for on-wire transport
+func (c *collectionRefImpl) ToWire() *v1.Collection {
 	if c.parentDocument != nil {
 		return &v1.Collection{
 			Name:   c.name,

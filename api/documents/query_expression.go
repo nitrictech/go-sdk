@@ -53,11 +53,11 @@ type queryExpression struct {
 	val   *value
 }
 
-func (q *queryExpression) toWire() (*v1.Expression, error) {
+func (q *queryExpression) ToWire() (*v1.Expression, error) {
 	if q.field == "" {
 		return nil, errors.New(
 			codes.InvalidArgument,
-			"queryExpress.toWire: provide non-blank field name",
+			"queryExpress.ToWire: provide non-blank field name",
 		)
 	}
 
@@ -65,7 +65,7 @@ func (q *queryExpression) toWire() (*v1.Expression, error) {
 		return nil, err
 	}
 
-	wv, err := q.val.toWire()
+	wv, err := q.val.ToWire()
 
 	if err != nil {
 		return nil, err
