@@ -56,7 +56,8 @@ generate-mocks:
 	@go run github.com/golang/mock/mockgen github.com/nitrictech/apis/go/nitric/v1 DocumentServiceClient,EventServiceClient,TopicServiceClient,QueueServiceClient,StorageServiceClient,FaasServiceClient,FaasService_TriggerStreamClient,DocumentService_QueryStreamClient,SecretServiceClient,ResourceServiceClient > mocks/clients.go
 	@go run github.com/golang/mock/mockgen github.com/nitrictech/apis/go/nitric/v1 DocumentServiceServer,EventServiceServer,TopicServiceServer,QueueServiceServer,StorageServiceServer,FaasServiceServer,FaasService_TriggerStreamServer,DocumentService_QueryStreamServer,SecretServiceServer > mocks/servers.go
 	@go run github.com/golang/mock/mockgen -package mock_v1 google.golang.org/grpc ClientConnInterface > mocks/grpc_clientconn.go
-	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/storage Storage > mocks/mockapi/storage.go
+	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/storage Storage,Bucket > mocks/mockapi/storage.go
+	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/documents Documents,CollectionRef > mocks/mockapi/documents.go
 
 # Runs tests for coverage upload to codecov.io
 test-ci: generate-mocks

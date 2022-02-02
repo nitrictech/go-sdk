@@ -27,29 +27,29 @@ import (
 	"github.com/nitrictech/go-sdk/mocks/mockapi"
 )
 
-var _ = Describe("bucket", func() {
+var _ = Describe("collection", func() {
 	ctrl := gomock.NewController(GinkgoT())
 	Context("New", func() {
 		mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 		When("valid args", func() {
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
-			mockStorage := mockapi.NewMockStorage(ctrl)
+			mockDocuments := mockapi.NewMockDocuments(ctrl)
 
 			m := &manager{
 				blockers: map[string]Starter{},
 				conn:     mockConn,
 				rsc:      mockClient,
-				storage:  mockStorage,
+				docs:     mockDocuments,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),
 				&nitricv1.ResourceDeclareRequest{
 					Resource: &nitricv1.Resource{
-						Type: nitricv1.ResourceType_Bucket,
-						Name: "red",
+						Type: nitricv1.ResourceType_Collection,
+						Name: "gold",
 					},
-					Config: &nitricv1.ResourceDeclareRequest_Bucket{
-						Bucket: &nitricv1.BucketResource{},
+					Config: &nitricv1.ResourceDeclareRequest_Collection{
+						Collection: &nitricv1.CollectionResource{},
 					},
 				})
 
@@ -64,19 +64,19 @@ var _ = Describe("bucket", func() {
 								Type: nitricv1.ResourceType_Function,
 							}},
 							Actions: []nitricv1.Action{
-								nitricv1.Action_BucketFileGet, nitricv1.Action_BucketFileList, nitricv1.Action_BucketFilePut,
+								nitricv1.Action_CollectionDocumentRead, nitricv1.Action_CollectionList, nitricv1.Action_CollectionQuery, nitricv1.Action_CollectionDocumentWrite,
 							},
 							Resources: []*nitricv1.Resource{{
-								Type: nitricv1.ResourceType_Bucket,
-								Name: "red",
+								Type: nitricv1.ResourceType_Collection,
+								Name: "gold",
 							}},
 						},
 					},
 				})
 
-			mockBucket := mockapi.NewMockBucket(ctrl)
-			mockStorage.EXPECT().Bucket("red").Return(mockBucket)
-			b, err := m.NewBucket("red", BucketReading, BucketWriting)
+			mockCollectionRef := mockapi.NewMockCollectionRef(ctrl)
+			mockDocuments.EXPECT().Collection("gold").Return(mockCollectionRef)
+			b, err := m.NewCollection("gold", CollectionReading, CollectionWriting)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

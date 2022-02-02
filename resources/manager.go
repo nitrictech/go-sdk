@@ -56,6 +56,7 @@ type manager struct {
 	rsc     v1.ResourceServiceClient
 	evts    events.Events
 	storage storage.Storage
+	docs    documents.Documents
 }
 
 var (

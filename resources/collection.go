@@ -78,10 +78,12 @@ func (m *manager) NewCollection(name string, permissions ...CollectionPermission
 		return nil, err
 	}
 
-	dc, err := documents.New()
-	if err != nil {
-		return nil, err
+	if m.docs == nil {
+		m.docs, err = documents.New()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return dc.Collection(name), nil
+	return m.docs.Collection(name), nil
 }

@@ -3,7 +3,7 @@ module github.com/nitrictech/go-sdk
 go 1.16
 
 require (
-	github.com/golang/mock v1.6.0
+	github.com/golang/mock v1.6.1-0.20220113215914-32e424a26556
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.44.0
 	github.com/google/addlicense v1.0.0
