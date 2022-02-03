@@ -50,4 +50,66 @@ var _ = Describe("schedule", func() {
 			})
 		})
 	})
+	Context("rateSplit", func() {
+		When("hours", func() {
+			It("2 hours", func() {
+				r, f, err := rateSplit("2 hours")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(2))
+				Expect(f).To(Equal(faas.Frequency("hours")))
+			})
+			It("1 hours", func() {
+				r, f, err := rateSplit("1 hours")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(1))
+				Expect(f).To(Equal(faas.Frequency("hours")))
+			})
+			It("hour", func() {
+				r, f, err := rateSplit("hour")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(1))
+				Expect(f).To(Equal(faas.Frequency("hours")))
+			})
+		})
+		When("days", func() {
+			It("day", func() {
+				r, f, err := rateSplit("day")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(1))
+				Expect(f).To(Equal(faas.Frequency("days")))
+			})
+			It("1 day", func() {
+				r, f, err := rateSplit("1 days")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(1))
+				Expect(f).To(Equal(faas.Frequency("days")))
+			})
+			It("89 day", func() {
+				r, f, err := rateSplit("89 days")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(89))
+				Expect(f).To(Equal(faas.Frequency("days")))
+			})
+		})
+		When("minutes", func() {
+			It("minute", func() {
+				r, f, err := rateSplit("minute")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(1))
+				Expect(f).To(Equal(faas.Frequency("minutes")))
+			})
+			It("1 minutes", func() {
+				r, f, err := rateSplit("1 minutes")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(1))
+				Expect(f).To(Equal(faas.Frequency("minutes")))
+			})
+			It("89 minutes", func() {
+				r, f, err := rateSplit("89 minutes")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(r).To(Equal(89))
+				Expect(f).To(Equal(faas.Frequency("minutes")))
+			})
+		})
+	})
 })

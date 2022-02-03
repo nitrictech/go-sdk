@@ -22,9 +22,18 @@ import (
 	"github.com/nitrictech/go-sdk/faas"
 )
 
+var singularRates = []string{"minute", "hour", "day"}
+
 func rateSplit(rate string) (int, faas.Frequency, error) {
 	rateParts := strings.Split(rate, " ")
-	if len(rateParts) < 2 {
+	if len(rateParts) == 1 {
+		for _, r := range singularRates {
+			if r == rateParts[0] {
+				return 1, faas.Frequency(r + "s"), nil
+			}
+		}
+	}
+	if len(rateParts) != 2 {
 		return 0, "", fmt.Errorf("not enough parts to rate expression %s", rate)
 	}
 	rateNum := rateParts[0]
@@ -35,19 +44,12 @@ func rateSplit(rate string) (int, faas.Frequency, error) {
 		return 0, "", fmt.Errorf("invalid rate expression %s; %w", rate, err)
 	}
 
-	switch rateType {
-	case "minutes":
-		// Every nth minute
-		return num, faas.Frequency(rateType), nil
-	case "hours":
-		// The top of every nth hour
-		return num, faas.Frequency(rateType), nil
-	case "days":
-		// Midnight every nth day
-		return num, faas.Frequency(rateType), nil
-	default:
-		return 0, "", fmt.Errorf("invalid rate expression %s; %s must be one of [minutes, hours, days]", rate, rateType)
+	for _, r := range singularRates {
+		if r+"s" == rateType {
+			return num, faas.Frequency(rateType), nil
+		}
 	}
+	return 0, "", fmt.Errorf("invalid rate expression %s; %s must be one of [minutes, hours, days]", rate, rateType)
 }
 
 func NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error {
