@@ -55,15 +55,25 @@ func NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error {
 }
 
 func (m *manager) NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error {
-	f := faas.New()
+	f, ok := m.builders[name]
+	if !ok {
+		f = faas.New()
+	}
+
 	r, freq, err := rateSplit(rate)
 	if err != nil {
 		return err
 	}
-	f.WithRateWorkerOpts(faas.RateWorkerOptions{Description: name, Rate: r, Frequency: freq})
-	f.Event(handlers...)
+
+	f.Event(handlers...).
+		WithRateWorkerOpts(faas.RateWorkerOptions{
+			Description: name,
+			Rate:        r,
+			Frequency:   freq,
+		})
 
 	m.addStarter(fmt.Sprintf("schedule:%s/%s", name, rate), f)
+	m.builders[name] = f
 
 	return nil
 }

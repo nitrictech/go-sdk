@@ -75,10 +75,12 @@ func (m *manager) NewQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	qs, err := queues.New()
-	if err != nil {
-		return nil, err
+	if m.queues == nil {
+		m.queues, err = queues.New()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return qs.Queue(name), nil
+	return m.queues.Queue(name), nil
 }

@@ -21,6 +21,8 @@ import (
 	"os"
 	"sync"
 
+	"google.golang.org/grpc"
+
 	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/documents"
@@ -31,7 +33,6 @@ import (
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
 	"github.com/nitrictech/newcli/pkg/utils"
-	"google.golang.org/grpc"
 )
 
 type Starter interface {
@@ -53,19 +54,25 @@ type manager struct {
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
-	rsc     v1.ResourceServiceClient
-	evts    events.Events
-	storage storage.Storage
-	docs    documents.Documents
+	rsc      v1.ResourceServiceClient
+	evts     events.Events
+	storage  storage.Storage
+	docs     documents.Documents
+	queues   queues.Queues
+	builders map[string]faas.HandlerBuilder
 }
 
 var (
-	run = &manager{blockers: map[string]Starter{}}
+	run = &manager{
+		blockers: map[string]Starter{},
+		builders: map[string]faas.HandlerBuilder{},
+	}
 )
 
 func New() Manager {
 	return &manager{
 		blockers: map[string]Starter{},
+		builders: map[string]faas.HandlerBuilder{},
 	}
 }
 

@@ -58,7 +58,8 @@ func (m *manager) NewTopic(name string, permissions ...TopicPermission) (Topic, 
 		Resource: res,
 		Config: &nitricv1.ResourceDeclareRequest_Topic{
 			Topic: &nitricv1.TopicResource{},
-		}}
+		},
+	}
 	_, err = rsc.Declare(context.Background(), dr)
 	if err != nil {
 		return nil, err
