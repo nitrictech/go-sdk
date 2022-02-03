@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 
 	"google.golang.org/grpc"
@@ -126,7 +127,7 @@ func (m *manager) Run() error {
 }
 
 func IsBuildEnvirnonment() bool {
-	return os.Getenv("NITRIC_BUILD") == "true"
+	return strings.ToLower(os.Getenv("NITRIC_ENVIRONMENT")) == "build"
 }
 
 func isEOF(err error) bool {
