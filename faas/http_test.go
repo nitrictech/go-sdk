@@ -54,9 +54,10 @@ var _ = Describe("Http", func() {
 			)
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&HttpContext{
+				_, err := hndlr(&HttpContext{
 					Response: &HttpResponse{},
 				}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2"}))
 			})
@@ -82,9 +83,10 @@ var _ = Describe("Http", func() {
 			))
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&HttpContext{
+				_, err := hndlr(&HttpContext{
 					Response: &HttpResponse{},
 				}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2", "3"}))
 			})

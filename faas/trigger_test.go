@@ -58,7 +58,8 @@ var _ = Describe("Trigger", func() {
 			)
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&triggerContextImpl{}, nil)
+				_, err := hndlr(&triggerContextImpl{}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2"}))
 			})
@@ -84,9 +85,10 @@ var _ = Describe("Trigger", func() {
 			))
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&triggerContextImpl{
+				_, err := hndlr(&triggerContextImpl{
 					http: &HttpContext{},
 				}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2", "3"}))
 			})

@@ -18,11 +18,12 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc"
+
 	pb "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	"google.golang.org/grpc"
 )
 
 type HandlerBuilder interface {

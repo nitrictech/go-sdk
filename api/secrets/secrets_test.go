@@ -15,11 +15,13 @@
 package secrets
 
 import (
+	"os"
+
 	"github.com/golang/mock/gomock"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"os"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("Secrets", func() {

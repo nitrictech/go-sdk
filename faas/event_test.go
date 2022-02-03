@@ -54,9 +54,10 @@ var _ = Describe("Event", func() {
 			)
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&EventContext{
+				_, err := hndlr(&EventContext{
 					Response: &EventResponse{},
 				}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2"}))
 			})
@@ -82,9 +83,10 @@ var _ = Describe("Event", func() {
 			))
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&EventContext{
+				_, err := hndlr(&EventContext{
 					Response: &EventResponse{},
 				}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2", "3"}))
 			})

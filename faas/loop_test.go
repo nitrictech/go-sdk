@@ -18,10 +18,11 @@ import (
 	"io"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 type handlerSpy struct {
@@ -63,7 +64,7 @@ var _ = Describe("look", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-				By("recieving the error from the stream")
+				By("receiving the error from the stream")
 				mockStream.EXPECT().Recv().Return(nil, io.EOF)
 
 				err := awaitFaasLoop(mockStream, &faasClientImpl{
@@ -120,7 +121,7 @@ var _ = Describe("look", func() {
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockHttpRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
@@ -149,7 +150,7 @@ var _ = Describe("look", func() {
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockHttpRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
@@ -248,7 +249,7 @@ var _ = Describe("look", func() {
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockTopicRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
@@ -277,7 +278,7 @@ var _ = Describe("look", func() {
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockTopicRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
