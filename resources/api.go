@@ -76,14 +76,6 @@ func (r *route) Delete(handlers ...faas.HttpMiddleware) {
 	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("DELETE"))
 }
 
-//	mainApi := nitric.Api("main")
-//
-//	mainApi.Get("/hello/:name", func(ctx *faas.HttpContext, next *faas.HttpHandler) *faas.HttpContext {
-//	  // implement
-//
-//    return next(ctx)
-//	})
-
 type Api interface {
 	Get(string, ...faas.HttpMiddleware)
 	Put(string, ...faas.HttpMiddleware)
