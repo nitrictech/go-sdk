@@ -79,7 +79,7 @@ var _ = Describe("DocumentIter", func() {
 
 			It("should pass through the error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Aborted: mock-error"))
+				Expect(err.Error()).To(Equal("Aborted: mock-error: \n rpc error: code = Aborted desc = mock-error"))
 			})
 		})
 

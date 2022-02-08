@@ -41,7 +41,7 @@ var _ = Describe("QueryExpression", func() {
 		})
 	})
 
-	Context("toWire", func() {
+	Context("ToWire", func() {
 		When("translating a valid query expression to wire", func() {
 			qe := &queryExpression{
 				field: "test",
@@ -49,7 +49,7 @@ var _ = Describe("QueryExpression", func() {
 				val:   StringValue("test"),
 			}
 
-			r, err := qe.toWire()
+			r, err := qe.ToWire()
 
 			It("should not return an error", func() {
 				Expect(err).ToNot(HaveOccurred())
@@ -74,11 +74,11 @@ var _ = Describe("QueryExpression", func() {
 				val: StringValue("test"),
 			}
 
-			_, err := qe.toWire()
+			_, err := qe.ToWire()
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Invalid Argument: queryExpress.toWire: provide non-blank field name"))
+				Expect(err.Error()).To(Equal("Invalid Argument: queryExpress.ToWire: provide non-blank field name"))
 			})
 		})
 
@@ -89,7 +89,7 @@ var _ = Describe("QueryExpression", func() {
 				val:   StringValue("test"),
 			}
 
-			_, err := qe.toWire()
+			_, err := qe.ToWire()
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
@@ -104,11 +104,11 @@ var _ = Describe("QueryExpression", func() {
 				val:   &value{},
 			}
 
-			_, err := qe.toWire()
+			_, err := qe.ToWire()
 
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Invalid Argument: value.toWire: Invalid Query Value"))
+				Expect(err.Error()).To(Equal("Invalid Argument: value.ToWire: Invalid Query Value"))
 			})
 		})
 	})

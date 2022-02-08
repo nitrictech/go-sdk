@@ -89,7 +89,7 @@ func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef
 func (d *documentRefImpl) toWireKey() *v1.Key {
 	return &v1.Key{
 		Id:         d.id,
-		Collection: d.col.toWire(),
+		Collection: d.col.ToWire(),
 	}
 }
 

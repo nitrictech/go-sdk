@@ -89,9 +89,9 @@ var _ = Describe("CollectionRef", func() {
 		})
 	})
 
-	Context("toWire", func() {
+	Context("ToWire", func() {
 		When("translating a collection without a parent reference to wire", func() {
-			wc := mc.toWire()
+			wc := mc.ToWire()
 
 			It("should have the same name as the collectionRef", func() {
 				Expect(wc.GetName()).To(Equal(mc.name))
@@ -116,7 +116,7 @@ var _ = Describe("CollectionRef", func() {
 				name: "test-mock-child",
 			}
 
-			wc := mpc.toWire()
+			wc := mpc.ToWire()
 
 			It("should have the same name as the collectionRef", func() {
 				Expect(wc.GetName()).To(Equal("test-mock-child"))

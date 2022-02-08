@@ -113,7 +113,7 @@ var _ = Describe("Query", func() {
 
 					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
-						Expect(err.Error()).To(Equal("Unimplemented: mock-error"))
+						Expect(err.Error()).To(Equal("Unimplemented: mock-error: \n rpc error: code = Unimplemented desc = mock-error"))
 					})
 				})
 
@@ -223,7 +223,7 @@ var _ = Describe("Query", func() {
 
 					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
-						Expect(err.Error()).To(Equal("Unknown: mock-error"))
+						Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock-error"))
 					})
 				})
 

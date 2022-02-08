@@ -52,7 +52,7 @@ var _ = Describe("Queue", func() {
 
 			It("should pass through the error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unknown: mock error"))
+				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 			})
 		})
 

@@ -73,7 +73,7 @@ func (q *queryImpl) expressionsToWire() ([]*v1.Expression, error) {
 	expressions := make([]*v1.Expression, 0, len(q.exps))
 
 	for _, e := range q.exps {
-		wexp, err := e.toWire()
+		wexp, err := e.ToWire()
 
 		if err != nil {
 			return nil, err
@@ -104,7 +104,7 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 	}
 
 	r, err := q.dc.Query(context.TODO(), &v1.DocumentQueryRequest{
-		Collection:  q.col.toWire(),
+		Collection:  q.col.ToWire(),
 		Expressions: expressions,
 		Limit:       int32(q.limit),
 		PagingToken: token,
@@ -145,7 +145,7 @@ func (q *queryImpl) Stream() (DocumentIter, error) {
 	}
 
 	r, err := q.dc.QueryStream(context.TODO(), &v1.DocumentQueryStreamRequest{
-		Collection:  q.col.toWire(),
+		Collection:  q.col.ToWire(),
 		Expressions: expressions,
 		Limit:       int32(q.limit),
 	})

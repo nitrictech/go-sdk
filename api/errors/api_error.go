@@ -45,14 +45,16 @@ func (a *ApiError) Error() string {
 func FromGrpcError(err error) error {
 	if s, ok := status.FromError(err); ok {
 		return &ApiError{
-			code: codes.Code(s.Code()),
-			msg:  s.Message(),
+			code:  codes.Code(s.Code()),
+			msg:   s.Message(),
+			cause: err,
 		}
 	}
 
 	return &ApiError{
-		code: codes.Unknown,
-		msg:  err.Error(),
+		code:  codes.Unknown,
+		msg:   "error from grpc library",
+		cause: err,
 	}
 }
 
