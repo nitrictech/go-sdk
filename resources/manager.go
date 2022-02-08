@@ -131,9 +131,15 @@ func IsBuildEnvirnonment() bool {
 }
 
 func isEOF(err error) bool {
+	if err == nil {
+		return false
+	}
 	var apiErr *apierrors.ApiError
 	if errors.As(err, &apiErr) {
 		err = apiErr.Unwrap()
 	}
-	return errors.Is(err, io.EOF)
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, io.EOF) || err.Error() == io.EOF.Error()
 }

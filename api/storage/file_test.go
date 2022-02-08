@@ -45,7 +45,7 @@ var _ = Describe("Object", func() {
 
 				_, err := obj.Read()
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unknown: mock error"))
+				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
 				ctrl.Finish()
 			})
@@ -90,7 +90,7 @@ var _ = Describe("Object", func() {
 
 				err := obj.Write([]byte("test"))
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unknown: mock error"))
+				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
 				ctrl.Finish()
 			})
@@ -132,7 +132,7 @@ var _ = Describe("Object", func() {
 				mockStorage.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 				err := obj.Delete()
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unknown: mock error"))
+				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
 				ctrl.Finish()
 			})
@@ -194,7 +194,7 @@ var _ = Describe("Object", func() {
 
 				_, err := obj.SignUrl(PresignUrlOptions{})
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unknown: mock error"))
+				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
 				ctrl.Finish()
 			})
