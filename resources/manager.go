@@ -16,7 +16,6 @@ package resources
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -106,8 +105,7 @@ func (m *manager) Run() error {
 	wg := sync.WaitGroup{}
 	errList := utils.NewErrorList()
 
-	for name, blocker := range m.blockers {
-		fmt.Println("Starting ", name)
+	for _, blocker := range m.blockers {
 		wg.Add(1)
 		go func(s Starter) {
 			defer wg.Done()

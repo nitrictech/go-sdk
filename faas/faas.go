@@ -17,6 +17,7 @@ package faas
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc"
 
@@ -27,9 +28,8 @@ import (
 )
 
 type ApiWorkerOptions struct {
-	ApiName     string
-	Path        string
-	HttpMethods []string
+	ApiName string
+	Path    string
 }
 
 type Frequency string //= "days" | "hours" | "minutes";
@@ -47,23 +47,24 @@ type SubscriptionWorkerOptions struct {
 }
 
 type HandlerBuilder interface {
-	Http(...HttpMiddleware) HandlerBuilder
+	Http(string, ...HttpMiddleware) HandlerBuilder
 	Event(...EventMiddleware) HandlerBuilder
 	Default(...TriggerMiddleware) HandlerBuilder
 	WithApiWorkerOpts(ApiWorkerOptions) HandlerBuilder
 	WithRateWorkerOpts(RateWorkerOptions) HandlerBuilder
 	WithSubscriptionWorkerOpts(SubscriptionWorkerOptions) HandlerBuilder
 	Start() error
+	String() string
 }
 
 type HandlerProvider interface {
-	GetHttp() HttpMiddleware
+	GetHttp(method string) HttpMiddleware
 	GetEvent() EventMiddleware
 	GetDefault() TriggerMiddleware
 }
 
 type faasClientImpl struct {
-	http                   HttpMiddleware
+	http                   map[string]HttpMiddleware
 	apiWorkerOpts          ApiWorkerOptions
 	event                  EventMiddleware
 	rateWorkerOpts         RateWorkerOptions
@@ -71,13 +72,36 @@ type faasClientImpl struct {
 	trig                   TriggerMiddleware
 }
 
-func (f *faasClientImpl) Http(mwares ...HttpMiddleware) HandlerBuilder {
-	f.http = ComposeHttpMiddlware(mwares...)
+func (f *faasClientImpl) String() string {
+	out := []string{}
+
+	if f.apiWorkerOpts.ApiName != "" {
+		methods := []string{}
+		for k := range f.http {
+			methods = append(methods, k)
+		}
+		out = append(out, fmt.Sprintf("Api:%s, path:%s methods:[%s]", f.apiWorkerOpts.ApiName, f.apiWorkerOpts.Path, strings.Join(methods, ",")))
+	}
+	if f.rateWorkerOpts.Frequency != "" {
+		out = append(out, fmt.Sprintf("Rate:%d, Freq:%d", f.rateWorkerOpts.Rate, f.rateWorkerOpts.Rate))
+	}
+	if f.subscriptionWorkerOpts.Topic != "" {
+		out = append(out, fmt.Sprintf("Subscribe:%s", f.subscriptionWorkerOpts.Topic))
+	}
+
+	return strings.Join(out, "\n")
+}
+
+func (f *faasClientImpl) Http(method string, mwares ...HttpMiddleware) HandlerBuilder {
+	f.http[method] = ComposeHttpMiddlware(mwares...)
 	return f
 }
 
-func (f *faasClientImpl) GetHttp() HttpMiddleware {
-	return f.http
+func (f *faasClientImpl) GetHttp(method string) HttpMiddleware {
+	if _, ok := f.http[method]; !ok {
+		return nil
+	}
+	return f.http[method]
 }
 
 func (f *faasClientImpl) Event(mwares ...EventMiddleware) HandlerBuilder {
@@ -120,19 +144,23 @@ func (f *faasClientImpl) Start() error {
 
 func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
 	// Fail if no handlers were provided
-	if f.http == nil && f.event == nil && f.trig == nil {
+	if len(f.http) == 0 && f.event == nil && f.trig == nil {
 		return fmt.Errorf("no valid handlers provided")
 	}
 
 	if stream, err := fsc.TriggerStream(context.TODO()); err == nil {
 		initRequest := &pb.InitRequest{}
 
-		if len(f.apiWorkerOpts.HttpMethods) > 0 {
+		if len(f.http) > 0 {
+			methods := []string{}
+			for k := range f.http {
+				methods = append(methods, k)
+			}
 			initRequest.Worker = &pb.InitRequest_Api{
 				Api: &pb.ApiWorker{
 					Api:     f.apiWorkerOpts.ApiName,
 					Path:    f.apiWorkerOpts.Path,
-					Methods: f.apiWorkerOpts.HttpMethods,
+					Methods: methods,
 				},
 			}
 		}
@@ -179,7 +207,7 @@ func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
 
 // Creates a new HandlerBuilder
 func New() HandlerBuilder {
-	return &faasClientImpl{}
+	return &faasClientImpl{http: map[string]HttpMiddleware{}}
 }
 
 func (f *faasClientImpl) WithApiWorkerOpts(opts ApiWorkerOptions) HandlerBuilder {

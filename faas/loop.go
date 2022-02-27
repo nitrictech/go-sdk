@@ -54,9 +54,9 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f HandlerProvider, erro
 
 			// Interrogate the HandlerProvider to see if it is capable of handling this trigger
 			var funcErr error = nil
-			if ctx.Http() != nil && f.GetHttp() != nil {
+			if ctx.Http() != nil && f.GetHttp(ctx.http.Request.Method()) != nil {
 				// handle http
-				ctx.http, funcErr = f.GetHttp()(ctx.Http(), httpDummy)
+				ctx.http, funcErr = f.GetHttp(ctx.http.Request.Method())(ctx.Http(), httpDummy)
 
 				if ctx.http == nil && funcErr == nil {
 					funcErr = fmt.Errorf("nil context returned from http handler")
