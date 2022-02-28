@@ -42,7 +42,7 @@ var _ = Describe("api", func() {
 
 			Expect(m.blockers["route:testApi/objects/:id"]).ToNot(BeNil())
 			Expect(m.blockers["route:testApi/objects"]).ToNot(BeNil())
-			Expect(m.builders["testApi/objects/:id"].String()).To(Equal("Api:testApi, path:objects/:id methods:[GET,PUT,PATCH,DELETE]"))
+			Expect(m.builders["testApi/objects/:id"].String()).To(Equal("Api:testApi, path:objects/:id methods:[DELETE,GET,PATCH,PUT]"))
 			Expect(m.builders["testApi/objects"].String()).To(Equal("Api:testApi, path:objects/ methods:[GET,POST]"))
 		})
 	})

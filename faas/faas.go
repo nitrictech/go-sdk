@@ -17,6 +17,7 @@ package faas
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -80,6 +81,7 @@ func (f *faasClientImpl) String() string {
 		for k := range f.http {
 			methods = append(methods, k)
 		}
+		sort.Strings(methods)
 		out = append(out, fmt.Sprintf("Api:%s, path:%s methods:[%s]", f.apiWorkerOpts.ApiName, f.apiWorkerOpts.Path, strings.Join(methods, ",")))
 	}
 	if f.rateWorkerOpts.Frequency != "" {
@@ -156,6 +158,7 @@ func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
 			for k := range f.http {
 				methods = append(methods, k)
 			}
+			sort.Strings(methods)
 			initRequest.Worker = &pb.InitRequest_Api{
 				Api: &pb.ApiWorker{
 					Api:     f.apiWorkerOpts.ApiName,
