@@ -47,18 +47,18 @@ var _ = Describe("Faas", func() {
 					return ctx, nil
 				}
 
-				impl := &faasClientImpl{}
-				impl.Http(mware)
+				impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
+				impl.Http("GET", mware)
 
 				It("should set the private http field", func() {
-					Expect(impl.Http()).ToNot(BeNil())
+					Expect(impl.Http("GET")).ToNot(BeNil())
 				})
 
 				When("Getting the Http Middleware", func() {
-					mw := impl.GetHttp()
+					mw := impl.GetHttp("GET")
 
 					It("should return the internal http field", func() {
-						Expect(reflect.ValueOf(impl.http).Pointer()).To(Equal(reflect.ValueOf(mw).Pointer()))
+						Expect(reflect.ValueOf(impl.http["GET"]).Pointer()).To(Equal(reflect.ValueOf(mw).Pointer()))
 					})
 				})
 			})
@@ -70,7 +70,7 @@ var _ = Describe("Faas", func() {
 					return ctx, nil
 				}
 
-				impl := &faasClientImpl{}
+				impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
 				impl.Event(mware)
 
 				It("should set the private event field", func() {
@@ -93,7 +93,7 @@ var _ = Describe("Faas", func() {
 					return ctx, nil
 				}
 
-				impl := &faasClientImpl{}
+				impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
 				impl.Default(mware)
 
 				It("should set the private trig field", func() {
@@ -112,7 +112,7 @@ var _ = Describe("Faas", func() {
 	})
 
 	Context("Start", func() {
-		impl := &faasClientImpl{}
+		impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
 		When("No FaasServiceServer is available", func() {
 			err := impl.Start()
 
@@ -134,10 +134,13 @@ var _ = Describe("Faas", func() {
 			})
 
 			When("a valid handler is provided", func() {
-				impl.Http(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+				impl.Http("GET", func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					return ctx, nil
 				})
-				impl.WithApiWorkerOpts(ApiWorkerOptions{ApiName: "test", Path: "apples", HttpMethods: []string{"GET"}})
+				impl.Http("POST", func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+					return ctx, nil
+				})
+				impl.WithApiWorkerOpts(ApiWorkerOptions{ApiName: "test", Path: "apples"})
 
 				It("should start the faas loop", func() {
 					By("Opening a stream with the Faas server")
@@ -151,7 +154,7 @@ var _ = Describe("Faas", func() {
 									Api: &pb.ApiWorker{
 										Api:     "test",
 										Path:    "apples",
-										Methods: []string{"GET"},
+										Methods: []string{"GET", "POST"},
 									},
 								},
 							},

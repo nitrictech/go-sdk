@@ -29,8 +29,8 @@ type Route interface {
 }
 
 type route struct {
-	opts           faas.ApiWorkerOptions
-	handlerBuilder faas.HandlerBuilder
+	builderName string
+	m           *manager
 }
 
 func NewRoute(apiName, apiPath string) Route {
@@ -38,42 +38,46 @@ func NewRoute(apiName, apiPath string) Route {
 }
 
 func (m *manager) NewRoute(apiName, apiPath string) Route {
-	f := faas.New()
-	m.addStarter("route:"+path.Join(apiName, apiPath), f)
+	rName := path.Join(apiName, apiPath)
+	_, ok := m.builders[rName]
+	if !ok {
+		m.builders[rName] = faas.New().WithApiWorkerOpts(faas.ApiWorkerOptions{
+			ApiName: apiName,
+			Path:    apiPath,
+		})
+	}
 
 	return &route{
-		opts: faas.ApiWorkerOptions{
-			ApiName:     apiName,
-			Path:        apiPath,
-			HttpMethods: []string{},
-		},
-		handlerBuilder: f,
+		m:           m,
+		builderName: rName,
 	}
 }
 
-func (r *route) optsWithMethod(method string) faas.ApiWorkerOptions {
-	r.opts.HttpMethods = append(r.opts.HttpMethods, method)
-	return r.opts
+func (r *route) addMethodHandler(method string, handlers ...faas.HttpMiddleware) {
+	b := r.m.builders[r.builderName]
+	b.Http(method, handlers...)
+	r.m.addStarter("route:"+r.builderName, b)
+	r.m.builders[r.builderName] = b
 }
 
 func (r *route) Get(handlers ...faas.HttpMiddleware) {
-	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("GET"))
+	r.addMethodHandler("GET", handlers...)
 }
 
 func (r *route) Post(handlers ...faas.HttpMiddleware) {
-	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("POST"))
+	r.addMethodHandler("POST", handlers...)
 }
 
 func (r *route) Put(handlers ...faas.HttpMiddleware) {
-	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("PUT"))
+	r.addMethodHandler("PUT", handlers...)
 }
 
 func (r *route) Patch(handlers ...faas.HttpMiddleware) {
-	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("PATCH"))
+	r.addMethodHandler("PATCH", handlers...)
 }
 
 func (r *route) Delete(handlers ...faas.HttpMiddleware) {
-	r.handlerBuilder.Http(handlers...).WithApiWorkerOpts(r.optsWithMethod("DELETE"))
+	r.addMethodHandler("DELETE", handlers...)
 }
 
 type Api interface {
@@ -87,12 +91,14 @@ type Api interface {
 type api struct {
 	name   string
 	routes map[string]Route
+	m      *manager
 }
 
 func (m *manager) NewApi(name string) Api {
 	return &api{
 		name:   name,
 		routes: map[string]Route{},
+		m:      m,
 	}
 }
 
@@ -103,9 +109,10 @@ func NewApi(name string) Api {
 func (a *api) Get(match string, handlers ...faas.HttpMiddleware) {
 	r, ok := a.routes[match]
 	if !ok {
-		r = NewRoute(a.name, match)
+		r = a.m.NewRoute(a.name, match)
 	}
 	r.Get(handlers...)
+	a.routes[match] = r
 }
 
 func (a *api) Post(match string, handlers ...faas.HttpMiddleware) {
@@ -114,6 +121,7 @@ func (a *api) Post(match string, handlers ...faas.HttpMiddleware) {
 		r = NewRoute(a.name, match)
 	}
 	r.Post(handlers...)
+	a.routes[match] = r
 }
 
 func (a *api) Patch(match string, handlers ...faas.HttpMiddleware) {
@@ -122,6 +130,7 @@ func (a *api) Patch(match string, handlers ...faas.HttpMiddleware) {
 		r = NewRoute(a.name, match)
 	}
 	r.Patch(handlers...)
+	a.routes[match] = r
 }
 
 func (a *api) Put(match string, handlers ...faas.HttpMiddleware) {
@@ -130,6 +139,7 @@ func (a *api) Put(match string, handlers ...faas.HttpMiddleware) {
 		r = NewRoute(a.name, match)
 	}
 	r.Put(handlers...)
+	a.routes[match] = r
 }
 
 func (a *api) Delete(match string, handlers ...faas.HttpMiddleware) {
@@ -138,4 +148,5 @@ func (a *api) Delete(match string, handlers ...faas.HttpMiddleware) {
 		r = NewRoute(a.name, match)
 	}
 	r.Delete(handlers...)
+	a.routes[match] = r
 }

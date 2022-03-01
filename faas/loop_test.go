@@ -131,7 +131,7 @@ var _ = Describe("look", func() {
 					mockStream.EXPECT().Send(defaultHttpResponse).Return(nil)
 
 					err := awaitFaasLoop(mockStream, &faasClientImpl{
-						http: spy.Http,
+						http: map[string]HttpMiddleware{"GET": spy.Http},
 					})
 
 					By("return the error")
@@ -205,7 +205,7 @@ var _ = Describe("look", func() {
 						},
 					}).Return(nil)
 
-					err := awaitFaasLoop(mockStream, &faasClientImpl{})
+					err := awaitFaasLoop(mockStream, &faasClientImpl{http: map[string]HttpMiddleware{}})
 
 					By("returning the error")
 					Expect(err).Should(HaveOccurred())
@@ -327,7 +327,7 @@ var _ = Describe("look", func() {
 						},
 					}).Return(nil)
 
-					err := awaitFaasLoop(mockStream, &faasClientImpl{})
+					err := awaitFaasLoop(mockStream, &faasClientImpl{http: map[string]HttpMiddleware{}})
 
 					By("returning the error")
 					Expect(err).Should(HaveOccurred())
