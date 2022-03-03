@@ -6,57 +6,26 @@
 ![test status](https://github.com/nitrictech/go-sdk/actions/workflows/test.yaml/badge.svg?branch=main)
 [![codecov](https://codecov.io/gh/nitrictech/go-sdk/branch/main/graph/badge.svg?token=TYH4QAZI07)](https://codecov.io/gh/nitrictech/go-sdk)
 
-# Nitric SDK for Go
+# Go SDK for Nitric
 
-Client libarary for interfacing with the Nitric APIs as well as the creation of golang functions with Nitric.
+The Go SDK supports the use of the Nitric framework with GoLang 1.16. For more information, check out the main [Nitric repo](https://github.com/nitrictech/nitric).
 
-## Quick Start
+Nitric SDKs provide an infrastructure-as-code style that lets you define resources in code. You can also write the functions that support the logic behind APIs, subscribers and schedules.
 
-### Using the Nitric CLI
+You can request the type of access you need to resources such as publishing for topics, without dealing directly with IAM or policy documents.
 
-1. Get the Nitric CLI
-2. Create a new Nitric Project `nitric make:project <my-new-project>`
-3. Select `function/golang15` as a starter function
+## Status
 
-## Using the Nitric SDK
+The SDK is in early stage development and APIs and interfaces are still subject to breaking changes. We’d love your feedback as we build additional functionality!
 
-### Creating a new API clients
-```go
-import "github.com/nitrictech/go-sdk/api/events"
+## Get in touch
 
-// NitricFunction - Handles individual function requests (http, events, etc.)
-func createNitricClient() {
-	ec, err := events.New()
+- Ask questions in [GitHub discussions](https://github.com/nitrictech/nitric/discussions)
 
-  if err != nil {
-    // Do something with err
-  }
+- Find us on [Twitter](https://twitter.com/nitric_io)
 
-	// use the new events client
-	// ec.Topic("my-topic").Publish(...)
-}
-```
+- Send us an [email](mailto:maintainers@nitric.io)
 
-### Starting a Nitric FaaS server
+## Get Started
 
-```go
-package main
-
-import "github.com/nitrictech/go-sdk/faas"
-
-// NitricFunction - Handles individual function requests (http, events, etc.)
-func NitricFunction(trigger *faas.NitricTrigger) (*faas.TriggerResponse, error) {
-	// Construct a default response base on the existing trigger context
-	resp := trigger.DefaultResponse()
-	resp.SetData([]byte("Hello Nitric"))
-
-	return resp, nil
-}
-
-func main() {
-	faas.Start(NitricFunction)
-}
-```
-<!-- TODO: Add additional examples but don't add too much noise to the landing README -->
-<!-- More specific usage examples can be found in [examples](./examples/README.md) -->
-
+Check out the [Nitric docs](https://nitric.io/docs) to see how to get started using Nitric.
