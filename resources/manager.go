@@ -25,6 +25,7 @@ import (
 
 	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
+	"github.com/nitrictech/cli/pkg/utils"
 	"github.com/nitrictech/go-sdk/api/documents"
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/events"
@@ -32,7 +33,6 @@ import (
 	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
-	"github.com/nitrictech/newcli/pkg/utils"
 )
 
 type Starter interface {

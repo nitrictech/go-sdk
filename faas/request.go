@@ -38,14 +38,16 @@ type HttpRequest interface {
 	Path() string
 	Query() map[string][]string
 	Headers() map[string][]string
+	PathParams() map[string]string
 }
 
 type httpRequestImpl struct {
 	dataRequestImpl
-	method  string
-	path    string
-	query   map[string][]string
-	headers map[string][]string
+	method     string
+	path       string
+	query      map[string][]string
+	headers    map[string][]string
+	pathParams map[string]string
 }
 
 func (h *httpRequestImpl) Method() string {
@@ -62,6 +64,10 @@ func (h *httpRequestImpl) Query() map[string][]string {
 
 func (h *httpRequestImpl) Headers() map[string][]string {
 	return h.headers
+}
+
+func (h *httpRequestImpl) PathParams() map[string]string {
+	return h.pathParams
 }
 
 type EventRequest interface {

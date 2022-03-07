@@ -51,6 +51,9 @@ var _ = Describe("Faas", func() {
 						QueryParams: map[string]*v1.QueryValue{
 							"q": {Value: []string{"my-query"}},
 						},
+						PathParams: map[string]string{
+							"id": "123456",
+						},
 					},
 				},
 			})
@@ -89,6 +92,10 @@ var _ = Describe("Faas", func() {
 
 			It("should have initialized extra context", func() {
 				Expect(ctx.Http().Extras).To(BeEquivalentTo(map[string]interface{}{}))
+			})
+
+			It("should have the provided pathParams", func() {
+				Expect(ctx.Http().Request.PathParams()["id"]).To(Equal("123456"))
 			})
 		})
 
