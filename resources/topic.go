@@ -69,7 +69,7 @@ func (m *manager) NewTopic(name string, permissions ...TopicPermission) (Topic, 
 	for _, perm := range permissions {
 		switch perm {
 		case TopicPublishing:
-			actions = append(actions, nitricv1.Action_TopicDetail, nitricv1.Action_TopicEventPublish)
+			actions = append(actions, nitricv1.Action_TopicDetail, nitricv1.Action_TopicEventPublish, nitricv1.Action_TopicList)
 		default:
 			return nil, fmt.Errorf("TopicPermission %s unknown", perm)
 		}
