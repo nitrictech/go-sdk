@@ -20,10 +20,10 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	"github.com/nitrictech/protoutils"
 )
 
 var _ = Describe("Task", func() {
@@ -58,7 +58,7 @@ var _ = Describe("Task", func() {
 
 	Context("wireToTask", func() {
 		When("translating a proto task to a task", func() {
-			pbs, _ := structpb.NewStruct(map[string]interface{}{
+			pbs, _ := protoutils.NewStruct(map[string]interface{}{
 				"test": "test",
 			})
 			t := wireToTask(&v1.NitricTask{

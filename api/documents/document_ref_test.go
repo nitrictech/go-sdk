@@ -22,10 +22,10 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	"github.com/nitrictech/protoutils"
 )
 
 var _ = Describe("DocumentRef", func() {
@@ -223,7 +223,7 @@ var _ = Describe("DocumentRef", func() {
 		})
 
 		When("the grpc server returns a successful response", func() {
-			ms, _ := structpb.NewStruct(map[string]interface{}{
+			ms, _ := protoutils.NewStruct(map[string]interface{}{
 				"test": "test",
 			})
 			mdc := mock_v1.NewMockDocumentServiceClient(ctrl)

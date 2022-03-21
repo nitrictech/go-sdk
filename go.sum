@@ -1323,6 +1323,8 @@ github.com/nitrictech/boxygen v0.0.1-rc.7.0.20211212231606-62c668408f91/go.mod h
 github.com/nitrictech/cli v1.1.0 h1:LX7K7XEGI91X9jSDkU+OkXmDtbWKdPAFFG1mUBcbUN4=
 github.com/nitrictech/cli v1.1.0/go.mod h1:aAmCuzst//rgf8ELsQYvMppYISKzZaeRuZsceRjY47E=
 github.com/nitrictech/nitric v0.14.0/go.mod h1:FleHmmNgQpURYUTViDoAgFcDR3i0ZNJDuf981WYVM2Y=
+github.com/nitrictech/protoutils v0.0.0-20220321024151-14f05ec4cd27 h1:9TRWFdhnlG1E4yIPGDZwgfXd7KXRGEUOCNrbS7/pexY=
+github.com/nitrictech/protoutils v0.0.0-20220321024151-14f05ec4cd27/go.mod h1:foTDKqoQFITPHBz73s77dyIE9SRN2ZLO3HoTydxauiw=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
