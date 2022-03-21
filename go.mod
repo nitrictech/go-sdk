@@ -10,6 +10,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/nitrictech/apis v0.14.1
 	github.com/nitrictech/cli v1.1.0
+	github.com/nitrictech/protoutils v0.0.0-20220321024151-14f05ec4cd27
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/uw-labs/lichen v0.1.4
@@ -17,5 +18,4 @@ require (
 	golang.org/x/tools v0.1.9
 	google.golang.org/grpc v1.44.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
-	google.golang.org/protobuf v1.27.1
 )

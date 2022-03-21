@@ -17,11 +17,10 @@ package events
 import (
 	"context"
 
-	"google.golang.org/protobuf/types/known/structpb"
-
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	"github.com/nitrictech/protoutils"
 )
 
 // Topic
@@ -41,7 +40,7 @@ func (s *topicImpl) Name() string {
 
 func (s *topicImpl) Publish(evt *Event) (*Event, error) {
 	// Convert payload to Protobuf Struct
-	payloadStruct, err := structpb.NewStruct(evt.Payload)
+	payloadStruct, err := protoutils.NewStruct(evt.Payload)
 	if err != nil {
 		return nil, errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
 	}

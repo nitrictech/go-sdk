@@ -19,11 +19,11 @@ import (
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	"github.com/nitrictech/protoutils"
 )
 
 // DocumentRef - Represents a reference to a document
@@ -130,7 +130,7 @@ func (d *documentRefImpl) Delete() error {
 
 // Set - Sets the contents of the document this reference refers to
 func (d *documentRefImpl) Set(content map[string]interface{}) error {
-	sv, err := structpb.NewStruct(content)
+	sv, err := protoutils.NewStruct(content)
 
 	if err != nil {
 		return errors.NewWithCause(

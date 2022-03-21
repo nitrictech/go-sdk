@@ -17,11 +17,10 @@ package queues
 import (
 	"context"
 
-	"google.golang.org/protobuf/types/known/structpb"
-
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	"github.com/nitrictech/protoutils"
 )
 
 type Task struct {
@@ -75,7 +74,7 @@ type FailedTask struct {
 
 func taskToWire(task *Task) (*v1.NitricTask, error) {
 	// Convert payload to Protobuf Struct
-	payloadStruct, err := structpb.NewStruct(task.Payload)
+	payloadStruct, err := protoutils.NewStruct(task.Payload)
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Internal,
