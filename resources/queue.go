@@ -69,6 +69,9 @@ func (m *manager) NewQueue(name string, permissions ...QueuePermission) (queues.
 			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
 		}
 	}
+	if len(actions) > 0 {
+		actions = append(actions, nitricv1.Action_QueueDetail, nitricv1.Action_QueueList)
+	}
 
 	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))
 	if err != nil {
