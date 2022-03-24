@@ -16,7 +16,7 @@ install:
 .PHONY: install-tools
 install-tools: install
 	@echo Installing tools from tools.go
-	@cat ./tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go get %
+	@cat ./tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
 .PHONY: init
 init: install-tools
