@@ -65,6 +65,8 @@ var _ = Describe("queue", func() {
 							}},
 							Actions: []nitricv1.Action{
 								nitricv1.Action_QueueReceive,
+								nitricv1.Action_QueueDetail,
+								nitricv1.Action_QueueList,
 							},
 							Resources: []*nitricv1.Resource{{
 								Type: nitricv1.ResourceType_Queue,
