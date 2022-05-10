@@ -26,6 +26,7 @@ type Route interface {
 	Put(handler ...faas.HttpMiddleware)
 	Post(handler ...faas.HttpMiddleware)
 	Delete(handler ...faas.HttpMiddleware)
+	Options(handler ...faas.HttpMiddleware)
 }
 
 type route struct {
@@ -80,12 +81,17 @@ func (r *route) Delete(handlers ...faas.HttpMiddleware) {
 	r.addMethodHandler("DELETE", handlers...)
 }
 
+func (r *route) Options(handlers ...faas.HttpMiddleware) {
+	r.addMethodHandler("OPTIONS", handlers...)
+}
+
 type Api interface {
 	Get(string, ...faas.HttpMiddleware)
 	Put(string, ...faas.HttpMiddleware)
 	Patch(string, ...faas.HttpMiddleware)
 	Post(string, ...faas.HttpMiddleware)
 	Delete(string, ...faas.HttpMiddleware)
+	Options(string, ...faas.HttpMiddleware)
 }
 
 type api struct {
@@ -112,6 +118,15 @@ func (a *api) Get(match string, handlers ...faas.HttpMiddleware) {
 		r = a.m.NewRoute(a.name, match)
 	}
 	r.Get(handlers...)
+	a.routes[match] = r
+}
+
+func (a *api) Options(match string, handlers ...faas.HttpMiddleware) {
+	r, ok := a.routes[match]
+	if !ok {
+		r = a.m.NewRoute(a.name, match)
+	}
+	r.Options(handlers...)
 	a.routes[match] = r
 }
 

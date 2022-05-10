@@ -39,10 +39,11 @@ var _ = Describe("api", func() {
 			a.Put("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 			a.Patch("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 			a.Delete("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
+			a.Options("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 
 			Expect(m.blockers["route:testApi/objects/:id"]).ToNot(BeNil())
 			Expect(m.blockers["route:testApi/objects"]).ToNot(BeNil())
-			Expect(m.builders["testApi/objects/:id"].String()).To(Equal("Api:testApi, path:objects/:id methods:[DELETE,GET,PATCH,PUT]"))
+			Expect(m.builders["testApi/objects/:id"].String()).To(Equal("Api:testApi, path:objects/:id methods:[DELETE,GET,OPTIONS,PATCH,PUT]"))
 			Expect(m.builders["testApi/objects"].String()).To(Equal("Api:testApi, path:objects/ methods:[GET,POST]"))
 		})
 	})
