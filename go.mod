@@ -7,7 +7,7 @@ require (
 	github.com/golangci/golangci-lint v1.46.0
 	github.com/google/addlicense v1.0.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nitrictech/apis v0.15.1
+	github.com/nitrictech/apis v0.16.0
 	github.com/nitrictech/cli v1.1.0-develop.14.0.20220512031901-3a86481b11ef
 	github.com/nitrictech/protoutils v0.0.0-20220321044654-02667a814cdf
 	github.com/onsi/ginkgo v1.16.5

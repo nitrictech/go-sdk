@@ -369,6 +369,26 @@ func (mr *MockStorageServiceClientMockRecorder) Delete(arg0, arg1 interface{}, a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStorageServiceClient)(nil).Delete), varargs...)
 }
 
+// ListFiles mocks base method.
+func (m *MockStorageServiceClient) ListFiles(arg0 context.Context, arg1 *v1.StorageListFilesRequest, arg2 ...grpc.CallOption) (*v1.StorageListFilesResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListFiles", varargs...)
+	ret0, _ := ret[0].(*v1.StorageListFilesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListFiles indicates an expected call of ListFiles.
+func (mr *MockStorageServiceClientMockRecorder) ListFiles(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFiles", reflect.TypeOf((*MockStorageServiceClient)(nil).ListFiles), varargs...)
+}
+
 // PreSignUrl mocks base method.
 func (m *MockStorageServiceClient) PreSignUrl(arg0 context.Context, arg1 *v1.StoragePreSignUrlRequest, arg2 ...grpc.CallOption) (*v1.StoragePreSignUrlResponse, error) {
 	m.ctrl.T.Helper()

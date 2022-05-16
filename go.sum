@@ -1378,8 +1378,8 @@ github.com/nishanths/predeclared v0.0.0-20190419143655-18a43bb90ffc/go.mod h1:62
 github.com/nishanths/predeclared v0.2.1/go.mod h1:HvkGJcA3naj4lOwnFXFDkFxVtSqQMB9sbB1usJ+xjQE=
 github.com/nishanths/predeclared v0.2.2 h1:V2EPdZPliZymNAn79T8RkNApBjMmVKh5XRpLm/w98Vk=
 github.com/nishanths/predeclared v0.2.2/go.mod h1:RROzoN6TnGQupbC+lqggsOlcgysk3LMK/HI84Mp280c=
-github.com/nitrictech/apis v0.15.1 h1:Z9DIEAeSgv/9kiarjqmd+tjHnHE2H0txwv97bkiEoUI=
-github.com/nitrictech/apis v0.15.1/go.mod h1:+/XRbGpCLSo+ICqgmU9askPzc9plOGpUAxKmWkIktqs=
+github.com/nitrictech/apis v0.16.0 h1:yznmsDUCbzqgMnlGVBUkXp9h1zgSpgQyFvUf0xg4HnM=
+github.com/nitrictech/apis v0.16.0/go.mod h1:+/XRbGpCLSo+ICqgmU9askPzc9plOGpUAxKmWkIktqs=
 github.com/nitrictech/boxygen v0.0.1-rc.9/go.mod h1:2XXi1xEwqitH4/gus1bHyG/IQe8WOniK+pybGTz2y/Y=
 github.com/nitrictech/cli v1.1.0-develop.14.0.20220512031901-3a86481b11ef h1:VHEdz/KD4wvvVyGfl8TE42bbJTPJo8wtMbjcZm5qaX4=
 github.com/nitrictech/cli v1.1.0-develop.14.0.20220512031901-3a86481b11ef/go.mod h1:7V7P02yLVDRavz2+iC5Z5JnozBxCVRraZ0TLKVloZC4=
