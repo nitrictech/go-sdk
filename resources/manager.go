@@ -30,6 +30,7 @@ import (
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/events"
 	"github.com/nitrictech/go-sdk/api/queues"
+	"github.com/nitrictech/go-sdk/api/secrets"
 	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
@@ -44,6 +45,7 @@ type Manager interface {
 	NewApi(name string) Api
 	NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
 	NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error)
+	NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error)
 	NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error)
 	NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error
 	NewTopic(name string, permissions ...TopicPermission) (Topic, error)
@@ -58,6 +60,7 @@ type manager struct {
 	evts     events.Events
 	storage  storage.Storage
 	docs     documents.Documents
+	secrets  secrets.Secrets
 	queues   queues.Queues
 	builders map[string]faas.HandlerBuilder
 }
