@@ -32,6 +32,8 @@ const (
 
 // File - A file reference for a bucket
 type File interface {
+	// Name - Get the name of the file
+	Name() string
 	// Read - Read this object
 	Read() ([]byte, error)
 	// Write - Write this object
@@ -46,6 +48,10 @@ type fileImpl struct {
 	bucket string
 	key    string
 	sc     v1.StorageServiceClient
+}
+
+func (o *fileImpl) Name() string {
+	return o.key
 }
 
 func (o *fileImpl) Read() ([]byte, error) {
