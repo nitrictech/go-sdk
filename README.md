@@ -1,10 +1,25 @@
 <p align="center">
-  <img src="./docs/assets/dot_matrix_logo_go.png" alt="Nitric Logo"/>
+  <a href="https://nitric.io">
+    <img src="docs/assets/nitric-logo.svg" width="120" alt="Nitric Logo"/>
+  </a>
 </p>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/nitrictech/go-sdk)](https://goreportcard.com/report/github.com/nitrictech/go-sdk)
-![test status](https://github.com/nitrictech/go-sdk/actions/workflows/test.yaml/badge.svg?branch=main)
-[![codecov](https://codecov.io/gh/nitrictech/go-sdk/branch/main/graph/badge.svg?token=TYH4QAZI07)](https://codecov.io/gh/nitrictech/go-sdk)
+<p align="center">
+  Build <a href="https://nitric.io">nitric</a> applications with Go.
+</p>
+
+<p align="center">
+  <img alt="Tests" src="https://github.com/nitrictech/go-sdk/actions/workflows/test.yaml/badge.svg?branch=main">
+  <a href="https://codecov.io/gh/nitrictech/go-sdk">
+    <img alt="codecov" src="https://codecov.io/gh/nitrictech/go-sdk/branch/main/graph/badge.svg?token=TYH4QAZI07">
+  </a>
+  <a href="https://github.com/nitrictech/go-sdk">
+    <img alt="Version" src="https://img.shields.io/github/v/release/nitrictech/go-sdk">
+  </a>
+  <a href="https://goreportcard.com/badge/github.com/nitrictech/go-sdk">
+    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/nitrictech/go-sdk">
+  </a>
+</p>
 
 # Go SDK for Nitric
 
