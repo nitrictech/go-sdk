@@ -60,6 +60,7 @@ generate-mocks:
 	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/documents Documents,CollectionRef > mocks/mockapi/documents.go
 	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/queues Queues,Queue > mocks/mockapi/queues.go
 	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/events Events,Topic > mocks/mockapi/events.go
+	@go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/secrets Secrets,SecretRef > mocks/mockapi/secrets.go
 
 # Runs tests for coverage upload to codecov.io
 test-ci: generate-mocks
