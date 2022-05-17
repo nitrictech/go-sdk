@@ -84,3 +84,18 @@ func (mr *MockBucketMockRecorder) File(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "File", reflect.TypeOf((*MockBucket)(nil).File), arg0)
 }
+
+// Files mocks base method.
+func (m *MockBucket) Files() ([]storage.File, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Files")
+	ret0, _ := ret[0].([]storage.File)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Files indicates an expected call of Files.
+func (mr *MockBucketMockRecorder) Files() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Files", reflect.TypeOf((*MockBucket)(nil).Files))
+}

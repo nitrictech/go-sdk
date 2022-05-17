@@ -14,11 +14,17 @@
 
 package storage
 
-import v1 "github.com/nitrictech/apis/go/nitric/v1"
+import (
+	"context"
+
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
+)
 
 type Bucket interface {
-	// Object - Get an object reference for in this bucket
+	// File - Get a file reference for in this bucket
 	File(key string) File
+	// Files - Get all file references for this bucket
+	Files() ([]File, error)
 }
 
 type bucketImpl struct {
@@ -32,4 +38,26 @@ func (b *bucketImpl) File(key string) File {
 		bucket: b.name,
 		key:    key,
 	}
+}
+
+func (b *bucketImpl) Files() ([]File, error) {
+	resp, err := b.sc.ListFiles(context.TODO(), &v1.StorageListFilesRequest{
+		BucketName: b.name,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	fileRefs := make([]File, 0)
+
+	for _, f := range resp.Files {
+		fileRefs = append(fileRefs, &fileImpl{
+			sc:     b.sc,
+			bucket: b.name,
+			key:    f.Key,
+		})
+	}
+
+	return fileRefs, nil
 }
