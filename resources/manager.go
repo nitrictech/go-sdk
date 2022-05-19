@@ -21,11 +21,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc"
 
 	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	"github.com/nitrictech/cli/pkg/utils"
 	"github.com/nitrictech/go-sdk/api/documents"
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/events"
@@ -56,7 +55,7 @@ type manager struct {
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
-	rsc      v1.ResourceServiceClient
+	rsc      nitricv1.ResourceServiceClient
 	evts     events.Events
 	storage  storage.Storage
 	docs     documents.Documents
@@ -79,7 +78,7 @@ func New() Manager {
 	}
 }
 
-func (m *manager) resourceServiceClient() (v1.ResourceServiceClient, error) {
+func (m *manager) resourceServiceClient() (nitricv1.ResourceServiceClient, error) {
 	m.connMutex.Lock()
 	defer m.connMutex.Unlock()
 
@@ -106,7 +105,8 @@ func Run() error {
 
 func (m *manager) Run() error {
 	wg := sync.WaitGroup{}
-	errList := utils.NewErrorList()
+	var errList error
+	var mutex sync.Mutex
 
 	for _, blocker := range m.blockers {
 		wg.Add(1)
@@ -117,14 +117,17 @@ func (m *manager) Run() error {
 				if IsBuildEnvirnonment() && isEOF(err) {
 					err = nil // ignore the EOF error when running code-as-config.
 				}
-				errList.Add(err)
+
+				mutex.Lock()
+				errList = multierror.Append(errList, err)
+				mutex.Unlock()
 			}
 		}(blocker)
 	}
 
 	wg.Wait()
 
-	return errList.Aggregate()
+	return errList
 }
 
 func IsBuildEnvirnonment() bool {
