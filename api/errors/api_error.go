@@ -19,6 +19,7 @@ import (
 
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
 
@@ -44,6 +45,9 @@ func (a *ApiError) Error() string {
 // FromGrpcError - translates a standard grpc error to a nitric api error
 func FromGrpcError(err error) error {
 	if s, ok := status.FromError(err); ok {
+		for _, item := range s.Details() {
+			err = multierror.Append(err, fmt.Errorf("%v", item))
+		}
 		return &ApiError{
 			code:  codes.Code(s.Code()),
 			msg:   s.Message(),
