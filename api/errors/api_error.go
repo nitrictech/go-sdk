@@ -17,9 +17,9 @@ package errors
 import (
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
 

@@ -115,9 +115,9 @@ func (m *manager) Run() error {
 
 			if err := s.Start(); err != nil {
 				if IsBuildEnvirnonment() && isEOF(err) {
-					err = nil // ignore the EOF error when running code-as-config.
+					// ignore the EOF error when running code-as-config.
+					return
 				}
-
 				mutex.Lock()
 				errList = multierror.Append(errList, err)
 				mutex.Unlock()
