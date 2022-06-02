@@ -17,7 +17,7 @@ package errors
 import (
 	"fmt"
 
-	"github.com/hashicorp/go-multierror"
+	multierror "github.com/missionMeteora/toolkit/errors"
 	"google.golang.org/grpc/status"
 
 	"github.com/nitrictech/go-sdk/api/errors/codes"
@@ -45,13 +45,16 @@ func (a *ApiError) Error() string {
 // FromGrpcError - translates a standard grpc error to a nitric api error
 func FromGrpcError(err error) error {
 	if s, ok := status.FromError(err); ok {
+		errList := &multierror.ErrorList{}
+		errList.Push(err)
 		for _, item := range s.Details() {
-			err = multierror.Append(err, fmt.Errorf("%v", item))
+			errList.Push(fmt.Errorf("%v", item))
 		}
+
 		return &ApiError{
 			code:  codes.Code(s.Code()),
 			msg:   s.Message(),
-			cause: err,
+			cause: errList.Err(),
 		}
 	}
 

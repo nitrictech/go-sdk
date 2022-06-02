@@ -21,7 +21,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/hashicorp/go-multierror"
+	multierror "github.com/missionMeteora/toolkit/errors"
 	"google.golang.org/grpc"
 
 	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
@@ -105,8 +105,7 @@ func Run() error {
 
 func (m *manager) Run() error {
 	wg := sync.WaitGroup{}
-	var errList error
-	var mutex sync.Mutex
+	errList := &multierror.ErrorList{}
 
 	for _, blocker := range m.blockers {
 		wg.Add(1)
@@ -118,16 +117,14 @@ func (m *manager) Run() error {
 					// ignore the EOF error when running code-as-config.
 					return
 				}
-				mutex.Lock()
-				errList = multierror.Append(errList, err)
-				mutex.Unlock()
+				errList.Push(err)
 			}
 		}(blocker)
 	}
 
 	wg.Wait()
 
-	return errList
+	return errList.Err()
 }
 
 func IsBuildEnvirnonment() bool {
