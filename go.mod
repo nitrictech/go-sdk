@@ -6,7 +6,7 @@ require (
 	github.com/golang/mock v1.6.1-0.20220113215914-32e424a26556
 	github.com/golangci/golangci-lint v1.46.0
 	github.com/google/addlicense v1.0.0
-	github.com/hashicorp/go-multierror v1.1.1
+	github.com/missionMeteora/toolkit v0.0.0-20170713173850-88364e3ef8cc
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nitrictech/apis v0.16.0
 	github.com/nitrictech/protoutils v0.0.0-20220321044654-02667a814cdf
@@ -81,6 +81,7 @@ require (
 	github.com/gostaticanalysis/forcetypeassert v0.1.0 // indirect
 	github.com/gostaticanalysis/nilerr v0.1.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.4.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
