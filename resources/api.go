@@ -15,8 +15,10 @@
 package resources
 
 import (
+	"context"
 	"path"
 
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/faas"
 )
 
@@ -95,21 +97,85 @@ type Api interface {
 }
 
 type api struct {
-	name   string
-	routes map[string]Route
-	m      *manager
+	name          string
+	routes        map[string]Route
+	m             *manager
+	securityRules map[string]interface{}
+	security      map[string][]string
 }
 
-func (m *manager) NewApi(name string) Api {
-	return &api{
+func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
+	rsc, err := m.resourceServiceClient()
+	if err != nil {
+		return nil, err
+	}
+
+	a := &api{
 		name:   name,
 		routes: map[string]Route{},
 		m:      m,
 	}
+
+	// Apply options
+	if opts != nil {
+		for _, o := range opts {
+			o(a)
+		}
+	}
+
+	var secDefs map[string]*v1.ApiSecurityDefinition = nil
+	var security map[string]*v1.ApiScopes = nil
+
+	// Apply security rules
+	if a.securityRules != nil {
+		secDefs = make(map[string]*v1.ApiSecurityDefinition)
+		for n, def := range a.securityRules {
+			if jwt, ok := def.(JwtSecurityRule); ok {
+				secDefs[n] = &v1.ApiSecurityDefinition{
+					Definition: &v1.ApiSecurityDefinition_Jwt{
+						Jwt: &v1.ApiSecurityDefinitionJwt{
+							Issuer:    jwt.Issuer,
+							Audiences: jwt.Audiences,
+						},
+					},
+				}
+			}
+		}
+	}
+
+	// Apply security and scopes
+	if a.security != nil {
+		security = make(map[string]*v1.ApiScopes)
+		for n, sec := range a.security {
+			security[n] = &v1.ApiScopes{
+				Scopes: sec,
+			}
+		}
+	}
+
+	// declare resource
+	_, err = rsc.Declare(context.TODO(), &v1.ResourceDeclareRequest{
+		Resource: &v1.Resource{
+			Name: name,
+			Type: v1.ResourceType_Api,
+		},
+		Config: &v1.ResourceDeclareRequest_Api{
+			Api: &v1.ApiResource{
+				SecurityDefinitions: secDefs,
+				Security:            security,
+			},
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
 }
 
-func NewApi(name string) Api {
-	return run.NewApi(name)
+func NewApi(name string, opts ...ApiOption) (Api, error) {
+	return run.NewApi(name, opts...)
 }
 
 func (a *api) Get(match string, handlers ...faas.HttpMiddleware) {
