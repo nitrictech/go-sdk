@@ -41,7 +41,7 @@ type Starter interface {
 
 type Manager interface {
 	Run() error
-	NewApi(name string) Api
+	NewApi(name string, opts ...ApiOption) (Api, error)
 	NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
 	NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error)
 	NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error)

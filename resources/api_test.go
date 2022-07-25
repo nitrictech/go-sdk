@@ -15,10 +15,15 @@
 package resources
 
 import (
+	"context"
+
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/faas"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("api", func() {
@@ -45,6 +50,55 @@ var _ = Describe("api", func() {
 			Expect(m.blockers["route:testApi/objects"]).ToNot(BeNil())
 			Expect(m.builders["testApi/objects/:id"].String()).To(Equal("Api:testApi, path:objects/:id methods:[DELETE,GET,OPTIONS,PATCH,PUT]"))
 			Expect(m.builders["testApi/objects"].String()).To(Equal("Api:testApi, path:objects/ methods:[GET,POST]"))
+		})
+	})
+
+	Context("New With Security", func() {
+		It("declares a new API resource with security rules", func() {
+			ctrl := gomock.NewController(GinkgoT())
+			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
+			mockConn := mock_v1.NewMockClientConnInterface(ctrl)
+			m := &manager{
+				blockers: map[string]Starter{},
+				builders: map[string]faas.HandlerBuilder{},
+				rsc:      mockClient,
+				conn:     mockConn,
+			}
+
+			mockClient.EXPECT().Declare(context.TODO(), &v1.ResourceDeclareRequest{
+				Resource: &v1.Resource{
+					Type: v1.ResourceType_Api,
+					Name: "testApi",
+				}, Config: &v1.ResourceDeclareRequest_Api{
+					Api: &v1.ApiResource{
+						SecurityDefinitions: map[string]*v1.ApiSecurityDefinition{
+							"jwt": {
+								Definition: &v1.ApiSecurityDefinition_Jwt{
+									Jwt: &v1.ApiSecurityDefinitionJwt{
+										Audiences: []string{"test"},
+										Issuer:    "https://test.com",
+									},
+								},
+							},
+						},
+						Security: map[string]*v1.ApiScopes{
+							"jwt": {
+								Scopes: []string{},
+							},
+						},
+					},
+				},
+			}).Times(1)
+
+			a, err := m.NewApi("testApi", WithSecurityJwtRule("jwt", JwtSecurityRule{
+				Audiences: []string{"test"},
+				Issuer:    "https://test.com",
+			}), WithSecurity("jwt", []string{}))
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(a).ToNot(BeNil())
+
+			ctrl.Finish()
 		})
 	})
 })
