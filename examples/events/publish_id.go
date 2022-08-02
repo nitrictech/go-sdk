@@ -23,13 +23,12 @@ import (
 
 // [END import]
 
-func publishEventId() {
+func publishEventId() error {
 	// [START snippet]
 	// Create a new storage client
 	ec, err := events.New()
-
 	if err != nil {
-		// handle client creation error...
+		return err
 	}
 
 	pEvt, err := ec.Topic("my-topic").Publish(&events.Event{
@@ -40,9 +39,11 @@ func publishEventId() {
 	})
 
 	if err != nil {
-		// handle topic publish error
+		return err
 	}
 
 	fmt.Println("Published event: ", pEvt)
 	// [END snippet]
+
+	return nil
 }

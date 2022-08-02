@@ -41,9 +41,16 @@ func TestPublishTopic(t *testing.T) {
 	v1.RegisterEventServiceServer(grpcServer, mec)
 	v1.RegisterTopicServiceServer(grpcServer, mtc)
 	go grpcServer.Serve(lis)
+
 	// call the function to test
-	publishEvent()
-	publishEventId()
+	if err := publishEvent(); err != nil {
+		t.Error(err)
+	}
+
+	if err := publishEventId(); err != nil {
+		t.Error(err)
+	}
+
 	// Cleanup
 	grpcServer.Stop()
 	lis.Close()
