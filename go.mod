@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/golang/mock v1.6.1-0.20220113215914-32e424a26556
-	github.com/golangci/golangci-lint v1.46.0
+	github.com/golangci/golangci-lint v1.46.2
 	github.com/google/addlicense v1.0.0
 	github.com/missionMeteora/toolkit v0.0.0-20170713173850-88364e3ef8cc
 	github.com/mitchellh/mapstructure v1.5.0
@@ -14,6 +14,12 @@ require (
 	github.com/onsi/gomega v1.18.1
 	github.com/uw-labs/lichen v0.1.6
 	google.golang.org/grpc v1.46.0
+)
+
+replace (
+	github.com/google/licenseclassifier => github.com/google/licenseclassifier v0.0.0-20201113175434-78a70215ca36
+	github.com/kunwardeep/paralleltest => github.com/kunwardeep/paralleltest v1.0.3
+	golang.org/x/tools => golang.org/x/tools v0.1.11-0.20220316014157-77aa08bb151a
 )
 
 require (
@@ -99,7 +105,7 @@ require (
 	github.com/ldez/tagliatelle v0.3.1 // indirect
 	github.com/leonklingele/grouper v1.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/lufeee/execinquery v1.1.0 // indirect
+	github.com/lufeee/execinquery v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/maratori/testpackage v1.0.1 // indirect
 	github.com/matoous/godox v0.0.0-20210227103229-6504466cf951 // indirect
@@ -123,7 +129,7 @@ require (
 	github.com/phayes/checkstyle v0.0.0-20170904204023-bfd46e6a821d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/polyfloyd/go-errorlint v0.0.0-20220510153142-36539f2bdac3 // indirect
+	github.com/polyfloyd/go-errorlint v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.34.0 // indirect
@@ -176,6 +182,7 @@ require (
 	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.11 // indirect
+	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/genproto v0.0.0-20220505152158-f39f71e6c8f3 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
@@ -188,5 +195,3 @@ require (
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20220316160445-06cc5682983b // indirect
 )
-
-replace github.com/google/licenseclassifier => github.com/google/licenseclassifier v0.0.0-20201113175434-78a70215ca36
