@@ -15,9 +15,10 @@
 package faas
 
 import (
-	"errors"
 	"fmt"
 	"io"
+
+	"github.com/pkg/errors"
 
 	pb "github.com/nitrictech/apis/go/nitric/v1"
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
@@ -102,11 +103,11 @@ func withInternalServerError(ctx *triggerContextImpl) *triggerContextImpl {
 
 func faasPanicRecovery(ctx *triggerContextImpl, stream pb.FaasService_TriggerStreamClient, f HandlerProvider, svrMsgID string) {
 	if rErr := recover(); rErr != nil {
-		fmt.Printf("the handler function paniced: %v\n", rErr)
+		fmt.Println(errors.WithStack(fmt.Errorf("the handler function paniced: %v", rErr)))
 
 		err := faasSendResponse(withInternalServerError(ctx), stream, svrMsgID)
 		if err != nil {
-			fmt.Println("Error sending error response", err)
+			fmt.Println(errors.WithMessage(err, "Error sending error response"))
 		}
 	}
 }
