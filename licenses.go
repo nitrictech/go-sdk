@@ -23,6 +23,7 @@ import (
 	_ "github.com/nitrictech/go-sdk/api/queues"
 	_ "github.com/nitrictech/go-sdk/api/storage"
 	_ "github.com/nitrictech/go-sdk/faas"
+	_ "github.com/nitrictech/go-sdk/resources"
 )
 
 func main() {}
