@@ -49,6 +49,12 @@ func WithSecurity(name string, scopes []string) ApiOption {
 	}
 }
 
+func WithNoMethodSecurity() MethodOption {
+	return func(mo *methodOptions) {
+		mo.securityDisabled = true
+	}
+}
+
 func WithMethodSecurity(name string, scopes []string) MethodOption {
 	return func(mo *methodOptions) {
 		if name == "" {
