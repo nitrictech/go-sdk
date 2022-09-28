@@ -82,6 +82,5 @@ var _ = Describe("DocumentIter", func() {
 				Expect(err.Error()).To(Equal("Aborted: mock-error: \n rpc error: code = Aborted desc = mock-error"))
 			})
 		})
-
 	})
 })

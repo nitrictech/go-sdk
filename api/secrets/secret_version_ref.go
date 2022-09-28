@@ -52,7 +52,6 @@ func (s *secretVersionRefImpl) Access() (SecretValue, error) {
 			Version: s.version,
 		},
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

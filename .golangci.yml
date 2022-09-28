@@ -18,6 +18,7 @@ linters:
   - misspell
   - unconvert
   - errcheck
+  - gofumpt
 
 issues:
   max-issues-per-linter: 0

@@ -14,8 +14,10 @@
 
 package faas
 
-type HttpHandler = func(*HttpContext) (*HttpContext, error)
-type HttpMiddleware = func(*HttpContext, HttpHandler) (*HttpContext, error)
+type (
+	HttpHandler    = func(*HttpContext) (*HttpContext, error)
+	HttpMiddleware = func(*HttpContext, HttpHandler) (*HttpContext, error)
+)
 
 func httpDummy(ctx *HttpContext) (*HttpContext, error) {
 	return ctx, nil

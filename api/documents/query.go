@@ -74,7 +74,6 @@ func (q *queryImpl) expressionsToWire() ([]*v1.Expression, error) {
 
 	for _, e := range q.exps {
 		wexp, err := e.ToWire()
-
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +87,6 @@ func (q *queryImpl) expressionsToWire() ([]*v1.Expression, error) {
 func (q *queryImpl) Fetch() (*FetchResult, error) {
 	// build the expressions list
 	expressions, err := q.expressionsToWire()
-
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +107,6 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 		Limit:       int32(q.limit),
 		PagingToken: token,
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
@@ -118,7 +115,6 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 
 	for _, d := range r.GetDocuments() {
 		ref, err := documentRefFromWireKey(q.dc, d.GetKey())
-
 		if err != nil {
 			// XXX: Potentially just log an error and continue
 			return nil, err
@@ -139,7 +135,6 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 func (q *queryImpl) Stream() (DocumentIter, error) {
 	// build the expressions list
 	expressions, err := q.expressionsToWire()
-
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +144,6 @@ func (q *queryImpl) Stream() (DocumentIter, error) {
 		Expressions: expressions,
 		Limit:       int32(q.limit),
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

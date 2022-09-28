@@ -26,7 +26,6 @@ import (
 )
 
 var _ = Describe("Bucket", func() {
-
 	Context("File", func() {
 		When("creating a new File reference", func() {
 			ctrl := gomock.NewController(GinkgoT())

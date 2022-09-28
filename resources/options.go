@@ -14,8 +14,10 @@
 
 package resources
 
-type ApiOption = func(api *api)
-type MethodOption = func(mo *methodOptions)
+type (
+	ApiOption    = func(api *api)
+	MethodOption = func(mo *methodOptions)
+)
 
 type JwtSecurityRule struct {
 	Issuer    string

@@ -132,7 +132,6 @@ func (f *faasClientImpl) Start() error {
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
-
 	if err != nil {
 		return errors.NewWithCause(
 			codes.Unavailable,

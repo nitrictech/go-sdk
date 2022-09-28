@@ -44,7 +44,6 @@ func (b *bucketImpl) Files() ([]File, error) {
 	resp, err := b.sc.ListFiles(context.TODO(), &v1.StorageListFilesRequest{
 		BucketName: b.name,
 	})
-
 	if err != nil {
 		return nil, err
 	}

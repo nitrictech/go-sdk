@@ -21,7 +21,6 @@ import (
 
 var _ = Describe("Trigger", func() {
 	Context("ComposeTriggerMiddleware", func() {
-
 		When("Creating a function with a single handler", func() {
 			hndlr := ComposeTriggerMiddleware(func(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
 				ctx.Http().Response.Status = 201

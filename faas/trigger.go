@@ -14,8 +14,10 @@
 
 package faas
 
-type TriggerHandler = func(TriggerContext) (TriggerContext, error)
-type TriggerMiddleware = func(TriggerContext, TriggerHandler) (TriggerContext, error)
+type (
+	TriggerHandler    = func(TriggerContext) (TriggerContext, error)
+	TriggerMiddleware = func(TriggerContext, TriggerHandler) (TriggerContext, error)
+)
 
 func triggerDummy(ctx TriggerContext) (TriggerContext, error) {
 	return ctx, nil

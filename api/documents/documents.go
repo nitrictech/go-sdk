@@ -47,7 +47,6 @@ func New() (Documents, error) {
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
-
 	if err != nil {
 		return nil, errors.NewWithCause(codes.Internal, "documents.New", err)
 	}

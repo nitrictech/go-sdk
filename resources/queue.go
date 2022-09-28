@@ -29,9 +29,7 @@ const (
 	QueueReceving QueuePermission = "receiving"
 )
 
-var (
-	QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceving}
-)
+var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceving}
 
 func NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
 	return run.NewQueue(name, permissions...)
@@ -52,7 +50,8 @@ func (m *manager) NewQueue(name string, permissions ...QueuePermission) (queues.
 		Resource: colRes,
 		Config: &nitricv1.ResourceDeclareRequest_Queue{
 			Queue: &nitricv1.QueueResource{},
-		}}
+		},
+	}
 	_, err = rsc.Declare(context.Background(), dr)
 	if err != nil {
 		return nil, err

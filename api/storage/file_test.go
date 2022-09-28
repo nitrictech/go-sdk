@@ -26,10 +26,8 @@ import (
 )
 
 var _ = Describe("Object", func() {
-
 	Context("Read", func() {
 		When("The grpc server returns an error", func() {
-
 			It("should pass through the returned error", func() {
 				ctrl := gomock.NewController(GinkgoT())
 

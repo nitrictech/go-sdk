@@ -45,7 +45,6 @@ func (s *secretRefImpl) Put(sec []byte) (SecretVersionRef, error) {
 		},
 		Value: sec,
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

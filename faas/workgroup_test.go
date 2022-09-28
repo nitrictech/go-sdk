@@ -24,7 +24,6 @@ import (
 
 var _ = Describe("WorkPool", func() {
 	Context("3 max", func() {
-
 		When("no jobs are provided", func() {
 			w := NewWorkPool(3)
 			w.Wait()
