@@ -16,24 +16,27 @@ package resources
 
 import (
 	"context"
+	"net/http"
 	"path"
+	"strings"
 
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/faas"
 )
 
 type Route interface {
-	Get(handler ...faas.HttpMiddleware)
-	Patch(handler ...faas.HttpMiddleware)
-	Put(handler ...faas.HttpMiddleware)
-	Post(handler ...faas.HttpMiddleware)
-	Delete(handler ...faas.HttpMiddleware)
-	Options(handler ...faas.HttpMiddleware)
+	Get(handler faas.HttpMiddleware, opts ...MethodOption)
+	Patch(handler faas.HttpMiddleware, opts ...MethodOption)
+	Put(handler faas.HttpMiddleware, opts ...MethodOption)
+	Post(handler faas.HttpMiddleware, opts ...MethodOption)
+	Delete(handler faas.HttpMiddleware, opts ...MethodOption)
+	Options(handler faas.HttpMiddleware, opts ...MethodOption)
 }
 
 type route struct {
-	builderName string
-	m           *manager
+	apiPath string
+	apiName string
+	m       *manager
 }
 
 func NewRoute(apiName, apiPath string) Route {
@@ -41,59 +44,72 @@ func NewRoute(apiName, apiPath string) Route {
 }
 
 func (m *manager) NewRoute(apiName, apiPath string) Route {
-	rName := path.Join(apiName, apiPath)
-	_, ok := m.builders[rName]
+	return &route{
+		m:       m,
+		apiPath: apiPath,
+		apiName: apiName,
+	}
+}
+
+func (r *route) AddMethodHandler(methods []string, handler faas.HttpMiddleware, opts ...MethodOption) {
+	bName := path.Join(r.apiName, r.apiPath, strings.Join(methods, "-"))
+
+	mo := &methodOptions{}
+	for _, o := range opts {
+		o(mo)
+	}
+
+	_, ok := r.m.builders[bName]
 	if !ok {
-		m.builders[rName] = faas.New().WithApiWorkerOpts(faas.ApiWorkerOptions{
-			ApiName: apiName,
-			Path:    apiPath,
+		r.m.builders[bName] = faas.New().WithApiWorkerOpts(faas.ApiWorkerOptions{
+			ApiName:          r.apiName,
+			Path:             r.apiPath,
+			Security:         mo.security,
+			SecurityDisabled: mo.securityDisabled,
 		})
 	}
 
-	return &route{
-		m:           m,
-		builderName: rName,
+	b := r.m.builders[bName]
+
+	for _, m := range methods {
+		b.Http(m, handler)
 	}
+
+	r.m.addStarter("route:"+bName, b)
+	r.m.builders[bName] = b
 }
 
-func (r *route) addMethodHandler(method string, handlers ...faas.HttpMiddleware) {
-	b := r.m.builders[r.builderName]
-	b.Http(method, handlers...)
-	r.m.addStarter("route:"+r.builderName, b)
-	r.m.builders[r.builderName] = b
+func (r *route) Get(handler faas.HttpMiddleware, opts ...MethodOption) {
+	r.AddMethodHandler([]string{http.MethodGet}, handler, opts...)
 }
 
-func (r *route) Get(handlers ...faas.HttpMiddleware) {
-	r.addMethodHandler("GET", handlers...)
+func (r *route) Post(handler faas.HttpMiddleware, opts ...MethodOption) {
+	r.AddMethodHandler([]string{http.MethodPost}, handler, opts...)
 }
 
-func (r *route) Post(handlers ...faas.HttpMiddleware) {
-	r.addMethodHandler("POST", handlers...)
+func (r *route) Put(handler faas.HttpMiddleware, opts ...MethodOption) {
+	r.AddMethodHandler([]string{http.MethodPut}, handler, opts...)
 }
 
-func (r *route) Put(handlers ...faas.HttpMiddleware) {
-	r.addMethodHandler("PUT", handlers...)
+func (r *route) Patch(handler faas.HttpMiddleware, opts ...MethodOption) {
+	r.AddMethodHandler([]string{http.MethodPatch}, handler, opts...)
 }
 
-func (r *route) Patch(handlers ...faas.HttpMiddleware) {
-	r.addMethodHandler("PATCH", handlers...)
+func (r *route) Delete(handler faas.HttpMiddleware, opts ...MethodOption) {
+	r.AddMethodHandler([]string{http.MethodDelete}, handler, opts...)
 }
 
-func (r *route) Delete(handlers ...faas.HttpMiddleware) {
-	r.addMethodHandler("DELETE", handlers...)
-}
-
-func (r *route) Options(handlers ...faas.HttpMiddleware) {
-	r.addMethodHandler("OPTIONS", handlers...)
+func (r *route) Options(handler faas.HttpMiddleware, opts ...MethodOption) {
+	r.AddMethodHandler([]string{http.MethodOptions}, handler, opts...)
 }
 
 type Api interface {
-	Get(string, ...faas.HttpMiddleware)
-	Put(string, ...faas.HttpMiddleware)
-	Patch(string, ...faas.HttpMiddleware)
-	Post(string, ...faas.HttpMiddleware)
-	Delete(string, ...faas.HttpMiddleware)
-	Options(string, ...faas.HttpMiddleware)
+	Get(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	Put(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	Patch(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	Post(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	Delete(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	Options(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 }
 
 type api struct {
@@ -178,56 +194,68 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 	return run.NewApi(name, opts...)
 }
 
-func (a *api) Get(match string, handlers ...faas.HttpMiddleware) {
+// Get adds a Get method handler to the path with any specified opts.
+// Note: to chain middleware use faas.ComposeHttpMiddlware()
+func (a *api) Get(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = a.m.NewRoute(a.name, match)
 	}
-	r.Get(handlers...)
+	r.Get(handler, opts...)
 	a.routes[match] = r
 }
 
-func (a *api) Post(match string, handlers ...faas.HttpMiddleware) {
+// Post adds a Post method handler to the path with any specified opts.
+// Note: to chain middleware use faas.ComposeHttpMiddlware()
+func (a *api) Post(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	r.Post(handlers...)
+	r.Post(handler, opts...)
 	a.routes[match] = r
 }
 
-func (a *api) Patch(match string, handlers ...faas.HttpMiddleware) {
+// Patch adds a Patch method handler to the path with any specified opts.
+// Note: to chain middleware use faas.ComposeHttpMiddlware()
+func (a *api) Patch(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	r.Patch(handlers...)
+	r.Patch(handler, opts...)
 	a.routes[match] = r
 }
 
-func (a *api) Put(match string, handlers ...faas.HttpMiddleware) {
+// Put adds a Put method handler to the path with any specified opts.
+// Note: to chain middleware use faas.ComposeHttpMiddlware()
+func (a *api) Put(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	r.Put(handlers...)
+	r.Put(handler, opts...)
 	a.routes[match] = r
 }
 
-func (a *api) Delete(match string, handlers ...faas.HttpMiddleware) {
+// Delete adds a Delete method handler to the path with any specified opts.
+// Note: to chain middleware use faas.ComposeHttpMiddlware()
+func (a *api) Delete(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	r.Delete(handlers...)
+	r.Delete(handler, opts...)
 	a.routes[match] = r
 }
 
-func (a *api) Options(match string, handlers ...faas.HttpMiddleware) {
+// Options adds an Options method handler to the path with any specified opts.
+// Note: to chain middleware use faas.ComposeHttpMiddlware()
+func (a *api) Options(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
 	r, ok := a.routes[match]
 	if !ok {
 		r = NewRoute(a.name, match)
 	}
-	r.Options(handlers...)
+	r.Options(handler, opts...)
 	a.routes[match] = r
 }

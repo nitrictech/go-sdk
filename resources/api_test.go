@@ -28,7 +28,7 @@ import (
 
 var _ = Describe("api", func() {
 	Context("New", func() {
-		It("can register multiple methods on routes", func() {
+		It("can register one method per routes", func() {
 			m := &manager{
 				blockers: map[string]Starter{},
 				builders: map[string]faas.HandlerBuilder{},
@@ -46,10 +46,12 @@ var _ = Describe("api", func() {
 			a.Delete("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 			a.Options("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 
-			Expect(m.blockers["route:testApi/objects/:id"]).ToNot(BeNil())
-			Expect(m.blockers["route:testApi/objects"]).ToNot(BeNil())
-			Expect(m.builders["testApi/objects/:id"].String()).To(Equal("Api:testApi, path:objects/:id methods:[DELETE,GET,OPTIONS,PATCH,PUT]"))
-			Expect(m.builders["testApi/objects"].String()).To(Equal("Api:testApi, path:objects/ methods:[GET,POST]"))
+			Expect(m.blockers["route:testApi/objects/GET"]).ToNot(BeNil())
+			Expect(m.blockers["route:testApi/objects/POST"]).ToNot(BeNil())
+			Expect(m.blockers["route:testApi/objects/:id/GET"]).ToNot(BeNil())
+			Expect(m.blockers["route:testApi/objects/:id/PUT"]).ToNot(BeNil())
+			Expect(m.blockers["route:testApi/objects/:id/DELETE"]).ToNot(BeNil())
+			Expect(m.blockers["route:testApi/objects/:id/OPTIONS"]).ToNot(BeNil())
 		})
 	})
 

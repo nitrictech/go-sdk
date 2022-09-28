@@ -29,8 +29,10 @@ import (
 )
 
 type ApiWorkerOptions struct {
-	ApiName string
-	Path    string
+	ApiName          string
+	Path             string
+	Security         map[string][]string
+	SecurityDisabled bool
 }
 
 type Frequency string //= "days" | "hours" | "minutes";
@@ -159,11 +161,23 @@ func (f *faasClientImpl) startWithClient(fsc pb.FaasServiceClient) error {
 				methods = append(methods, k)
 			}
 			sort.Strings(methods)
+
+			sec := map[string]*pb.ApiWorkerScopes{}
+			for k, v := range f.apiWorkerOpts.Security {
+				sec[k] = &pb.ApiWorkerScopes{
+					Scopes: v,
+				}
+			}
+
 			initRequest.Worker = &pb.InitRequest_Api{
 				Api: &pb.ApiWorker{
 					Api:     f.apiWorkerOpts.ApiName,
 					Path:    f.apiWorkerOpts.Path,
 					Methods: methods,
+					Options: &pb.ApiWorkerOptions{
+						SecurityDisabled: f.apiWorkerOpts.SecurityDisabled,
+						Security:         sec,
+					},
 				},
 			}
 		}

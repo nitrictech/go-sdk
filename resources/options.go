@@ -15,10 +15,16 @@
 package resources
 
 type ApiOption = func(api *api)
+type MethodOption = func(mo *methodOptions)
 
 type JwtSecurityRule struct {
 	Issuer    string
 	Audiences []string
+}
+
+type methodOptions struct {
+	security         map[string][]string
+	securityDisabled bool
 }
 
 func WithSecurityJwtRule(name string, rule JwtSecurityRule) ApiOption {
@@ -38,5 +44,19 @@ func WithSecurity(name string, scopes []string) ApiOption {
 		}
 
 		api.security[name] = scopes
+	}
+}
+
+func WithMethodSecurity(name string, scopes []string) MethodOption {
+	return func(mo *methodOptions) {
+		if name == "" {
+			mo.securityDisabled = true
+		} else {
+			if mo.security == nil {
+				mo.security = map[string][]string{}
+			}
+
+			mo.security[name] = scopes
+		}
 	}
 }
