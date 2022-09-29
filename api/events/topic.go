@@ -53,7 +53,6 @@ func (s *topicImpl) Publish(evt *Event) (*Event, error) {
 			PayloadType: evt.PayloadType,
 		},
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

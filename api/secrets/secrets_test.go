@@ -25,7 +25,6 @@ import (
 )
 
 var _ = Describe("Secrets", func() {
-
 	Context("New", func() {
 		When("Constructing a new Secrets client with no rpc server available", func() {
 			os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")

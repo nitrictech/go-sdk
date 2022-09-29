@@ -29,9 +29,7 @@ const (
 	SecretWriting SecretPermission = "writing"
 )
 
-var (
-	SecretEverything []SecretPermission = []SecretPermission{SecretReading, SecretWriting}
-)
+var SecretEverything []SecretPermission = []SecretPermission{SecretReading, SecretWriting}
 
 func NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
 	return run.NewSecret(name, permissions...)
@@ -52,7 +50,8 @@ func (m *manager) NewSecret(name string, permissions ...SecretPermission) (secre
 		Resource: colRes,
 		Config: &nitricv1.ResourceDeclareRequest_Secret{
 			Secret: &nitricv1.SecretResource{},
-		}}
+		},
+	}
 	_, err = rsc.Declare(context.Background(), dr)
 	if err != nil {
 		return nil, err

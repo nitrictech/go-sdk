@@ -30,9 +30,7 @@ const (
 	BucketDeleting BucketPermission = "deleting"
 )
 
-var (
-	BucketEverything []BucketPermission = []BucketPermission{BucketReading, BucketWriting, BucketDeleting}
-)
+var BucketEverything []BucketPermission = []BucketPermission{BucketReading, BucketWriting, BucketDeleting}
 
 func NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
 	return run.NewBucket(name, permissions...)

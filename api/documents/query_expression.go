@@ -66,7 +66,6 @@ func (q *queryExpression) ToWire() (*v1.Expression, error) {
 	}
 
 	wv, err := q.val.ToWire()
-
 	if err != nil {
 		return nil, err
 	}

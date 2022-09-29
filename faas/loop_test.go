@@ -73,7 +73,6 @@ func awaitFaasLoop(str v1.FaasService_TriggerStreamClient, p HandlerProvider) er
 
 var _ = Describe("look", func() {
 	Context("faasLoop", func() {
-
 		When("receiving an error from the stream", func() {
 			It("should return an error", func() {
 				spy := &handlerSpy{}
@@ -273,7 +272,6 @@ var _ = Describe("look", func() {
 					ctrl.Finish()
 				})
 			})
-
 		})
 
 		When("receiving an event from the stream", func() {

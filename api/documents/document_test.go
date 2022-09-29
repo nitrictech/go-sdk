@@ -20,7 +20,6 @@ import (
 )
 
 var _ = Describe("Document", func() {
-
 	Context("Content", func() {
 		When("given a document with content", func() {
 			md := &documentImpl{

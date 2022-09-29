@@ -72,7 +72,8 @@ func faasLoop(stream pb.FaasService_TriggerStreamClient, f HandlerProvider, erro
 				aa := a.(*processOneArgs)
 
 				return faasProcessOne(aa.ctx, aa.stream, aa.f, aa.svrMsgID)
-			}, &processOneArgs{ctx: ctx,
+			}, &processOneArgs{
+				ctx:      ctx,
 				stream:   stream,
 				f:        f,
 				svrMsgID: srvrMsg.GetId(),

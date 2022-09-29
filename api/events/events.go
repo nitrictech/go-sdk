@@ -49,7 +49,6 @@ func (s *eventsImpl) Topic(name string) Topic {
 
 func (s *eventsImpl) Topics() ([]Topic, error) {
 	r, err := s.tc.List(context.TODO(), &v1.TopicListRequest{})
-
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +67,6 @@ func New() (Events, error) {
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
-
 	if err != nil {
 		return nil, errors.NewWithCause(codes.Unavailable, "Unable to dial Events service", err)
 	}

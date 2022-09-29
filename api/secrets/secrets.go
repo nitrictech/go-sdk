@@ -46,7 +46,6 @@ func New() (Secrets, error) {
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
-
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,

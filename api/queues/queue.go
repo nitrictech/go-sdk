@@ -50,7 +50,6 @@ func (q *queueImpl) Receive(depth int) ([]ReceivedTask, error) {
 		Queue: q.name,
 		Depth: int32(depth),
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

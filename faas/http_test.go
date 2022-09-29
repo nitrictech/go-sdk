@@ -21,7 +21,6 @@ import (
 
 var _ = Describe("Http", func() {
 	Context("ComposeHttpMiddleware", func() {
-
 		When("Creating a function with a single handler", func() {
 			hndlr := ComposeHttpMiddlware(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 				ctx.Response.Body = []byte("hello!")

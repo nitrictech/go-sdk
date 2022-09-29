@@ -64,12 +64,10 @@ type manager struct {
 	builders map[string]faas.HandlerBuilder
 }
 
-var (
-	run = &manager{
-		blockers: map[string]Starter{},
-		builders: map[string]faas.HandlerBuilder{},
-	}
-)
+var run = &manager{
+	blockers: map[string]Starter{},
+	builders: map[string]faas.HandlerBuilder{},
+}
 
 func New() Manager {
 	return &manager{

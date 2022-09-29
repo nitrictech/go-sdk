@@ -30,9 +30,7 @@ const (
 	CollectionDeleting CollectionPermission = "deleting"
 )
 
-var (
-	CollectionEverything []CollectionPermission = []CollectionPermission{CollectionReading, CollectionWriting, CollectionDeleting}
-)
+var CollectionEverything []CollectionPermission = []CollectionPermission{CollectionReading, CollectionWriting, CollectionDeleting}
 
 func NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
 	return run.NewCollection(name, permissions...)
@@ -53,7 +51,8 @@ func (m *manager) NewCollection(name string, permissions ...CollectionPermission
 		Resource: colRes,
 		Config: &nitricv1.ResourceDeclareRequest_Collection{
 			Collection: &nitricv1.CollectionResource{},
-		}}
+		},
+	}
 	_, err = rsc.Declare(context.Background(), dr)
 	if err != nil {
 		return nil, err

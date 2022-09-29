@@ -61,7 +61,6 @@ type documentRefImpl struct {
 func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef, error) {
 	if dc != nil && k != nil {
 		col, err := collectionRefFromWire(dc, k.GetCollection())
-
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +130,6 @@ func (d *documentRefImpl) Delete() error {
 // Set - Sets the contents of the document this reference refers to
 func (d *documentRefImpl) Set(content map[string]interface{}) error {
 	sv, err := protoutils.NewStruct(content)
-
 	if err != nil {
 		return errors.NewWithCause(
 			codes.Internal,
@@ -159,7 +157,6 @@ func (d *documentRefImpl) Get() (Document, error) {
 	res, err := d.dc.Get(context.TODO(), &v1.DocumentGetRequest{
 		Key: d.toWireKey(),
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

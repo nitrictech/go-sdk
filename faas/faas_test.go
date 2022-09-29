@@ -140,7 +140,14 @@ var _ = Describe("Faas", func() {
 				impl.Http("POST", func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					return ctx, nil
 				})
-				impl.WithApiWorkerOpts(ApiWorkerOptions{ApiName: "test", Path: "apples"})
+				impl.WithApiWorkerOpts(ApiWorkerOptions{
+					ApiName: "test",
+					Path:    "apples",
+					Security: map[string][]string{
+						"x": {"y"},
+					},
+					SecurityDisabled: false,
+				})
 
 				It("should start the faas loop", func() {
 					By("Opening a stream with the Faas server")
@@ -155,6 +162,14 @@ var _ = Describe("Faas", func() {
 										Api:     "test",
 										Path:    "apples",
 										Methods: []string{"GET", "POST"},
+										Options: &pb.ApiWorkerOptions{
+											SecurityDisabled: false,
+											Security: map[string]*pb.ApiWorkerScopes{
+												"x": {
+													Scopes: []string{"y"},
+												},
+											},
+										},
 									},
 								},
 							},

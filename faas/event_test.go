@@ -21,7 +21,6 @@ import (
 
 var _ = Describe("Event", func() {
 	Context("ComposeEventMiddleware", func() {
-
 		When("Creating a function with a single handler", func() {
 			hndlr := ComposeEventMiddleware(func(ctx *EventContext, next EventHandler) (*EventContext, error) {
 				ctx.Response.Success = false

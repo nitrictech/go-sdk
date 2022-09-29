@@ -14,8 +14,10 @@
 
 package faas
 
-type EventHandler = func(*EventContext) (*EventContext, error)
-type EventMiddleware = func(*EventContext, EventHandler) (*EventContext, error)
+type (
+	EventHandler    = func(*EventContext) (*EventContext, error)
+	EventMiddleware = func(*EventContext, EventHandler) (*EventContext, error)
+)
 
 func eventDummy(ctx *EventContext) (*EventContext, error) {
 	return ctx, nil

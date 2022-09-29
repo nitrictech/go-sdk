@@ -59,7 +59,6 @@ func (o *fileImpl) Read() ([]byte, error) {
 		BucketName: o.bucket,
 		Key:        o.key,
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
@@ -120,7 +119,6 @@ func (o *fileImpl) SignUrl(opts PresignUrlOptions) (string, error) {
 		Operation:  op,
 		Expiry:     uint32(opts.Expiry),
 	})
-
 	if err != nil {
 		return "", errors.FromGrpcError(err)
 	}
