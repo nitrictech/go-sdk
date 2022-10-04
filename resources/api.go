@@ -15,8 +15,11 @@
 package resources
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 
@@ -31,6 +34,7 @@ type Route interface {
 	Post(handler faas.HttpMiddleware, opts ...MethodOption)
 	Delete(handler faas.HttpMiddleware, opts ...MethodOption)
 	Options(handler faas.HttpMiddleware, opts ...MethodOption)
+	AddMethodHandler(methods []string, handler faas.HttpMiddleware, opts ...MethodOption)
 }
 
 type route struct {
@@ -110,6 +114,8 @@ type Api interface {
 	Post(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	Delete(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	Options(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	// compatible with http.HandleFunc
+	HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request), opts ...MethodOption)
 }
 
 type api struct {
@@ -192,6 +198,54 @@ func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
 
 func NewApi(name string, opts ...ApiOption) (Api, error) {
 	return run.NewApi(name, opts...)
+}
+
+type faasResponseWriter struct {
+	*faas.HttpContext
+}
+
+func (f *faasResponseWriter) Header() http.Header {
+	return f.Response.Headers
+}
+
+func (f *faasResponseWriter) Write(b []byte) (int, error) {
+	f.Response.Body = append(f.Response.Body, b...)
+	return len(b), nil
+}
+
+func (f *faasResponseWriter) WriteHeader(statusCode int) {
+	f.Response.Status = statusCode
+}
+
+var _ http.ResponseWriter = &faasResponseWriter{}
+
+func convert(fn func(w http.ResponseWriter, r *http.Request)) faas.HttpMiddleware {
+	return func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) {
+		fn(&faasResponseWriter{
+			HttpContext: hc,
+		}, &http.Request{
+			URL: &url.URL{
+				Path: hc.Request.Path(),
+			},
+			Method: hc.Request.Method(),
+			Header: hc.Request.Headers(),
+			Body:   io.NopCloser(bytes.NewReader(hc.Request.Data())),
+		})
+
+		return hh(hc)
+	}
+}
+
+func (a *api) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request), opts ...MethodOption) {
+	r, ok := a.routes[pattern]
+	if !ok {
+		r = a.m.NewRoute(a.name, pattern)
+	}
+
+	allMethods := []string{http.MethodDelete, http.MethodGet, http.MethodOptions, http.MethodPatch, http.MethodPost, http.MethodPut}
+
+	r.AddMethodHandler(allMethods, convert(handler), opts...)
+	a.routes[pattern] = r
 }
 
 // Get adds a Get method handler to the path with any specified opts.
