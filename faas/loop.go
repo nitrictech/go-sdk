@@ -17,6 +17,7 @@ package faas
 import (
 	"fmt"
 	"io"
+	"runtime/debug"
 
 	"github.com/pkg/errors"
 
@@ -104,7 +105,8 @@ func withInternalServerError(ctx *triggerContextImpl) *triggerContextImpl {
 
 func faasPanicRecovery(ctx *triggerContextImpl, stream pb.FaasService_TriggerStreamClient, f HandlerProvider, svrMsgID string) {
 	if rErr := recover(); rErr != nil {
-		fmt.Println(errors.WithStack(fmt.Errorf("the handler function paniced: %v", rErr)))
+		fmt.Println(fmt.Errorf("the handler function paniced: %v", rErr))
+		fmt.Println(string(debug.Stack()))
 
 		err := faasSendResponse(withInternalServerError(ctx), stream, svrMsgID)
 		if err != nil {
