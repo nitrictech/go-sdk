@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	events "github.com/nitrictech/go-sdk/api/events"
 )
 
@@ -101,16 +102,21 @@ func (mr *MockTopicMockRecorder) Name() *gomock.Call {
 }
 
 // Publish mocks base method.
-func (m *MockTopic) Publish(arg0 *events.Event) (*events.Event, error) {
+func (m *MockTopic) Publish(arg0 *events.Event, arg1 ...func(*v1.EventPublishRequest)) (*events.Event, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Publish", arg0)
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Publish", varargs...)
 	ret0, _ := ret[0].(*events.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Publish indicates an expected call of Publish.
-func (mr *MockTopicMockRecorder) Publish(arg0 interface{}) *gomock.Call {
+func (mr *MockTopicMockRecorder) Publish(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockTopic)(nil).Publish), arg0)
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockTopic)(nil).Publish), varargs...)
 }

@@ -24,10 +24,12 @@ import (
 	"github.com/nitrictech/protoutils"
 )
 
+type PublishOption = func(*v1.EventPublishRequest)
+
 // Topic
 type Topic interface {
 	Name() string
-	Publish(*Event) (*Event, error)
+	Publish(*Event, ...PublishOption) (*Event, error)
 }
 
 type topicImpl struct {
@@ -38,8 +40,6 @@ type topicImpl struct {
 func (s *topicImpl) Name() string {
 	return s.name
 }
-
-type PublishOption = func(*v1.EventPublishRequest)
 
 // WithDelay - Delay event publishing by the given duration
 func WithDelay(duration time.Duration) func(*v1.EventPublishRequest) {
