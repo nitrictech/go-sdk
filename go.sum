@@ -666,8 +666,8 @@ github.com/nishanths/predeclared v0.0.0-20190419143655-18a43bb90ffc/go.mod h1:62
 github.com/nishanths/predeclared v0.2.1/go.mod h1:HvkGJcA3naj4lOwnFXFDkFxVtSqQMB9sbB1usJ+xjQE=
 github.com/nishanths/predeclared v0.2.2 h1:V2EPdZPliZymNAn79T8RkNApBjMmVKh5XRpLm/w98Vk=
 github.com/nishanths/predeclared v0.2.2/go.mod h1:RROzoN6TnGQupbC+lqggsOlcgysk3LMK/HI84Mp280c=
-github.com/nitrictech/apis v0.17.0 h1:ZeZmER7YIc/GkzIwK07i8Cbwompl1xPrxpEt3A1pToA=
-github.com/nitrictech/apis v0.17.0/go.mod h1:avnOBnT14G1vZiXJn7UOTpfbkh42OZ3alJKE4ueMeuU=
+github.com/nitrictech/apis v0.19.0-rc.2 h1:sqeCagWy49CzJ4kQ0tkwHlsNHOkZkAQSb13lxMBFJ7Y=
+github.com/nitrictech/apis v0.19.0-rc.2/go.mod h1:PQp64Z05hMkVSHpbvV2fAQxBtW7Dk04jl2U8A3iNFMQ=
 github.com/nitrictech/protoutils v0.0.0-20220321044654-02667a814cdf h1:8MB8W8ylM8sCM2COGfiO39/tB6BTdiawLszaUGCNL5w=
 github.com/nitrictech/protoutils v0.0.0-20220321044654-02667a814cdf/go.mod h1:b2lzk2a4o1bvSrSCE6yvTldHuXCJymuDVhdMJGOSslw=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=

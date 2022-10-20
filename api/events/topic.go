@@ -16,6 +16,7 @@ package events
 
 import (
 	"context"
+	"time"
 
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -23,10 +24,12 @@ import (
 	"github.com/nitrictech/protoutils"
 )
 
+type PublishOption = func(*v1.EventPublishRequest)
+
 // Topic
 type Topic interface {
 	Name() string
-	Publish(*Event) (*Event, error)
+	Publish(*Event, ...PublishOption) (*Event, error)
 }
 
 type topicImpl struct {
@@ -38,21 +41,35 @@ func (s *topicImpl) Name() string {
 	return s.name
 }
 
-func (s *topicImpl) Publish(evt *Event) (*Event, error) {
+// WithDelay - Delay event publishing by the given duration
+func WithDelay(duration time.Duration) func(*v1.EventPublishRequest) {
+	return func(epr *v1.EventPublishRequest) {
+		epr.Delay = uint32(duration.Seconds())
+	}
+}
+
+func (s *topicImpl) Publish(evt *Event, opts ...PublishOption) (*Event, error) {
 	// Convert payload to Protobuf Struct
 	payloadStruct, err := protoutils.NewStruct(evt.Payload)
 	if err != nil {
 		return nil, errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
 	}
 
-	r, err := s.ec.Publish(context.TODO(), &v1.EventPublishRequest{
+	event := &v1.EventPublishRequest{
 		Topic: s.name,
 		Event: &v1.NitricEvent{
 			Id:          evt.ID,
 			Payload:     payloadStruct,
 			PayloadType: evt.PayloadType,
 		},
-	})
+	}
+
+	// Apply options to the event payload
+	for _, opt := range opts {
+		opt(event)
+	}
+
+	r, err := s.ec.Publish(context.TODO(), event)
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
