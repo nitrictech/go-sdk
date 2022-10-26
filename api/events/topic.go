@@ -26,9 +26,12 @@ import (
 
 type PublishOption = func(*v1.EventPublishRequest)
 
-// Topic
+// Topic for pub/sub async messaging.
 type Topic interface {
+	// Name returns the Topic name.
 	Name() string
+
+	// Publish will publish the provided events on the topic.
 	Publish(*Event, ...PublishOption) (*Event, error)
 }
 

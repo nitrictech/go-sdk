@@ -24,6 +24,7 @@ import (
 	"github.com/nitrictech/go-sdk/faas"
 )
 
+// Route providers convenience functions to register a handler in a single method.
 type Route interface {
 	Get(handler faas.HttpMiddleware, opts ...MethodOption)
 	Patch(handler faas.HttpMiddleware, opts ...MethodOption)
@@ -103,6 +104,11 @@ func (r *route) Options(handler faas.HttpMiddleware, opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodOptions}, handler, opts...)
 }
 
+// Api Resource represents an HTTP API, capable of routing and securing incoming HTTP requests to handlers.
+// path is the route path matcher e.g. '/home'. Supports path params via colon prefix e.g. '/customers/:customerId'
+// handler the handler to register for callbacks.
+//
+// Note: to chain middleware use faas.ComposeHttpMiddlware()
 type Api interface {
 	Get(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	Put(path string, handler faas.HttpMiddleware, opts ...MethodOption)
@@ -190,6 +196,9 @@ func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
 	return a, nil
 }
 
+// NewApi Registers a new API Resource.
+//
+// The returned API object can be used to register Routes and Methods, with Handlers.
 func NewApi(name string, opts ...ApiOption) (Api, error) {
 	return run.NewApi(name, opts...)
 }

@@ -39,6 +39,7 @@ type Starter interface {
 	Start() error
 }
 
+// Manager is the top level object that resources are created on.
 type Manager interface {
 	Run() error
 	NewApi(name string, opts ...ApiOption) (Api, error)
@@ -69,6 +70,9 @@ var run = &manager{
 	builders: map[string]faas.HandlerBuilder{},
 }
 
+// New is used to create the top level resource manager.
+// Note: this is not required if you are using
+// resources.NewApi() and the like. These use a default manager instance.
 func New() Manager {
 	return &manager{
 		blockers: map[string]Starter{},
@@ -97,6 +101,7 @@ func (m *manager) addStarter(name string, s Starter) {
 	m.blockers[name] = s
 }
 
+// Run will run the function and callback the required handlers when these events are received.
 func Run() error {
 	return run.Run()
 }
@@ -125,6 +130,7 @@ func (m *manager) Run() error {
 	return errList.Err()
 }
 
+// IsBuildEnvirnonment will return true if the code is running during config discovery.
 func IsBuildEnvirnonment() bool {
 	return strings.ToLower(os.Getenv("NITRIC_ENVIRONMENT")) == "build"
 }

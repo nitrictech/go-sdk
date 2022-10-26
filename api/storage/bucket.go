@@ -20,6 +20,7 @@ import (
 	v1 "github.com/nitrictech/apis/go/nitric/v1"
 )
 
+// Cloud storage bucket resource for large file storage.
 type Bucket interface {
 	// File - Get a file reference for in this bucket
 	File(key string) File

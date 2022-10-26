@@ -20,7 +20,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
 
-// Collection
+// CollectionRef is a document collection resources, such as a collection/table in a document database.
 type CollectionRef interface {
 	Name() string
 	Doc(string) DocumentRef

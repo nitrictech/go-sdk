@@ -32,6 +32,7 @@ const (
 
 var CollectionEverything []CollectionPermission = []CollectionPermission{CollectionReading, CollectionWriting, CollectionDeleting}
 
+// NewCollection register this collection as a required resource for the calling function/container.
 func NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
 	return run.NewCollection(name, permissions...)
 }
