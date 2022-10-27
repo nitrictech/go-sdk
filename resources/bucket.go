@@ -32,6 +32,8 @@ const (
 
 var BucketEverything []BucketPermission = []BucketPermission{BucketReading, BucketWriting, BucketDeleting}
 
+// NewBucket register this bucket as a required resource for the calling function/container and
+// register the permissions required by the currently scoped function for this resource.
 func NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
 	return run.NewBucket(name, permissions...)
 }

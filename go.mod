@@ -6,6 +6,7 @@ require (
 	github.com/golang/mock v1.6.1-0.20220113215914-32e424a26556
 	github.com/golangci/golangci-lint v1.46.2
 	github.com/google/addlicense v1.0.0
+	github.com/google/uuid v1.3.0
 	github.com/missionMeteora/toolkit v0.0.0-20170713173850-88364e3ef8cc
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nitrictech/apis v0.19.0-rc.2
@@ -181,7 +182,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.1.12 // indirect
+	golang.org/x/tools v0.2.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/genproto v0.0.0-20220505152158-f39f71e6c8f3 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect

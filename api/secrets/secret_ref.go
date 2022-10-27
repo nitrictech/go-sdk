@@ -21,7 +21,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 )
 
-// SecretRef - A reference to a secret
+// SecretRef is a reference to a cloud secret for secret storage.
 type SecretRef interface {
 	Name() string
 	Put([]byte) (SecretVersionRef, error)

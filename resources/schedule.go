@@ -52,6 +52,8 @@ func rateSplit(rate string) (int, faas.Frequency, error) {
 	return 0, "", fmt.Errorf("invalid rate expression %s; %s must be one of [minutes, hours, days]", rate, rateType)
 }
 
+// NewSchedule provides a new schedule, which can be configured with a rate/cron and a callback to run on the schedule.
+// The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
 func NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error {
 	return run.NewSchedule(name, rate, handlers...)
 }

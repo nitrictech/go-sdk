@@ -22,7 +22,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
 
-// Queue - Interface for a Queue reference
+// Queue is a resource for async send/receive messaging.
 type Queue interface {
 	// Name - The name of the queue
 	Name() string

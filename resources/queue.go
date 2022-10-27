@@ -31,6 +31,7 @@ const (
 
 var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceving}
 
+// NewQueue registers this queue as a required resource for the calling function/container.
 func NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
 	return run.NewQueue(name, permissions...)
 }

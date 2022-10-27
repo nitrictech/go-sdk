@@ -23,9 +23,11 @@ import (
 	"github.com/nitrictech/go-sdk/faas"
 )
 
+// TopicPermission defines the available permissions on a topic
 type TopicPermission string
 
 const (
+	// TopicPublishing is required to call Publish on a topic.
 	TopicPublishing TopicPermission = "publishing"
 )
 
@@ -34,11 +36,15 @@ type topic struct {
 	mgr *manager
 }
 
+// Topic is a resource for pub/sub async messaging.
 type Topic interface {
 	events.Topic
+
+	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
 	Subscribe(...faas.EventMiddleware)
 }
 
+// NewTopic creates a new Topic with the give permissions.
 func NewTopic(name string, permissions ...TopicPermission) (Topic, error) {
 	return run.NewTopic(name, permissions...)
 }
