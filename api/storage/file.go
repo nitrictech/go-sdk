@@ -40,8 +40,10 @@ type File interface {
 	Write([]byte) error
 	// Delete - Delete this object
 	Delete() error
-	// SignUrl - Creates a signed Url for this file reference
-	SignUrl(PresignUrlOptions) (string, error)
+	// UploadUrl - Creates a signed Url for uploading this file reference
+	UploadUrl(expiry int) (string, error)
+	// DownloadUrl - Creates a signed Url for downloading this file reference
+	DownloadUrl(expiry int) (string, error)
 }
 
 type fileImpl struct {
@@ -102,7 +104,15 @@ func (p PresignUrlOptions) isValid() error {
 	return nil
 }
 
-func (o *fileImpl) SignUrl(opts PresignUrlOptions) (string, error) {
+func (o *fileImpl) UploadUrl(expiry int) (string, error) {
+	return o.signUrl(PresignUrlOptions{Expiry: expiry, Mode: ModeWrite})
+}
+
+func (o *fileImpl) DownloadUrl(expiry int) (string, error) {
+	return o.signUrl(PresignUrlOptions{Expiry: expiry, Mode: ModeRead})
+}
+
+func (o *fileImpl) signUrl(opts PresignUrlOptions) (string, error) {
 	if err := opts.isValid(); err != nil {
 		return "", errors.NewWithCause(codes.InvalidArgument, "invalid options", err)
 	}
