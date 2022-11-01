@@ -164,7 +164,7 @@ var _ = Describe("Object", func() {
 					key:    "test-object",
 				}
 
-				_, err := obj.SignUrl(PresignUrlOptions{
+				_, err := obj.signUrl(PresignUrlOptions{
 					Mode: 7,
 				})
 				Expect(err).Should(HaveOccurred())
@@ -190,7 +190,7 @@ var _ = Describe("Object", func() {
 					Operation:  v1.StoragePreSignUrlRequest_READ,
 				}).Return(nil, fmt.Errorf("mock error"))
 
-				_, err := obj.SignUrl(PresignUrlOptions{})
+				_, err := obj.signUrl(PresignUrlOptions{})
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
@@ -217,7 +217,7 @@ var _ = Describe("Object", func() {
 					Url: "http://example.com",
 				}, nil)
 
-				url, err := obj.SignUrl(PresignUrlOptions{Mode: ModeWrite})
+				url, err := obj.signUrl(PresignUrlOptions{Mode: ModeWrite})
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(url).To(Equal("http://example.com"))
