@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -41,7 +42,7 @@ var _ = Describe("Object", func() {
 				By("the gRPC server returning an error")
 				mockStorage.EXPECT().Read(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
-				_, err := obj.Read()
+				_, err := obj.Read(context.TODO())
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
@@ -64,7 +65,7 @@ var _ = Describe("Object", func() {
 					Body: []byte("test"),
 				}, nil)
 
-				b, _ := obj.Read()
+				b, _ := obj.Read(context.TODO())
 				Expect(b).To(Equal([]byte("test")))
 
 				ctrl.Finish()
@@ -86,7 +87,7 @@ var _ = Describe("Object", func() {
 				By("the gRPC server returning an error")
 				mockStorage.EXPECT().Write(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
-				err := obj.Write([]byte("test"))
+				err := obj.Write(context.TODO(), []byte("test"))
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
@@ -107,7 +108,7 @@ var _ = Describe("Object", func() {
 				By("the gRPC server returning a successful response")
 				mockStorage.EXPECT().Write(gomock.Any(), gomock.Any()).Return(&v1.StorageWriteResponse{}, nil)
 
-				err := obj.Write([]byte("test"))
+				err := obj.Write(context.TODO(), []byte("test"))
 				Expect(err).ToNot(HaveOccurred())
 
 				ctrl.Finish()
@@ -128,7 +129,7 @@ var _ = Describe("Object", func() {
 
 				By("the gRPC server returning an error")
 				mockStorage.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
-				err := obj.Delete()
+				err := obj.Delete(context.TODO())
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
@@ -149,7 +150,7 @@ var _ = Describe("Object", func() {
 				By("the gRPC server returning a successful response")
 				mockStorage.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(&v1.StorageDeleteResponse{}, nil)
 
-				err := obj.Delete()
+				err := obj.Delete(context.TODO())
 				Expect(err).ToNot(HaveOccurred())
 				ctrl.Finish()
 			})
@@ -164,7 +165,7 @@ var _ = Describe("Object", func() {
 					key:    "test-object",
 				}
 
-				_, err := obj.signUrl(PresignUrlOptions{
+				_, err := obj.signUrl(context.TODO(), PresignUrlOptions{
 					Mode: 7,
 				})
 				Expect(err).Should(HaveOccurred())
@@ -190,7 +191,7 @@ var _ = Describe("Object", func() {
 					Operation:  v1.StoragePreSignUrlRequest_READ,
 				}).Return(nil, fmt.Errorf("mock error"))
 
-				_, err := obj.signUrl(PresignUrlOptions{})
+				_, err := obj.signUrl(context.TODO(), PresignUrlOptions{})
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 
@@ -217,7 +218,7 @@ var _ = Describe("Object", func() {
 					Url: "http://example.com",
 				}, nil)
 
-				url, err := obj.signUrl(PresignUrlOptions{Mode: ModeWrite})
+				url, err := obj.signUrl(context.TODO(), PresignUrlOptions{Mode: ModeWrite})
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(url).To(Equal("http://example.com"))

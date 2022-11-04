@@ -15,13 +15,17 @@
 package resources
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"sync"
 
 	multierror "github.com/missionMeteora/toolkit/errors"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/documents"
@@ -49,6 +53,7 @@ type Manager interface {
 	NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error)
 	NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error
 	NewTopic(name string, permissions ...TopicPermission) (Topic, error)
+	NewRoute(apiName, apiPath string) Route
 }
 
 type manager struct {
@@ -65,15 +70,26 @@ type manager struct {
 	builders map[string]faas.HandlerBuilder
 }
 
-var run = &manager{
-	blockers: map[string]Starter{},
-	builders: map[string]faas.HandlerBuilder{},
-}
+var (
+	run       = New()
+	traceInit = sync.Once{}
+)
 
 // New is used to create the top level resource manager.
 // Note: this is not required if you are using
 // resources.NewApi() and the like. These use a default manager instance.
 func New() Manager {
+	traceInit.Do(func() {
+		if os.Getenv("OTELCOL_BIN") != "" {
+			tp, err := newTracerProvider(context.TODO())
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				otel.SetTracerProvider(tp)
+			}
+		}
+	})
+
 	return &manager{
 		blockers: map[string]Starter{},
 		builders: map[string]faas.HandlerBuilder{},
@@ -126,6 +142,12 @@ func (m *manager) Run() error {
 	}
 
 	wg.Wait()
+
+	tp, ok := otel.GetTracerProvider().(*sdktrace.TracerProvider)
+	if ok {
+		_ = tp.ForceFlush(context.TODO())
+		_ = tp.Shutdown(context.TODO())
+	}
 
 	return errList.Err()
 }

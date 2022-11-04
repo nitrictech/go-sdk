@@ -15,6 +15,7 @@
 package queues
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -130,7 +131,7 @@ var _ = Describe("Task", func() {
 					},
 				}
 
-				err := t.Complete()
+				err := t.Complete(context.TODO())
 
 				It("should not return an error", func() {
 					Expect(err).ToNot(HaveOccurred())
@@ -155,7 +156,7 @@ var _ = Describe("Task", func() {
 					},
 				}
 
-				err := t.Complete()
+				err := t.Complete(context.TODO())
 
 				It("should pass through the gRPC error", func() {
 					Expect(err).To(HaveOccurred())

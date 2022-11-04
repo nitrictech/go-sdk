@@ -15,6 +15,7 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -144,7 +145,7 @@ var _ = Describe("Events", func() {
 				tc: mockTopic,
 			}
 
-			returnEvt, err := evt.Topic("test-topic").Publish(&Event{
+			returnEvt, err := evt.Topic("test-topic").Publish(context.TODO(), &Event{
 				Payload: map[string]interface{}{
 					"test": "test",
 				},
@@ -171,7 +172,7 @@ var _ = Describe("Events", func() {
 				tc: mockTopic,
 			}
 
-			_, err := evt.Topic("test-topic").Publish(&Event{
+			_, err := evt.Topic("test-topic").Publish(context.TODO(), &Event{
 				Payload: map[string]interface{}{
 					"test": "test",
 				},

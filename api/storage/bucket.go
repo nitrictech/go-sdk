@@ -25,7 +25,7 @@ type Bucket interface {
 	// File - Get a file reference for in this bucket
 	File(key string) File
 	// Files - Get all file references for this bucket
-	Files() ([]File, error)
+	Files(ctx context.Context) ([]File, error)
 }
 
 type bucketImpl struct {
@@ -41,8 +41,8 @@ func (b *bucketImpl) File(key string) File {
 	}
 }
 
-func (b *bucketImpl) Files() ([]File, error) {
-	resp, err := b.sc.ListFiles(context.TODO(), &v1.StorageListFilesRequest{
+func (b *bucketImpl) Files(ctx context.Context) ([]File, error) {
+	resp, err := b.sc.ListFiles(ctx, &v1.StorageListFilesRequest{
 		BucketName: b.name,
 	})
 	if err != nil {

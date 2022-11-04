@@ -32,7 +32,7 @@ type Topic interface {
 	Name() string
 
 	// Publish will publish the provided events on the topic.
-	Publish(*Event, ...PublishOption) (*Event, error)
+	Publish(context.Context, *Event, ...PublishOption) (*Event, error)
 }
 
 type topicImpl struct {
@@ -51,7 +51,7 @@ func WithDelay(duration time.Duration) func(*v1.EventPublishRequest) {
 	}
 }
 
-func (s *topicImpl) Publish(evt *Event, opts ...PublishOption) (*Event, error) {
+func (s *topicImpl) Publish(ctx context.Context, evt *Event, opts ...PublishOption) (*Event, error) {
 	// Convert payload to Protobuf Struct
 	payloadStruct, err := protoutils.NewStruct(evt.Payload)
 	if err != nil {
@@ -72,7 +72,7 @@ func (s *topicImpl) Publish(evt *Event, opts ...PublishOption) (*Event, error) {
 		opt(event)
 	}
 
-	r, err := s.ec.Publish(context.TODO(), event)
+	r, err := s.ec.Publish(ctx, event)
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

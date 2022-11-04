@@ -5,6 +5,7 @@
 package mockapi
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -100,18 +101,18 @@ func (mr *MockSecretRefMockRecorder) Name() *gomock.Call {
 }
 
 // Put mocks base method.
-func (m *MockSecretRef) Put(arg0 []byte) (secrets.SecretVersionRef, error) {
+func (m *MockSecretRef) Put(arg0 context.Context, arg1 []byte) (secrets.SecretVersionRef, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Put", arg0)
+	ret := m.ctrl.Call(m, "Put", arg0, arg1)
 	ret0, _ := ret[0].(secrets.SecretVersionRef)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Put indicates an expected call of Put.
-func (mr *MockSecretRefMockRecorder) Put(arg0 interface{}) *gomock.Call {
+func (mr *MockSecretRefMockRecorder) Put(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockSecretRef)(nil).Put), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockSecretRef)(nil).Put), arg0, arg1)
 }
 
 // Version mocks base method.

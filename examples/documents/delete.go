@@ -16,6 +16,8 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
+
 	"github.com/nitrictech/go-sdk/api/documents"
 )
 
@@ -27,7 +29,7 @@ func delete() {
 
 	document := docs.Collection("products").Doc("nitric")
 
-	err := document.Delete()
+	err := document.Delete(context.TODO())
 
 	if err != nil {
 		// handle error

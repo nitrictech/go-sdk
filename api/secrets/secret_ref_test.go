@@ -15,6 +15,7 @@
 package secrets
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -129,7 +130,7 @@ var _ = Describe("secretRefImpl", func() {
 				}, nil).Times(1)
 
 				// Call the service
-				sv, err := s.Put([]byte("ssssshhhh... it's a secret"))
+				sv, err := s.Put(context.TODO(), []byte("ssssshhhh... it's a secret"))
 
 				By("not returning an error")
 				Expect(err).ToNot(HaveOccurred())
@@ -164,7 +165,7 @@ var _ = Describe("secretRefImpl", func() {
 				).Return(nil, fmt.Errorf("mock-error")).Times(1)
 
 				// Call the service
-				sv, err := s.Put([]byte("ssssshhhh... it's a secret"))
+				sv, err := s.Put(context.TODO(), []byte("ssssshhhh... it's a secret"))
 
 				By("returning the error")
 				Expect(err).To(HaveOccurred())

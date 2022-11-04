@@ -5,6 +5,7 @@
 package mockapi
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -102,10 +103,10 @@ func (mr *MockTopicMockRecorder) Name() *gomock.Call {
 }
 
 // Publish mocks base method.
-func (m *MockTopic) Publish(arg0 *events.Event, arg1 ...func(*v1.EventPublishRequest)) (*events.Event, error) {
+func (m *MockTopic) Publish(arg0 context.Context, arg1 *events.Event, arg2 ...func(*v1.EventPublishRequest)) (*events.Event, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Publish", varargs...)
@@ -115,8 +116,8 @@ func (m *MockTopic) Publish(arg0 *events.Event, arg1 ...func(*v1.EventPublishReq
 }
 
 // Publish indicates an expected call of Publish.
-func (mr *MockTopicMockRecorder) Publish(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *MockTopicMockRecorder) Publish(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockTopic)(nil).Publish), varargs...)
 }

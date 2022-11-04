@@ -15,6 +15,7 @@
 package queues
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -40,7 +41,7 @@ var _ = Describe("Queue", func() {
 				c:    mockQ,
 			}
 
-			_, err := q.Send([]*Task{
+			_, err := q.Send(context.TODO(), []*Task{
 				{
 					ID:          "1234",
 					PayloadType: "test-payload",
@@ -80,7 +81,7 @@ var _ = Describe("Queue", func() {
 				c:    mockQ,
 			}
 
-			fts, _ := q.Send([]*Task{
+			fts, _ := q.Send(context.TODO(), []*Task{
 				{
 					ID:          "1234",
 					PayloadType: "test-payload",
@@ -107,7 +108,7 @@ var _ = Describe("Queue", func() {
 					name: "test-queue",
 				}
 
-				_, err := q.Receive(0)
+				_, err := q.Receive(context.TODO(), 0)
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
@@ -137,7 +138,7 @@ var _ = Describe("Queue", func() {
 					c:    mockQ,
 				}
 
-				t, _ := q.Receive(1)
+				t, _ := q.Receive(context.TODO(), 1)
 
 				It("should receive a single task", func() {
 					Expect(t).To(HaveLen(1))

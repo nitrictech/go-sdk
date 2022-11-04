@@ -16,6 +16,7 @@ package storage_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/storage"
@@ -32,7 +33,7 @@ func readFile() {
 		// handle client creation error...
 	}
 
-	data, err := sc.Bucket("my-bucket").File("path/to/file").Read()
+	data, err := sc.Bucket("my-bucket").File("path/to/file").Read(context.TODO())
 
 	if err != nil {
 		// handle bucket file delete error

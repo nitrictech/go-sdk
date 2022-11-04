@@ -16,6 +16,7 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/documents"
@@ -29,7 +30,7 @@ func get() {
 
 	document := docs.Collection("products").Doc("nitric")
 
-	product, err := document.Get()
+	product, err := document.Get(context.TODO())
 
 	if err != nil {
 		// handle error

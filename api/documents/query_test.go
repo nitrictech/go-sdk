@@ -15,6 +15,7 @@
 package documents
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -109,7 +110,7 @@ var _ = Describe("Query", func() {
 					})
 					q.Where(Condition("test").Eq(StringValue("test")))
 
-					_, err := q.Fetch()
+					_, err := q.Fetch(context.TODO())
 
 					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
@@ -149,7 +150,7 @@ var _ = Describe("Query", func() {
 						Condition("test").Eq(StringValue("test")),
 					)
 
-					r, err := q.Fetch()
+					r, err := q.Fetch(context.TODO())
 
 					It("should return documents", func() {
 						By("not returning an error")
@@ -176,7 +177,7 @@ var _ = Describe("Query", func() {
 
 				q.FromPagingToken("blah")
 
-				_, err := q.Fetch()
+				_, err := q.Fetch(context.TODO())
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
@@ -194,7 +195,7 @@ var _ = Describe("Query", func() {
 
 				q.Where(&queryExpression{})
 
-				_, err := q.Fetch()
+				_, err := q.Fetch(context.TODO())
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
@@ -219,7 +220,7 @@ var _ = Describe("Query", func() {
 					})
 					q.Where(Condition("test").Eq(StringValue("test")))
 
-					_, err := q.Stream()
+					_, err := q.Stream(context.TODO())
 
 					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
@@ -245,7 +246,7 @@ var _ = Describe("Query", func() {
 						Condition("test").Eq(StringValue("test")),
 					)
 
-					r, err := q.Stream()
+					r, err := q.Stream(context.TODO())
 
 					It("should not return an error", func() {
 						Expect(err).ToNot(HaveOccurred())
@@ -273,7 +274,7 @@ var _ = Describe("Query", func() {
 
 				q.Where(&queryExpression{})
 
-				_, err := q.Stream()
+				_, err := q.Stream(context.TODO())
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())

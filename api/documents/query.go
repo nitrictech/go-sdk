@@ -33,10 +33,10 @@ type Query interface {
 	FromPagingToken(interface{}) Query
 
 	// Fetch - Return paged values
-	Fetch() (*FetchResult, error)
+	Fetch(ctx context.Context) (*FetchResult, error)
 
 	// Stream - Return an iterator containing values
-	Stream() (DocumentIter, error)
+	Stream(ctx context.Context) (DocumentIter, error)
 }
 
 // Defacto Query interface implementation
@@ -84,7 +84,7 @@ func (q *queryImpl) expressionsToWire() ([]*v1.Expression, error) {
 	return expressions, nil
 }
 
-func (q *queryImpl) Fetch() (*FetchResult, error) {
+func (q *queryImpl) Fetch(ctx context.Context) (*FetchResult, error) {
 	// build the expressions list
 	expressions, err := q.expressionsToWire()
 	if err != nil {
@@ -101,7 +101,7 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 		token = t
 	}
 
-	r, err := q.dc.Query(context.TODO(), &v1.DocumentQueryRequest{
+	r, err := q.dc.Query(ctx, &v1.DocumentQueryRequest{
 		Collection:  q.col.ToWire(),
 		Expressions: expressions,
 		Limit:       int32(q.limit),
@@ -132,14 +132,14 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 	}, nil
 }
 
-func (q *queryImpl) Stream() (DocumentIter, error) {
+func (q *queryImpl) Stream(ctx context.Context) (DocumentIter, error) {
 	// build the expressions list
 	expressions, err := q.expressionsToWire()
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := q.dc.QueryStream(context.TODO(), &v1.DocumentQueryStreamRequest{
+	r, err := q.dc.QueryStream(ctx, &v1.DocumentQueryStreamRequest{
 		Collection:  q.col.ToWire(),
 		Expressions: expressions,
 		Limit:       int32(q.limit),

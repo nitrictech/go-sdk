@@ -38,7 +38,7 @@ type ReceivedTask interface {
 	// Task - Returns the Task data contained in this Received Task instance
 	Task() *Task
 	// Complete - Completes the task removing it from the queue
-	Complete() error
+	Complete(context.Context) error
 }
 
 type receivedTaskImpl struct {
@@ -56,8 +56,8 @@ func (r *receivedTaskImpl) Queue() string {
 	return r.queue
 }
 
-func (r *receivedTaskImpl) Complete() error {
-	_, err := r.qc.Complete(context.TODO(), &v1.QueueCompleteRequest{
+func (r *receivedTaskImpl) Complete(ctx context.Context) error {
+	_, err := r.qc.Complete(ctx, &v1.QueueCompleteRequest{
 		Queue:   r.queue,
 		LeaseId: r.leaseId,
 	})

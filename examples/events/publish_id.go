@@ -16,6 +16,7 @@ package events_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/events"
@@ -31,7 +32,7 @@ func publishEventId() error {
 		return err
 	}
 
-	pEvt, err := ec.Topic("my-topic").Publish(&events.Event{
+	pEvt, err := ec.Topic("my-topic").Publish(context.TODO(), &events.Event{
 		ID: "unique-event-id",
 		Payload: map[string]interface{}{
 			"test": "event",

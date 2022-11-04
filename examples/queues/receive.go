@@ -16,6 +16,8 @@ package queues_examples
 
 // [START import]
 import (
+	"context"
+
 	"github.com/nitrictech/go-sdk/api/queues"
 )
 
@@ -25,14 +27,14 @@ func receive() {
 	// [START snippet]
 	qc, _ := queues.New()
 
-	tasks, err := qc.Queue("my-queue").Receive(10)
+	tasks, err := qc.Queue("my-queue").Receive(context.TODO(), 10)
 
 	if err != nil {
 		// handle error
 	}
 
 	for _, t := range tasks {
-		err := t.Complete()
+		err := t.Complete(context.TODO())
 
 		if err != nil {
 			// handle completion error

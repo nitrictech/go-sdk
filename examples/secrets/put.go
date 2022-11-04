@@ -16,6 +16,7 @@ package secrets_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/secrets"
@@ -28,7 +29,7 @@ func put() {
 	sc, _ := secrets.New()
 
 	// Access the latest secret
-	version, err := sc.Secret("my-secret").Put([]byte("sssshhhh.... it's a secret"))
+	version, err := sc.Secret("my-secret").Put(context.TODO(), []byte("sssshhhh.... it's a secret"))
 
 	if err != nil {
 		// handle error

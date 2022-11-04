@@ -16,6 +16,7 @@ package storage_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/storage"
@@ -31,7 +32,7 @@ func signUrlWrite() {
 		// handle client creation error...
 	}
 
-	url, err := sc.Bucket("my-bucket").File("path/to/file").UploadUrl(3600)
+	url, err := sc.Bucket("my-bucket").File("path/to/file").UploadUrl(context.TODO(), 3600)
 	if err != nil {
 		// handle bucket file presign url error
 	}

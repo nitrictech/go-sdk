@@ -16,6 +16,7 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/documents"
@@ -29,7 +30,7 @@ func queryLimit() {
 
 	query := docs.Collection("customers").Query().Limit(1000)
 
-	results, err := query.Fetch()
+	results, err := query.Fetch(context.TODO())
 
 	if err != nil {
 		// handle error

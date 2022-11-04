@@ -41,6 +41,11 @@ func (t triggerContextImpl) Event() *EventContext {
 func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*triggerContextImpl, error) {
 	trigCtx := &triggerContextImpl{}
 
+	tc := map[string]string{}
+	if triggerReq.TraceContext != nil {
+		tc = triggerReq.TraceContext.GetValues()
+	}
+
 	if triggerReq.GetHttp() != nil {
 		httpTrig := triggerReq.GetHttp()
 
@@ -69,8 +74,9 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 		trigCtx.http = &HttpContext{
 			Request: &httpRequestImpl{
 				dataRequestImpl: dataRequestImpl{
-					data:     triggerReq.GetData(),
-					mimeType: triggerReq.GetMimeType(),
+					data:         triggerReq.GetData(),
+					mimeType:     triggerReq.GetMimeType(),
+					traceContext: tc,
 				},
 				method:     httpTrig.GetMethod(),
 				headers:    headers,
@@ -93,8 +99,9 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 		trigCtx.event = &EventContext{
 			Request: &eventRequestImpl{
 				dataRequestImpl: dataRequestImpl{
-					data:     triggerReq.GetData(),
-					mimeType: triggerReq.GetMimeType(),
+					data:         triggerReq.GetData(),
+					mimeType:     triggerReq.GetMimeType(),
+					traceContext: tc,
 				},
 				topic: topic.GetTopic(),
 			},
