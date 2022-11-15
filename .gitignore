@@ -24,3 +24,5 @@ bin/
 
 contracts/
 *-contracts.tgz
+tools/include/
+tools/protoc-*.zip
