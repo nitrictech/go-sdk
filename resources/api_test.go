@@ -53,6 +53,48 @@ var _ = Describe("api", func() {
 			Expect(m.blockers["route:testApi/objects/:id/DELETE"]).ToNot(BeNil())
 			Expect(m.blockers["route:testApi/objects/:id/OPTIONS"]).ToNot(BeNil())
 		})
+		It("can get api details", func() {
+			ctrl := gomock.NewController(GinkgoT())
+			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
+			mockConn := mock_v1.NewMockClientConnInterface(ctrl)
+			m := &manager{
+				blockers: map[string]Starter{},
+				builders: map[string]faas.HandlerBuilder{},
+				rsc:      mockClient,
+				conn:     mockConn,
+			}
+
+			mockClient.EXPECT().Details(gomock.Any(), &v1.ResourceDetailsRequest{
+				Resource: &v1.Resource{
+					Name: "testApi",
+					Type: v1.ResourceType_Api,
+				},
+			}).Return(&v1.ResourceDetailsResponse{
+				Id:       "1234",
+				Provider: "aws",
+				Service:  "lambda",
+				Details: &v1.ResourceDetailsResponse_Api{
+					Api: &v1.ApiResourceDetails{
+						Url: "example.com/aws/thing",
+					},
+				},
+			}, nil)
+			a := &api{
+				name:   "testApi",
+				routes: map[string]Route{},
+				m:      m,
+			}
+			ad, err := a.Details(context.TODO())
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(ad).To(Equal(&ApiDetails{
+				Details: Details{
+					ID:       "1234",
+					Provider: "aws",
+					Service:  "lambda",
+				},
+				URL: "example.com/aws/thing",
+			}))
+		})
 	})
 
 	Context("New With Security", func() {

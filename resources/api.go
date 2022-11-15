@@ -116,6 +116,13 @@ type Api interface {
 	Post(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	Delete(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	Options(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	Details(ctx context.Context) (*ApiDetails, error)
+	URL(ctx context.Context) (string, error)
+}
+
+type ApiDetails struct {
+	Details
+	URL string
 }
 
 type api struct {
@@ -201,6 +208,46 @@ func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
 // The returned API object can be used to register Routes and Methods, with Handlers.
 func NewApi(name string, opts ...ApiOption) (Api, error) {
 	return run.NewApi(name, opts...)
+}
+
+func (a *api) Details(ctx context.Context) (*ApiDetails, error) {
+	rsc, err := a.m.resourceServiceClient()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := rsc.Details(ctx, &v1.ResourceDetailsRequest{
+		Resource: &v1.Resource{
+			Type: v1.ResourceType_Api,
+			Name: a.name,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	d := &ApiDetails{
+		Details: Details{
+			ID:       resp.Id,
+			Provider: resp.Provider,
+			Service:  resp.Service,
+		},
+	}
+	if resp.GetApi() != nil {
+		d.URL = resp.GetApi().GetUrl()
+	}
+
+	return d, nil
+}
+
+// URL returns the runtime URL of this API.
+func (a *api) URL(ctx context.Context) (string, error) {
+	d, err := a.Details(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return d.URL, nil
 }
 
 // Get adds a Get method handler to the path with any specified opts.
