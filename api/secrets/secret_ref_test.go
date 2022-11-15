@@ -21,8 +21,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 var _ = Describe("secretRefImpl", func() {

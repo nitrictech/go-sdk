@@ -17,7 +17,7 @@ package faas
 import (
 	"fmt"
 
-	pb "github.com/nitrictech/apis/go/nitric/v1"
+	pb "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 type TriggerContext interface {

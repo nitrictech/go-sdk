@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/queues"
+	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 type QueuePermission string

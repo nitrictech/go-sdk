@@ -17,9 +17,9 @@ package queues
 import (
 	"context"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 // Queue is a resource for async send/receive messaging.

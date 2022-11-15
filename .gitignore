@@ -21,3 +21,6 @@ bin/
 *.coverprofile
 
 .vscode/
+
+contracts/
+*-contracts.tgz

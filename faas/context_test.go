@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 var _ = Describe("Faas", func() {

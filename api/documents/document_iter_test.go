@@ -21,8 +21,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
