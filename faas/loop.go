@@ -21,9 +21,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	pb "github.com/nitrictech/apis/go/nitric/v1"
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	pb "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 const concurrentRequestLimit int = 10

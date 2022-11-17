@@ -17,10 +17,10 @@ package secrets
 import (
 	"google.golang.org/grpc"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 // Secrets - Base client for the Nitric Secrets service

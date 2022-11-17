@@ -8,8 +8,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	events "github.com/nitrictech/go-sdk/api/events"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 // MockEvents is a mock of Events interface.

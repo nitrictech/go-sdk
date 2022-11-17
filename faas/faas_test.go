@@ -23,8 +23,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	pb "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	pb "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 var _ = Describe("Faas", func() {

@@ -24,7 +24,6 @@ import (
 	multierror "github.com/missionMeteora/toolkit/errors"
 	"google.golang.org/grpc"
 
-	nitricv1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/documents"
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/events"
@@ -33,6 +32,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
+	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 type Starter interface {

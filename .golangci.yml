@@ -2,6 +2,7 @@ run:
   timeout: "5m"
   skip-files:
   - tools/tools.go
+  - doc.go
 
 linters:
   disable-all: true

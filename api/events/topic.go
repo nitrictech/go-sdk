@@ -18,9 +18,9 @@ import (
 	"context"
 	"time"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 

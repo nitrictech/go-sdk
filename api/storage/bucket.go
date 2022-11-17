@@ -17,7 +17,7 @@ package storage
 import (
 	"context"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
+	v1 "github.com/nitrictech/go-sdk/nitric/v1"
 )
 
 // Cloud storage bucket resource for large file storage.

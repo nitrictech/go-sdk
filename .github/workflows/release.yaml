@@ -6,6 +6,8 @@ on:
 jobs:
   version:
     runs-on: ubuntu-latest
+    env:
+      GOPATH: /home/runner/go
     steps:
       - uses: actions/checkout@v2
       - name: Bump version and push tag
