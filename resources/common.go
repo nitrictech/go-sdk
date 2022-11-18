@@ -36,3 +36,12 @@ func functionResourceDeclareRequest(subject *nitricv1.Resource, actions []nitric
 		},
 	}
 }
+
+type Details struct {
+	// The identifier of the resource
+	ID string
+	// The provider this resource is deployed with (e.g. aws)
+	Provider string
+	// The service this resource is deployed on (e.g. ApiGateway)
+	Service string
+}
