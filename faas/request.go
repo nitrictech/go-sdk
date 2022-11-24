@@ -14,14 +14,23 @@
 
 package faas
 
+import (
+	"context"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+)
+
 type DataRequest interface {
 	Data() []byte
 	MimeType() string
+	Context() context.Context
 }
 
 type dataRequestImpl struct {
-	data     []byte
-	mimeType string
+	data         []byte
+	mimeType     string
+	traceContext map[string]string
 }
 
 func (d *dataRequestImpl) Data() []byte {
@@ -32,8 +41,19 @@ func (d *dataRequestImpl) MimeType() string {
 	return d.mimeType
 }
 
+func (d *dataRequestImpl) Context() context.Context {
+	phc := propagation.HeaderCarrier{}
+
+	for k, v := range d.traceContext {
+		phc.Set(k, v)
+	}
+
+	return otel.GetTextMapPropagator().Extract(context.Background(), phc)
+}
+
 type HttpRequest interface {
 	DataRequest
+	Context() context.Context
 	Method() string
 	Path() string
 	Query() map[string][]string

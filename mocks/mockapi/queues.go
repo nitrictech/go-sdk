@@ -5,6 +5,7 @@
 package mockapi
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -86,31 +87,31 @@ func (mr *MockQueueMockRecorder) Name() *gomock.Call {
 }
 
 // Receive mocks base method.
-func (m *MockQueue) Receive(arg0 int) ([]queues.ReceivedTask, error) {
+func (m *MockQueue) Receive(arg0 context.Context, arg1 int) ([]queues.ReceivedTask, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Receive", arg0)
+	ret := m.ctrl.Call(m, "Receive", arg0, arg1)
 	ret0, _ := ret[0].([]queues.ReceivedTask)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Receive indicates an expected call of Receive.
-func (mr *MockQueueMockRecorder) Receive(arg0 interface{}) *gomock.Call {
+func (mr *MockQueueMockRecorder) Receive(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Receive", reflect.TypeOf((*MockQueue)(nil).Receive), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Receive", reflect.TypeOf((*MockQueue)(nil).Receive), arg0, arg1)
 }
 
 // Send mocks base method.
-func (m *MockQueue) Send(arg0 []*queues.Task) ([]*queues.FailedTask, error) {
+func (m *MockQueue) Send(arg0 context.Context, arg1 []*queues.Task) ([]*queues.FailedTask, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", arg0)
+	ret := m.ctrl.Call(m, "Send", arg0, arg1)
 	ret0, _ := ret[0].([]*queues.FailedTask)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockQueueMockRecorder) Send(arg0 interface{}) *gomock.Call {
+func (mr *MockQueueMockRecorder) Send(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockQueue)(nil).Send), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockQueue)(nil).Send), arg0, arg1)
 }

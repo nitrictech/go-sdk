@@ -16,6 +16,8 @@ package queues_examples
 
 // [START import]
 import (
+	"context"
+
 	"github.com/nitrictech/go-sdk/api/queues"
 )
 
@@ -25,7 +27,7 @@ func send() {
 	// [START snippet]
 	qc, _ := queues.New()
 
-	_, err := qc.Queue("my-queue").Send([]*queues.Task{
+	_, err := qc.Queue("my-queue").Send(context.TODO(), []*queues.Task{
 		{
 			ID:          "1234",
 			PayloadType: "test-payload",

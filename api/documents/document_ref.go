@@ -36,13 +36,13 @@ type DocumentRef interface {
 	Id() string
 
 	// Get - Retrieve the value of the document
-	Get() (Document, error)
+	Get(context.Context) (Document, error)
 
 	// Set - Sets the value of the document
-	Set(map[string]interface{}) error
+	Set(context.Context, map[string]interface{}) error
 
 	// Delete - Deletes the document
-	Delete() error
+	Delete(context.Context) error
 
 	// Collection - Retrieve a child collection of this document
 	Collection(string) (CollectionRef, error)
@@ -119,8 +119,8 @@ func (d *documentRefImpl) Collection(c string) (CollectionRef, error) {
 }
 
 // Delete - Deletes the document this reference refers to if it exists
-func (d *documentRefImpl) Delete() error {
-	_, err := d.dc.Delete(context.TODO(), &v1.DocumentDeleteRequest{
+func (d *documentRefImpl) Delete(ctx context.Context) error {
+	_, err := d.dc.Delete(ctx, &v1.DocumentDeleteRequest{
 		Key: d.toWireKey(),
 	})
 
@@ -128,7 +128,7 @@ func (d *documentRefImpl) Delete() error {
 }
 
 // Set - Sets the contents of the document this reference refers to
-func (d *documentRefImpl) Set(content map[string]interface{}) error {
+func (d *documentRefImpl) Set(ctx context.Context, content map[string]interface{}) error {
 	sv, err := protoutils.NewStruct(content)
 	if err != nil {
 		return errors.NewWithCause(
@@ -138,7 +138,7 @@ func (d *documentRefImpl) Set(content map[string]interface{}) error {
 		)
 	}
 
-	if _, err = d.dc.Set(context.TODO(), &v1.DocumentSetRequest{
+	if _, err = d.dc.Set(ctx, &v1.DocumentSetRequest{
 		Key:     d.toWireKey(),
 		Content: sv,
 	}); err != nil {
@@ -153,8 +153,8 @@ type DecodeOption interface {
 }
 
 // Get - Retrieves the Document this reference refers to if it exists
-func (d *documentRefImpl) Get() (Document, error) {
-	res, err := d.dc.Get(context.TODO(), &v1.DocumentGetRequest{
+func (d *documentRefImpl) Get(ctx context.Context) (Document, error) {
+	res, err := d.dc.Get(ctx, &v1.DocumentGetRequest{
 		Key: d.toWireKey(),
 	})
 	if err != nil {

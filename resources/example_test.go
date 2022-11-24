@@ -86,7 +86,7 @@ func ExampleNewSchedule() {
 
 	err = NewSchedule("job", "10 minutes", func(ec *faas.EventContext, next faas.EventHandler) (*faas.EventContext, error) {
 		fmt.Println("got scheduled event ", string(ec.Request.Data()))
-		tasks, err := queue.Receive(10)
+		tasks, err := queue.Receive(ec.Request.Context(), 10)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -94,7 +94,7 @@ func ExampleNewSchedule() {
 			for _, task := range tasks {
 				fmt.Printf("processing task %s", task.Task().ID)
 
-				if err = task.Complete(); err != nil {
+				if err = task.Complete(ec.Request.Context()); err != nil {
 					fmt.Println(err)
 				}
 			}
@@ -128,14 +128,14 @@ func ExampleNewQueue() {
 		os.Exit(1)
 	}
 
-	exampleApi.Get("/hello/:name", func(ctx *faas.HttpContext, next faas.HttpHandler) (*faas.HttpContext, error) {
-		params := ctx.Request.PathParams()
+	exampleApi.Get("/hello/:name", func(hc *faas.HttpContext, next faas.HttpHandler) (*faas.HttpContext, error) {
+		params := hc.Request.PathParams()
 
 		if params == nil || len(params["name"]) == 0 {
-			ctx.Response.Body = []byte("error retrieving path params")
-			ctx.Response.Status = http.StatusBadRequest
+			hc.Response.Body = []byte("error retrieving path params")
+			hc.Response.Status = http.StatusBadRequest
 		} else {
-			_, err = queue.Send([]*queues.Task{
+			_, err = queue.Send(hc.Request.Context(), []*queues.Task{
 				{
 					ID:          uuid.NewString(),
 					PayloadType: "custom-X",
@@ -143,15 +143,15 @@ func ExampleNewQueue() {
 				},
 			})
 			if err != nil {
-				ctx.Response.Body = []byte("error sending event")
-				ctx.Response.Status = http.StatusInternalServerError
+				hc.Response.Body = []byte("error sending event")
+				hc.Response.Status = http.StatusInternalServerError
 			} else {
-				ctx.Response.Body = []byte("Hello " + params["name"])
-				ctx.Response.Status = http.StatusOK
+				hc.Response.Body = []byte("Hello " + params["name"])
+				hc.Response.Status = http.StatusOK
 			}
 		}
 
-		return next(ctx)
+		return next(hc)
 	})
 
 	fmt.Println("running example")

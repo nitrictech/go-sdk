@@ -15,6 +15,7 @@
 package documents
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -108,7 +109,7 @@ var _ = Describe("DocumentRef", func() {
 				},
 			}
 
-			err := md.Delete()
+			err := md.Delete(context.TODO())
 
 			It("should pass through the returned error", func() {
 				Expect(err).To(HaveOccurred())
@@ -133,7 +134,7 @@ var _ = Describe("DocumentRef", func() {
 				},
 			}
 
-			err := md.Delete()
+			err := md.Delete(context.TODO())
 
 			It("should not return an error", func() {
 				Expect(err).ToNot(HaveOccurred())
@@ -159,7 +160,7 @@ var _ = Describe("DocumentRef", func() {
 				},
 			}
 
-			err := md.Set(map[string]interface{}{
+			err := md.Set(context.TODO(), map[string]interface{}{
 				"test": "test",
 			})
 
@@ -186,7 +187,7 @@ var _ = Describe("DocumentRef", func() {
 				},
 			}
 
-			err := md.Set(map[string]interface{}{
+			err := md.Set(context.TODO(), map[string]interface{}{
 				"test": "test",
 			})
 
@@ -214,7 +215,7 @@ var _ = Describe("DocumentRef", func() {
 				},
 			}
 
-			_, err := md.Get()
+			_, err := md.Get(context.TODO())
 
 			It("should pass through the returned error", func() {
 				Expect(err).To(HaveOccurred())
@@ -246,7 +247,7 @@ var _ = Describe("DocumentRef", func() {
 				},
 			}
 
-			d, _ := md.Get()
+			d, _ := md.Get(context.TODO())
 
 			It("should provide the returned document", func() {
 				Expect(d.Content()).To(Equal(map[string]interface{}{

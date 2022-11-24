@@ -27,9 +27,9 @@ type Queue interface {
 	// Name - The name of the queue
 	Name() string
 	// Send - Push a number of tasks to a queue
-	Send([]*Task) ([]*FailedTask, error)
+	Send(context.Context, []*Task) ([]*FailedTask, error)
 	// Receive - Retrieve tasks from a queue to a maximum of the given depth
-	Receive(int) ([]ReceivedTask, error)
+	Receive(context.Context, int) ([]ReceivedTask, error)
 }
 
 type queueImpl struct {
@@ -41,12 +41,12 @@ func (q *queueImpl) Name() string {
 	return q.name
 }
 
-func (q *queueImpl) Receive(depth int) ([]ReceivedTask, error) {
+func (q *queueImpl) Receive(ctx context.Context, depth int) ([]ReceivedTask, error) {
 	if depth < 1 {
 		return nil, errors.New(codes.InvalidArgument, "Queue.Receive: depth cannot be less than 1")
 	}
 
-	r, err := q.c.Receive(context.TODO(), &v1.QueueReceiveRequest{
+	r, err := q.c.Receive(ctx, &v1.QueueReceiveRequest{
 		Queue: q.name,
 		Depth: int32(depth),
 	})
@@ -68,7 +68,7 @@ func (q *queueImpl) Receive(depth int) ([]ReceivedTask, error) {
 	return rts, nil
 }
 
-func (q *queueImpl) Send(tasks []*Task) ([]*FailedTask, error) {
+func (q *queueImpl) Send(ctx context.Context, tasks []*Task) ([]*FailedTask, error) {
 	// Convert SDK Task objects to gRPC Task objects
 	wireTasks := make([]*v1.NitricTask, len(tasks))
 	for i, task := range tasks {
@@ -84,7 +84,7 @@ func (q *queueImpl) Send(tasks []*Task) ([]*FailedTask, error) {
 	}
 
 	// Push the tasks to the queue
-	res, err := q.c.SendBatch(context.Background(), &v1.QueueSendBatchRequest{
+	res, err := q.c.SendBatch(ctx, &v1.QueueSendBatchRequest{
 		Queue: q.name,
 		Tasks: wireTasks,
 	})

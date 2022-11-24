@@ -16,6 +16,7 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/documents"
@@ -31,7 +32,7 @@ func subColQuery() {
 
 	query := collection.Query()
 
-	results, err := query.Fetch()
+	results, err := query.Fetch(context.TODO())
 
 	if err != nil {
 		// handle error

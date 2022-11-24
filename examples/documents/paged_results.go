@@ -16,6 +16,7 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/documents"
@@ -33,10 +34,10 @@ func pagedResults() {
 	).Limit(100)
 
 	// Fetch first page
-	results, _ := query.Fetch()
+	results, _ := query.Fetch(context.TODO())
 
 	// Fetch next page
-	results, _ = query.FromPagingToken(results.PagingToken).Fetch()
+	results, _ = query.FromPagingToken(results.PagingToken).Fetch(context.TODO())
 
 	fmt.Println("results: ", results)
 	// [END snippet]

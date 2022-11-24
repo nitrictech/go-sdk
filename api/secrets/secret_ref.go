@@ -24,7 +24,7 @@ import (
 // SecretRef is a reference to a cloud secret for secret storage.
 type SecretRef interface {
 	Name() string
-	Put([]byte) (SecretVersionRef, error)
+	Put(context.Context, []byte) (SecretVersionRef, error)
 	Version(string) SecretVersionRef
 	Latest() SecretVersionRef
 }
@@ -38,8 +38,8 @@ func (s *secretRefImpl) Name() string {
 	return s.name
 }
 
-func (s *secretRefImpl) Put(sec []byte) (SecretVersionRef, error) {
-	r, err := s.sc.Put(context.TODO(), &v1.SecretPutRequest{
+func (s *secretRefImpl) Put(ctx context.Context, sec []byte) (SecretVersionRef, error) {
+	r, err := s.sc.Put(ctx, &v1.SecretPutRequest{
 		Secret: &v1.Secret{
 			Name: s.name,
 		},

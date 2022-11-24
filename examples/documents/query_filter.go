@@ -16,6 +16,7 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/documents"
@@ -32,7 +33,7 @@ func queryFilter() {
 		documents.Condition("age").Gt(documents.NumberValue(21)),
 	)
 
-	results, err := query.Fetch()
+	results, err := query.Fetch(context.TODO())
 
 	if err != nil {
 		// handle error

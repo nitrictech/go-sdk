@@ -5,6 +5,7 @@
 package mockapi
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -86,16 +87,16 @@ func (mr *MockBucketMockRecorder) File(arg0 interface{}) *gomock.Call {
 }
 
 // Files mocks base method.
-func (m *MockBucket) Files() ([]storage.File, error) {
+func (m *MockBucket) Files(arg0 context.Context) ([]storage.File, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Files")
+	ret := m.ctrl.Call(m, "Files", arg0)
 	ret0, _ := ret[0].([]storage.File)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Files indicates an expected call of Files.
-func (mr *MockBucketMockRecorder) Files() *gomock.Call {
+func (mr *MockBucketMockRecorder) Files(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Files", reflect.TypeOf((*MockBucket)(nil).Files))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Files", reflect.TypeOf((*MockBucket)(nil).Files), arg0)
 }

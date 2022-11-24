@@ -16,6 +16,7 @@ package queues_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/queues"
@@ -27,7 +28,7 @@ func failed() {
 	// [START snippet]
 	qc, _ := queues.New()
 
-	ftasks, err := qc.Queue("my-queue").Send([]*queues.Task{
+	ftasks, err := qc.Queue("my-queue").Send(context.TODO(), []*queues.Task{
 		{
 			ID:          "1234",
 			PayloadType: "test-payload",
@@ -45,7 +46,7 @@ func failed() {
 		// print out the failure reason
 		fmt.Println("Failed Task", ft.Reason)
 		// resend the failed task
-		qc.Queue("my-queue").Send([]*queues.Task{ft.Task})
+		qc.Queue("my-queue").Send(context.TODO(), []*queues.Task{ft.Task})
 	}
 	// [END snippet]
 }

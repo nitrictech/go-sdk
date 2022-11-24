@@ -16,6 +16,8 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
+
 	"github.com/nitrictech/go-sdk/api/documents"
 )
 
@@ -27,7 +29,7 @@ func set() {
 
 	document := docs.Collection("products").Doc("nitric")
 
-	err := document.Set(map[string]interface{}{
+	err := document.Set(context.TODO(), map[string]interface{}{
 		"id":          "nitric",
 		"name":        "Nitric Framework",
 		"description": "A development framework",

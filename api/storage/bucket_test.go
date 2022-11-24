@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -73,7 +74,7 @@ var _ = Describe("Bucket", func() {
 				}).Times(1).Return(nil, fmt.Errorf("mock-error"))
 
 				By("calling Files() on the bucket reference")
-				files, err := bucketRef.Files()
+				files, err := bucketRef.Files(context.TODO())
 
 				By("receiving nil files")
 				Expect(files).To(BeNil())
@@ -103,7 +104,7 @@ var _ = Describe("Bucket", func() {
 				}, nil)
 
 				By("bucket.Files() being called")
-				files, err := bucketRef.Files()
+				files, err := bucketRef.Files(context.TODO())
 
 				By("not returning an error")
 				Expect(err).ShouldNot(HaveOccurred())

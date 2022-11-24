@@ -15,6 +15,7 @@
 package constants
 
 import (
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 )
 
@@ -25,5 +26,7 @@ func DefaultOptions() []grpc.DialOption {
 		grpc.WithInsecure(), //nolint:staticcheck
 		grpc.WithBlock(),
 		grpc.WithTimeout(NitricDialTimeout()), //nolint:staticcheck
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	}
 }

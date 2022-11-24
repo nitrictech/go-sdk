@@ -16,6 +16,7 @@ package documents_examples
 
 // [START import]
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -29,7 +30,7 @@ func stream() {
 	docs, _ := documents.New()
 
 	query := docs.Collection("Customers").Query()
-	itr, _ := query.Stream()
+	itr, _ := query.Stream(context.TODO())
 
 	for d, err := itr.Next(); err != io.EOF; d, err = itr.Next() {
 		if err != nil {

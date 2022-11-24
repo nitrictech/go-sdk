@@ -35,15 +35,15 @@ type File interface {
 	// Name - Get the name of the file
 	Name() string
 	// Read - Read this object
-	Read() ([]byte, error)
+	Read(ctx context.Context) ([]byte, error)
 	// Write - Write this object
-	Write([]byte) error
+	Write(ctx context.Context, data []byte) error
 	// Delete - Delete this object
-	Delete() error
+	Delete(ctx context.Context) error
 	// UploadUrl - Creates a signed Url for uploading this file reference
-	UploadUrl(expiry int) (string, error)
+	UploadUrl(ctx context.Context, expiry int) (string, error)
 	// DownloadUrl - Creates a signed Url for downloading this file reference
-	DownloadUrl(expiry int) (string, error)
+	DownloadUrl(ctx context.Context, expiry int) (string, error)
 }
 
 type fileImpl struct {
@@ -56,8 +56,8 @@ func (o *fileImpl) Name() string {
 	return o.key
 }
 
-func (o *fileImpl) Read() ([]byte, error) {
-	r, err := o.sc.Read(context.TODO(), &v1.StorageReadRequest{
+func (o *fileImpl) Read(ctx context.Context) ([]byte, error) {
+	r, err := o.sc.Read(ctx, &v1.StorageReadRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 	})
@@ -68,8 +68,8 @@ func (o *fileImpl) Read() ([]byte, error) {
 	return r.GetBody(), nil
 }
 
-func (o *fileImpl) Write(content []byte) error {
-	if _, err := o.sc.Write(context.TODO(), &v1.StorageWriteRequest{
+func (o *fileImpl) Write(ctx context.Context, content []byte) error {
+	if _, err := o.sc.Write(ctx, &v1.StorageWriteRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 		Body:       content,
@@ -80,8 +80,8 @@ func (o *fileImpl) Write(content []byte) error {
 	return nil
 }
 
-func (o *fileImpl) Delete() error {
-	if _, err := o.sc.Delete(context.TODO(), &v1.StorageDeleteRequest{
+func (o *fileImpl) Delete(ctx context.Context) error {
+	if _, err := o.sc.Delete(ctx, &v1.StorageDeleteRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 	}); err != nil {
@@ -104,15 +104,15 @@ func (p PresignUrlOptions) isValid() error {
 	return nil
 }
 
-func (o *fileImpl) UploadUrl(expiry int) (string, error) {
-	return o.signUrl(PresignUrlOptions{Expiry: expiry, Mode: ModeWrite})
+func (o *fileImpl) UploadUrl(ctx context.Context, expiry int) (string, error) {
+	return o.signUrl(ctx, PresignUrlOptions{Expiry: expiry, Mode: ModeWrite})
 }
 
-func (o *fileImpl) DownloadUrl(expiry int) (string, error) {
-	return o.signUrl(PresignUrlOptions{Expiry: expiry, Mode: ModeRead})
+func (o *fileImpl) DownloadUrl(ctx context.Context, expiry int) (string, error) {
+	return o.signUrl(ctx, PresignUrlOptions{Expiry: expiry, Mode: ModeRead})
 }
 
-func (o *fileImpl) signUrl(opts PresignUrlOptions) (string, error) {
+func (o *fileImpl) signUrl(ctx context.Context, opts PresignUrlOptions) (string, error) {
 	if err := opts.isValid(); err != nil {
 		return "", errors.NewWithCause(codes.InvalidArgument, "invalid options", err)
 	}
@@ -123,7 +123,7 @@ func (o *fileImpl) signUrl(opts PresignUrlOptions) (string, error) {
 		op = v1.StoragePreSignUrlRequest_WRITE
 	}
 
-	r, err := o.sc.PreSignUrl(context.TODO(), &v1.StoragePreSignUrlRequest{
+	r, err := o.sc.PreSignUrl(ctx, &v1.StoragePreSignUrlRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 		Operation:  op,
