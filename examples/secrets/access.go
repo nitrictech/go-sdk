@@ -16,6 +16,8 @@ package secrets_examples
 
 // [START import]
 import (
+	"context"
+
 	"github.com/nitrictech/go-sdk/api/secrets"
 )
 
@@ -26,7 +28,7 @@ func access() {
 	sc, _ := secrets.New()
 
 	// Access the latest secret
-	secVal, err := sc.Secret("my-secret").Latest().Access()
+	secVal, err := sc.Secret("my-secret").Latest().Access(context.TODO())
 
 	if err != nil {
 		// handle error

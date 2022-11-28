@@ -24,7 +24,7 @@ import (
 // SecretVersionRef - A reference to a secret version
 type SecretVersionRef interface {
 	// Access - Retrieve the value of the secret
-	Access() (SecretValue, error)
+	Access(ctx context.Context) (SecretValue, error)
 	Secret() SecretRef
 	Version() string
 }
@@ -43,8 +43,8 @@ func (s *secretVersionRefImpl) Version() string {
 	return s.version
 }
 
-func (s *secretVersionRefImpl) Access() (SecretValue, error) {
-	r, err := s.sc.Access(context.TODO(), &v1.SecretAccessRequest{
+func (s *secretVersionRefImpl) Access(ctx context.Context) (SecretValue, error) {
+	r, err := s.sc.Access(ctx, &v1.SecretAccessRequest{
 		SecretVersion: &v1.SecretVersion{
 			Secret: &v1.Secret{
 				Name: s.secret.Name(),
