@@ -68,3 +68,10 @@ func WithMethodSecurity(name string, scopes []string) MethodOption {
 		}
 	}
 }
+
+// WithPath - Prefixes API with the given path
+func WithPath(path string) ApiOption {
+	return func(api *api) {
+		api.path = path
+	}
+}
