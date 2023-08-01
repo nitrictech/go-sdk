@@ -51,11 +51,11 @@ func NewCollection(name string) Collection  {
 }
 
 func (c *collection) With(permissions ...CollectionPermission) (documents.CollectionRef, error) {
-	return defaultManager.NewCollection(c.name, permissions...)
+	return defaultManager.newCollection(c.name, permissions...)
 }
 
-func (m *manager) NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
-	rsc, err := m.ResourceServiceClient()
+func (m *manager) newCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
+	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}

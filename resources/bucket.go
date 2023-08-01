@@ -53,11 +53,11 @@ func NewBucket(name string) Bucket {
 }
 
 func (b *bucket) With(permissions ...BucketPermission) (storage.Bucket, error) {
-	return defaultManager.NewBucket(b.name, permissions...)
+	return defaultManager.newBucket(b.name, permissions...)
 }
 
-func (m *manager) NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
-	rsc, err := m.ResourceServiceClient()
+func (m *manager) newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
+	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -113,5 +113,5 @@ func (b *bucket) On(notificationType faas.NotificationType, notificationPrefixFi
 	f.BucketNotification(middleware...)
 	f.WithBucketNotificationWorkerOptions(faas.BucketNotificationWorkerOptions{Bucket: b.name, NotificationType: notificationType, NotificationPrefixFilter: notificationPrefixFilter})
 
-	b.manager.AddWorker(fmt.Sprintf("bucket:notification %s %s/%s", b.name, notificationType, notificationPrefixFilter), f)
+	b.manager.addWorker(fmt.Sprintf("bucket:notification %s %s/%s", b.name, notificationType, notificationPrefixFilter), f)
 }

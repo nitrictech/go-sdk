@@ -46,10 +46,10 @@ type websocket struct {
 
 // NewCollection register this collection as a required resource for the calling function/container.
 func NewWebsocket(name string) (Websocket, error) {
-	return defaultManager.NewWebsocket(name)
+	return defaultManager.newWebsocket(name)
 }
 
-func (m *manager) NewWebsocket(name string) (Websocket, error) {
+func (m *manager) newWebsocket(name string) (Websocket, error) {
 	conn, err := grpc.Dial(
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
@@ -64,7 +64,7 @@ func (m *manager) NewWebsocket(name string) (Websocket, error) {
 
 	wClient := websocketv1.NewWebsocketServiceClient(conn)
 	
-	rsc, err := m.ResourceServiceClient()
+	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (w *websocket) On(eventType faas.WebsocketEventType, middleware ...faas.Web
 			EventType: eventType,
 		})
 
-	w.manager.AddWorker(fmt.Sprintf("websocket:%s/%s", w.name, eventType), f)
+	w.manager.addWorker(fmt.Sprintf("websocket:%s/%s", w.name, eventType), f)
 }
 
 func (w *websocket) Send(ctx context.Context, connectionId string, message []byte) error {
@@ -133,7 +133,7 @@ func (w *websocket) Close(ctx context.Context, connectionId string) error {
 }
 
 func (w *websocket) details(ctx context.Context) (*v1.ResourceDetailsResponse, error) {
-	rsc, err := w.manager.ResourceServiceClient()
+	rsc, err := w.manager.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}

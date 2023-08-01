@@ -38,10 +38,10 @@ type schedule struct {
 
 // NewSchedule provides a new schedule, which can be configured with a rate/cron and a callback to run on the schedule.
 func NewSchedule(name string) Schedule {
-	return defaultManager.NewSchedule(name)
+	return defaultManager.newSchedule(name)
 }
 
-func (m *manager) NewSchedule(name string) Schedule {
+func (m *manager) newSchedule(name string) Schedule {
 	return &schedule {
 		name: name,
 		manager: m,
@@ -49,7 +49,7 @@ func (m *manager) NewSchedule(name string) Schedule {
 }
 
 func (s *schedule) Cron(cron string, middleware ...faas.EventMiddleware) {
-	f := s.manager.GetBuilder(s.name)
+	f := s.manager.getBuilder(s.name)
 	if f == nil {
 		f = faas.New()
 	}
@@ -60,8 +60,8 @@ func (s *schedule) Cron(cron string, middleware ...faas.EventMiddleware) {
 			Cron: cron,
 		})
 
-	s.manager.AddWorker(fmt.Sprintf("schedule:%s/%s", s.name, cron), f)
-	s.manager.AddBuilder(s.name, f)
+	s.manager.addWorker(fmt.Sprintf("schedule:%s/%s", s.name, cron), f)
+	s.manager.addBuilder(s.name, f)
 }
 
 func rateSplit(rate string) (int, faas.Frequency, error) {
@@ -100,7 +100,7 @@ func rateSplit(rate string) (int, faas.Frequency, error) {
 
 // The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
 func (s *schedule) Every(rate string, middleware ...faas.EventMiddleware) error {
-	f := s.manager.GetBuilder(s.name)
+	f := s.manager.getBuilder(s.name)
 	if f == nil {
 		f = faas.New()
 	}
@@ -117,8 +117,8 @@ func (s *schedule) Every(rate string, middleware ...faas.EventMiddleware) error 
 			Rate: rateNum,
 		})
 
-	s.manager.AddBuilder(s.name, f)
-	s.manager.AddWorker(fmt.Sprintf("schedule:%s/%s", s.name, rate), f)
+	s.manager.addBuilder(s.name, f)
+	s.manager.addWorker(fmt.Sprintf("schedule:%s/%s", s.name, rate), f)
 
 	return nil
 }

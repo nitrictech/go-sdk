@@ -63,11 +63,11 @@ func NewTopic(name string) SubscribableTopic {
 }
 
 func (t *subscribableTopic) With(permissions ...TopicPermission) (Topic, error) {
-	return defaultManager.NewTopic(t.name, permissions...)
+	return defaultManager.newTopic(t.name, permissions...)
 }
 
-func (m *manager) NewTopic(name string, permissions ...TopicPermission) (Topic, error) {
-	rsc, err := m.ResourceServiceClient()
+func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, error) {
+	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (m *manager) NewTopic(name string, permissions ...TopicPermission) (Topic, 
 }
 
 func (t *subscribableTopic) Subscribe(middleware ...faas.EventMiddleware) {
-	f := t.manager.GetBuilder(t.name)
+	f := t.manager.getBuilder(t.name)
 	if f == nil {
 		f = faas.New()
 	}
@@ -126,6 +126,6 @@ func (t *subscribableTopic) Subscribe(middleware ...faas.EventMiddleware) {
 	f.Event(middleware...)
 	f.WithSubscriptionWorkerOpts(faas.SubscriptionWorkerOptions{Topic: t.name})
 
-	t.manager.AddBuilder(t.name, f)
-	t.manager.AddWorker(fmt.Sprintf("topic:subscribe %s", t.name), f)
+	t.manager.addBuilder(t.name, f)
+	t.manager.addWorker(fmt.Sprintf("topic:subscribe %s", t.name), f)
 }

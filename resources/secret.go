@@ -48,12 +48,12 @@ func NewSecret(name string) *secret {
 }
 
 func (s *secret) With(permissions ...SecretPermission) (secrets.SecretRef, error) {
-	return defaultManager.NewSecret(s.name, permissions...)
+	return defaultManager.newSecret(s.name, permissions...)
 
 }
 
-func (m *manager) NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
-	rsc, err := m.ResourceServiceClient()
+func (m *manager) newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
+	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}

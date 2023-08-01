@@ -46,19 +46,19 @@ type Starter interface {
 // Manager is the top level object that resources are created on.
 type Manager interface {
 	Run() error
-	AddWorker(name string, s Starter)
-	AddBuilder(name string, builder faas.HandlerBuilder)
-	GetBuilder(name string) faas.HandlerBuilder
-	ResourceServiceClient() (v1.ResourceServiceClient, error)
+	addWorker(name string, s Starter)
+	addBuilder(name string, builder faas.HandlerBuilder)
+	getBuilder(name string) faas.HandlerBuilder
+	resourceServiceClient() (v1.ResourceServiceClient, error)
 
-	NewApi(name string, opts ...ApiOption) (Api, error)
-	NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
-	NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error)
-	NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error)
-	NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error)
-	NewSchedule(name string) Schedule
-	NewTopic(name string, permissions ...TopicPermission) (Topic, error)
-	NewWebsocket(socket string) (Websocket, error)
+	newApi(name string, opts ...ApiOption) (Api, error)
+	newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
+	newCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error)
+	newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error)
+	newQueue(name string, permissions ...QueuePermission) (queues.Queue, error)
+	newSchedule(name string) Schedule
+	newTopic(name string, permissions ...TopicPermission) (Topic, error)
+	newWebsocket(socket string) (Websocket, error)
 }
 
 type manager struct {
@@ -102,19 +102,19 @@ func New() Manager {
 }
 
 // Gets an existing builder or returns a new handler builder
-func (m *manager) GetBuilder(name string) faas.HandlerBuilder {
+func (m *manager) getBuilder(name string) faas.HandlerBuilder {
 	return m.builders[name]
 }
 
-func (m *manager) AddBuilder(name string, builder faas.HandlerBuilder) {
+func (m *manager) addBuilder(name string, builder faas.HandlerBuilder) {
 	m.builders[name] = builder
 }
 
-func (m *manager) AddWorker(name string, s Starter) {
+func (m *manager) addWorker(name string, s Starter) {
 	m.workers[name] = s
 }
 
-func (m *manager) ResourceServiceClient() (v1.ResourceServiceClient, error) {
+func (m *manager) resourceServiceClient() (v1.ResourceServiceClient, error) {
 	m.connMutex.Lock()
 	defer m.connMutex.Unlock()
 

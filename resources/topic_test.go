@@ -74,7 +74,7 @@ var _ = Describe("topics", func() {
 
 			mockTopic := mockapi.NewMockTopic(ctrl)
 			mockEvents.EXPECT().Topic("news").Return(mockTopic)
-			b, err := m.NewTopic("news")
+			b, err := m.newTopic("news")
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

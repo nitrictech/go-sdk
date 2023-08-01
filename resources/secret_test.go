@@ -76,7 +76,7 @@ var _ = Describe("secrets", func() {
 
 			mockSecretRef := mockapi.NewMockSecretRef(ctrl)
 			mockSecrets.EXPECT().Secret("gold").Return(mockSecretRef)
-			b, err := m.NewSecret("gold", SecretPutting, SecretAccessing)
+			b, err := m.newSecret("gold", SecretPutting, SecretAccessing)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

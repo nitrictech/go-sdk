@@ -76,7 +76,7 @@ var _ = Describe("bucket", func() {
 
 			mockBucket := mockapi.NewMockBucket(ctrl)
 			mockStorage.EXPECT().Bucket("red").Return(mockBucket)
-			b, err := m.NewBucket("red", BucketReading, BucketWriting)
+			b, err := m.newBucket("red", BucketReading, BucketWriting)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

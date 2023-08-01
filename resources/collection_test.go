@@ -76,7 +76,7 @@ var _ = Describe("collection", func() {
 
 			mockCollectionRef := mockapi.NewMockCollectionRef(ctrl)
 			mockDocuments.EXPECT().Collection("gold").Return(mockCollectionRef)
-			b, err := m.NewCollection("gold", CollectionReading, CollectionWriting)
+			b, err := m.newCollection("gold", CollectionReading, CollectionWriting)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

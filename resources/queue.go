@@ -48,11 +48,11 @@ func NewQueue(name string) *queue {
 }
 // NewQueue registers this queue as a required resource for the calling function/container.
 func (q *queue) With(permissions ...QueuePermission) (queues.Queue, error) {
-	return defaultManager.NewQueue(q.name, permissions...)
+	return defaultManager.newQueue(q.name, permissions...)
 }
 
-func (m *manager) NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
-	rsc, err := m.ResourceServiceClient()
+func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
+	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}

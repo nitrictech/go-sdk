@@ -134,7 +134,7 @@ var _ = Describe("api", func() {
 				},
 			}).Times(1)
 
-			a, err := m.NewApi("testApi", WithSecurityJwtRule("jwt", JwtSecurityRule{
+			a, err := m.newApi("testApi", WithSecurityJwtRule("jwt", JwtSecurityRule{
 				Audiences: []string{"test"},
 				Issuer:    "https://test.com",
 			}), WithSecurity("jwt", []string{}))

@@ -76,7 +76,7 @@ func (r *route) AddMethodHandler(methods []string, handler faas.HttpMiddleware, 
 		o(mo)
 	}
 
-	b := r.manager.GetBuilder(bName)
+	b := r.manager.getBuilder(bName)
 	if b == nil {
 		b = faas.New().WithApiWorkerOpts(faas.ApiWorkerOptions{
 			ApiName:          r.apiName,
@@ -95,8 +95,8 @@ func (r *route) AddMethodHandler(methods []string, handler faas.HttpMiddleware, 
 		b.Http(m, composedHandler)
 	}
 
-	r.manager.AddBuilder(bName, b)
-	r.manager.AddWorker("route:"+bName, b)
+	r.manager.addBuilder(bName, b)
+	r.manager.addWorker("route:"+bName, b)
 }
 
 func (r *route) All(handler faas.HttpMiddleware, opts ...MethodOption) {
@@ -159,8 +159,8 @@ type api struct {
 	middleware faas.HttpMiddleware
 }
 
-func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
-	rsc, err := m.ResourceServiceClient()
+func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
+	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -231,11 +231,11 @@ func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
 //
 // The returned API object can be used to register Routes and Methods, with Handlers.
 func NewApi(name string, opts ...ApiOption) (Api, error) {
-	return defaultManager.NewApi(name, opts...)
+	return defaultManager.newApi(name, opts...)
 }
 
 func (a *api) Details(ctx context.Context) (*ApiDetails, error) {
-	rsc, err := a.manager.ResourceServiceClient()
+	rsc, err := a.manager.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}

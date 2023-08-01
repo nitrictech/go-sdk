@@ -78,7 +78,7 @@ var _ = Describe("queue", func() {
 
 			mockQueue := mockapi.NewMockQueue(ctrl)
 			mockQueues.EXPECT().Queue("wollies").Return(mockQueue)
-			b, err := m.NewQueue("wollies", QueueReceving)
+			b, err := m.newQueue("wollies", QueueReceving)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())
