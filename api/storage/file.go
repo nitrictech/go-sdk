@@ -20,7 +20,7 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type Mode int
@@ -49,7 +49,7 @@ type File interface {
 type fileImpl struct {
 	bucket string
 	key    string
-	sc     v1.StorageServiceClient
+	storageClient     v1.StorageServiceClient
 }
 
 func (o *fileImpl) Name() string {
@@ -57,7 +57,7 @@ func (o *fileImpl) Name() string {
 }
 
 func (o *fileImpl) Read(ctx context.Context) ([]byte, error) {
-	r, err := o.sc.Read(ctx, &v1.StorageReadRequest{
+	r, err := o.storageClient.Read(ctx, &v1.StorageReadRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 	})
@@ -69,7 +69,7 @@ func (o *fileImpl) Read(ctx context.Context) ([]byte, error) {
 }
 
 func (o *fileImpl) Write(ctx context.Context, content []byte) error {
-	if _, err := o.sc.Write(ctx, &v1.StorageWriteRequest{
+	if _, err := o.storageClient.Write(ctx, &v1.StorageWriteRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 		Body:       content,
@@ -81,7 +81,7 @@ func (o *fileImpl) Write(ctx context.Context, content []byte) error {
 }
 
 func (o *fileImpl) Delete(ctx context.Context) error {
-	if _, err := o.sc.Delete(ctx, &v1.StorageDeleteRequest{
+	if _, err := o.storageClient.Delete(ctx, &v1.StorageDeleteRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 	}); err != nil {
@@ -123,7 +123,7 @@ func (o *fileImpl) signUrl(ctx context.Context, opts PresignUrlOptions) (string,
 		op = v1.StoragePreSignUrlRequest_WRITE
 	}
 
-	r, err := o.sc.PreSignUrl(ctx, &v1.StoragePreSignUrlRequest{
+	r, err := o.storageClient.PreSignUrl(ctx, &v1.StoragePreSignUrlRequest{
 		BucketName: o.bucket,
 		Key:        o.key,
 		Operation:  op,

@@ -23,7 +23,7 @@ import (
 
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	pb "github.com/nitrictech/go-sdk/nitric/v1"
+	pb "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 const concurrentRequestLimit int = 10
@@ -133,6 +133,19 @@ func faasProcessOne(ctx *triggerContextImpl, stream pb.FaasService_TriggerStream
 		ctx.event, funcErr = f.GetEvent()(ctx.Event(), eventDummy)
 
 		if ctx.event == nil && funcErr == nil {
+			funcErr = fmt.Errorf("nil context returned from event handler")
+		}
+	} else if ctx.Websocket() != nil && f.GetWebsocket() != nil {
+		// handle websocket
+		ctx.websocket, funcErr = f.GetWebsocket()(ctx.Websocket(), websocketDummy)
+
+		if ctx.websocket == nil && funcErr == nil {
+			funcErr = fmt.Errorf("nil context returned from event handler")
+		}
+	} else if ctx.BucketNotification() != nil && f.GetBucketNotification() != nil {
+		ctx.bucketNotification, funcErr = f.GetBucketNotification()(ctx.BucketNotification(), bucketNotificationDummy)
+
+		if ctx.bucketNotification == nil && funcErr == nil {
 			funcErr = fmt.Errorf("nil context returned from event handler")
 		}
 	} else if f.GetDefault() != nil {

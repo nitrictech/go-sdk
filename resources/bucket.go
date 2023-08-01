@@ -19,10 +19,21 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/storage"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	"github.com/nitrictech/go-sdk/faas"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type BucketPermission string
+
+type bucket struct {
+	name string
+	manager Manager
+}
+
+type Bucket interface {
+	With(permissions ...BucketPermission) (storage.Bucket, error)
+	On(faas.NotificationType, string, ...faas.BucketNotificationMiddleware)
+}
 
 const (
 	BucketReading  BucketPermission = "reading"
@@ -34,25 +45,32 @@ var BucketEverything []BucketPermission = []BucketPermission{BucketReading, Buck
 
 // NewBucket register this bucket as a required resource for the calling function/container and
 // register the permissions required by the currently scoped function for this resource.
-func NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
-	return run.NewBucket(name, permissions...)
+func NewBucket(name string) Bucket {
+	return &bucket{
+		name: name,
+		manager: defaultManager,
+	}
+}
+
+func (b *bucket) With(permissions ...BucketPermission) (storage.Bucket, error) {
+	return defaultManager.NewBucket(b.name, permissions...)
 }
 
 func (m *manager) NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
-	rsc, err := m.resourceServiceClient()
+	rsc, err := m.ResourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
 
-	res := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Bucket,
+	res := &v1.Resource{
+		Type: v1.ResourceType_Bucket,
 		Name: name,
 	}
 
-	dr := &nitricv1.ResourceDeclareRequest{
+	dr := &v1.ResourceDeclareRequest{
 		Resource: res,
-		Config: &nitricv1.ResourceDeclareRequest_Bucket{
-			Bucket: &nitricv1.BucketResource{},
+		Config: &v1.ResourceDeclareRequest_Bucket{
+			Bucket: &v1.BucketResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -60,15 +78,15 @@ func (m *manager) NewBucket(name string, permissions ...BucketPermission) (stora
 		return nil, err
 	}
 
-	actions := []nitricv1.Action{}
+	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
 		case BucketReading:
-			actions = append(actions, nitricv1.Action_BucketFileGet, nitricv1.Action_BucketFileList)
+			actions = append(actions, v1.Action_BucketFileGet, v1.Action_BucketFileList)
 		case BucketWriting:
-			actions = append(actions, nitricv1.Action_BucketFilePut)
+			actions = append(actions, v1.Action_BucketFilePut)
 		case BucketDeleting:
-			actions = append(actions, nitricv1.Action_BucketFileDelete)
+			actions = append(actions, v1.Action_BucketFileDelete)
 		default:
 			return nil, fmt.Errorf("bucketPermission %s unknown", perm)
 		}
@@ -87,4 +105,13 @@ func (m *manager) NewBucket(name string, permissions ...BucketPermission) (stora
 	}
 
 	return m.storage.Bucket(name), nil
+}
+
+func (b *bucket) On(notificationType faas.NotificationType, notificationPrefixFilter string, middleware ...faas.BucketNotificationMiddleware) {	
+	f := faas.New()
+
+	f.BucketNotification(middleware...)
+	f.WithBucketNotificationWorkerOptions(faas.BucketNotificationWorkerOptions{Bucket: b.name, NotificationType: notificationType, NotificationPrefixFilter: notificationPrefixFilter})
+
+	b.manager.AddWorker(fmt.Sprintf("bucket:notification %s %s/%s", b.name, notificationType, notificationPrefixFilter), f)
 }

@@ -19,8 +19,18 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/documents"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
+
+
+type collection struct {
+	name string
+	manager Manager
+}
+
+type Collection interface {
+	With(permissions ...CollectionPermission) (documents.CollectionRef, error)
+}
 
 type CollectionPermission string
 
@@ -33,12 +43,19 @@ const (
 var CollectionEverything []CollectionPermission = []CollectionPermission{CollectionReading, CollectionWriting, CollectionDeleting}
 
 // NewCollection register this collection as a required resource for the calling function/container.
-func NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
-	return run.NewCollection(name, permissions...)
+func NewCollection(name string) Collection  {
+	return &collection{
+		name: name,
+		manager: defaultManager,
+	}
+}
+
+func (c *collection) With(permissions ...CollectionPermission) (documents.CollectionRef, error) {
+	return defaultManager.NewCollection(c.name, permissions...)
 }
 
 func (m *manager) NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {
-	rsc, err := m.resourceServiceClient()
+	rsc, err := m.ResourceServiceClient()
 	if err != nil {
 		return nil, err
 	}

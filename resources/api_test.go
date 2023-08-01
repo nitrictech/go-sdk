@@ -23,20 +23,20 @@ import (
 
 	"github.com/nitrictech/go-sdk/faas"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("api", func() {
 	Context("New", func() {
 		It("can register one method per routes", func() {
 			m := &manager{
-				blockers: map[string]Starter{},
+				workers: map[string]Starter{},
 				builders: map[string]faas.HandlerBuilder{},
 			}
 			a := &api{
 				name:   "testApi",
 				routes: map[string]Route{},
-				m:      m,
+				manager:      m,
 			}
 			a.Get("objects/", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 			a.Post("objects/", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
@@ -46,19 +46,19 @@ var _ = Describe("api", func() {
 			a.Delete("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 			a.Options("objects/:id", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 
-			Expect(m.blockers["route:testApi/objects/GET"]).ToNot(BeNil())
-			Expect(m.blockers["route:testApi/objects/POST"]).ToNot(BeNil())
-			Expect(m.blockers["route:testApi/objects/:id/GET"]).ToNot(BeNil())
-			Expect(m.blockers["route:testApi/objects/:id/PUT"]).ToNot(BeNil())
-			Expect(m.blockers["route:testApi/objects/:id/DELETE"]).ToNot(BeNil())
-			Expect(m.blockers["route:testApi/objects/:id/OPTIONS"]).ToNot(BeNil())
+			Expect(m.workers["route:testApi/objects/GET"]).ToNot(BeNil())
+			Expect(m.workers["route:testApi/objects/POST"]).ToNot(BeNil())
+			Expect(m.workers["route:testApi/objects/:id/GET"]).ToNot(BeNil())
+			Expect(m.workers["route:testApi/objects/:id/PUT"]).ToNot(BeNil())
+			Expect(m.workers["route:testApi/objects/:id/DELETE"]).ToNot(BeNil())
+			Expect(m.workers["route:testApi/objects/:id/OPTIONS"]).ToNot(BeNil())
 		})
 		It("can get api details", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
 			mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 			m := &manager{
-				blockers: map[string]Starter{},
+				workers: map[string]Starter{},
 				builders: map[string]faas.HandlerBuilder{},
 				rsc:      mockClient,
 				conn:     mockConn,
@@ -82,7 +82,7 @@ var _ = Describe("api", func() {
 			a := &api{
 				name:   "testApi",
 				routes: map[string]Route{},
-				m:      m,
+				manager:      m,
 			}
 			ad, err := a.Details(context.TODO())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -103,7 +103,7 @@ var _ = Describe("api", func() {
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
 			mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 			m := &manager{
-				blockers: map[string]Starter{},
+				workers: map[string]Starter{},
 				builders: map[string]faas.HandlerBuilder{},
 				rsc:      mockClient,
 				conn:     mockConn,

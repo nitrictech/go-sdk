@@ -1,29 +1,32 @@
 ifeq ($(OS),Windows_NT)
     ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
-	PROTOC_PLATFORM := win64
+	    PROTOC_PLATFORM := win64
     else
         ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-	    PROTOC_PLATFORM := win64
+	        PROTOC_PLATFORM := win64
         endif
         ifeq ($(PROCESSOR_ARCHITECTURE),x86)
-	    PROTOC_PLATFORM := win32
+	        PROTOC_PLATFORM := win32
         endif
     endif
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
         UNAME_P := $(shell uname -m)
-	ifeq ($(UNAME_P),x86_64)
-	    PROTOC_PLATFORM := linux-x86_64
-	endif
+	    ifeq ($(UNAME_P),x86_64)
+	        PROTOC_PLATFORM := linux-x86_64
+	    endif
         ifneq ($(filter %86,$(UNAME_P)),)
-	    PROTOC_PLATFORM := linux-x86_32
+	        PROTOC_PLATFORM := linux-x86_32
         endif
     endif
     ifeq ($(UNAME_S),Darwin)
-        UNAME_P := $(findstring X86_64,$(shell uname -v))
-        ifeq ($(UNAME_P),X86_64)
-	    PROTOC_PLATFORM := osx-x86_64
+        UNAME_P := $(shell uname -m)
+        ifeq ($(UNAME_P),arm64)
+            PROTOC_PLATFORM := osx-aarch_64
+        endif
+        ifeq ($(UNAME_P),x86_64)
+	        PROTOC_PLATFORM := osx-x86_64
         endif
     endif
 endif
@@ -35,7 +38,7 @@ endif
 TOOLS_DIR := ./tools
 TOOLS_BIN := $(TOOLS_DIR)/bin
 
-PROTOC_VERSION := 3.19.4
+PROTOC_VERSION := 23.4
 PROTOC_RELEASES_PATH := https://github.com/protocolbuffers/protobuf/releases/download
 PROTOC_ZIP := protoc-$(PROTOC_VERSION)-$(PROTOC_PLATFORM).zip
 PROTOC_DOWNLOAD := $(PROTOC_RELEASES_PATH)/v$(PROTOC_VERSION)/$(PROTOC_ZIP)

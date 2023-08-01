@@ -24,7 +24,7 @@ import (
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	"github.com/nitrictech/go-sdk/mocks/mockapi"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("bucket", func() {
@@ -36,38 +36,38 @@ var _ = Describe("bucket", func() {
 			mockStorage := mockapi.NewMockStorage(ctrl)
 
 			m := &manager{
-				blockers: map[string]Starter{},
+				workers: map[string]Starter{},
 				conn:     mockConn,
 				rsc:      mockClient,
 				storage:  mockStorage,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),
-				&nitricv1.ResourceDeclareRequest{
-					Resource: &nitricv1.Resource{
-						Type: nitricv1.ResourceType_Bucket,
+				&v1.ResourceDeclareRequest{
+					Resource: &v1.Resource{
+						Type: v1.ResourceType_Bucket,
 						Name: "red",
 					},
-					Config: &nitricv1.ResourceDeclareRequest_Bucket{
-						Bucket: &nitricv1.BucketResource{},
+					Config: &v1.ResourceDeclareRequest_Bucket{
+						Bucket: &v1.BucketResource{},
 					},
 				})
 
 			mockClient.EXPECT().Declare(context.Background(),
-				&nitricv1.ResourceDeclareRequest{
-					Resource: &nitricv1.Resource{
-						Type: nitricv1.ResourceType_Policy,
+				&v1.ResourceDeclareRequest{
+					Resource: &v1.Resource{
+						Type: v1.ResourceType_Policy,
 					},
-					Config: &nitricv1.ResourceDeclareRequest_Policy{
-						Policy: &nitricv1.PolicyResource{
-							Principals: []*nitricv1.Resource{{
-								Type: nitricv1.ResourceType_Function,
+					Config: &v1.ResourceDeclareRequest_Policy{
+						Policy: &v1.PolicyResource{
+							Principals: []*v1.Resource{{
+								Type: v1.ResourceType_Function,
 							}},
-							Actions: []nitricv1.Action{
-								nitricv1.Action_BucketFileGet, nitricv1.Action_BucketFileList, nitricv1.Action_BucketFilePut,
+							Actions: []v1.Action{
+								v1.Action_BucketFileGet, v1.Action_BucketFileList, v1.Action_BucketFilePut,
 							},
-							Resources: []*nitricv1.Resource{{
-								Type: nitricv1.ResourceType_Bucket,
+							Resources: []*v1.Resource{{
+								Type: v1.ResourceType_Bucket,
 								Name: "red",
 							}},
 						},

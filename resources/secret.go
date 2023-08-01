@@ -19,24 +19,41 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/secrets"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type SecretPermission string
 
 const (
-	SecretReading SecretPermission = "reading"
-	SecretWriting SecretPermission = "writing"
+	SecretAccessing SecretPermission = "accessing"
+	SecretPutting SecretPermission = "putting"
 )
 
-var SecretEverything []SecretPermission = []SecretPermission{SecretReading, SecretWriting}
+var SecretEverything []SecretPermission = []SecretPermission{SecretAccessing, SecretPutting}
 
-func NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
-	return run.NewSecret(name, permissions...)
+type Secret interface {
+
+}
+
+type secret struct {
+	name string
+	manager Manager
+}
+
+func NewSecret(name string) *secret {
+	return &secret{
+		name: name,
+		manager: defaultManager,
+	}
+}
+
+func (s *secret) With(permissions ...SecretPermission) (secrets.SecretRef, error) {
+	return defaultManager.NewSecret(s.name, permissions...)
+
 }
 
 func (m *manager) NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
-	rsc, err := m.resourceServiceClient()
+	rsc, err := m.ResourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -60,9 +77,9 @@ func (m *manager) NewSecret(name string, permissions ...SecretPermission) (secre
 	actions := []nitricv1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case SecretReading:
+		case SecretAccessing:
 			actions = append(actions, nitricv1.Action_SecretAccess)
-		case SecretWriting:
+		case SecretPutting:
 			actions = append(actions, nitricv1.Action_SecretPut)
 		default:
 			return nil, fmt.Errorf("secretPermission %s unknown", perm)

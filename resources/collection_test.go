@@ -24,7 +24,7 @@ import (
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	"github.com/nitrictech/go-sdk/mocks/mockapi"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("collection", func() {
@@ -36,7 +36,7 @@ var _ = Describe("collection", func() {
 			mockDocuments := mockapi.NewMockDocuments(ctrl)
 
 			m := &manager{
-				blockers: map[string]Starter{},
+				workers: map[string]Starter{},
 				conn:     mockConn,
 				rsc:      mockClient,
 				docs:     mockDocuments,

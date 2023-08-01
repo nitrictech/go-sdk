@@ -36,7 +36,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type Starter interface {
@@ -46,22 +46,27 @@ type Starter interface {
 // Manager is the top level object that resources are created on.
 type Manager interface {
 	Run() error
+	AddWorker(name string, s Starter)
+	AddBuilder(name string, builder faas.HandlerBuilder)
+	GetBuilder(name string) faas.HandlerBuilder
+	ResourceServiceClient() (v1.ResourceServiceClient, error)
+
 	NewApi(name string, opts ...ApiOption) (Api, error)
 	NewBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
 	NewCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error)
 	NewSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error)
 	NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error)
-	NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error
+	NewSchedule(name string) Schedule
 	NewTopic(name string, permissions ...TopicPermission) (Topic, error)
-	NewRoute(apiName, apiPath string) Route
+	NewWebsocket(socket string) (Websocket, error)
 }
 
 type manager struct {
-	blockers  map[string]Starter
+	workers  map[string]Starter
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
-	rsc      nitricv1.ResourceServiceClient
+	rsc      v1.ResourceServiceClient
 	evts     events.Events
 	storage  storage.Storage
 	docs     documents.Documents
@@ -71,8 +76,8 @@ type manager struct {
 }
 
 var (
-	run       = New()
-	traceInit = sync.Once{}
+	defaultManager = New()
+	traceInit      = sync.Once{}
 )
 
 // New is used to create the top level resource manager.
@@ -91,12 +96,25 @@ func New() Manager {
 	})
 
 	return &manager{
-		blockers: map[string]Starter{},
+		workers: map[string]Starter{},
 		builders: map[string]faas.HandlerBuilder{},
 	}
 }
 
-func (m *manager) resourceServiceClient() (nitricv1.ResourceServiceClient, error) {
+// Gets an existing builder or returns a new handler builder
+func (m *manager) GetBuilder(name string) faas.HandlerBuilder {
+	return m.builders[name]
+}
+
+func (m *manager) AddBuilder(name string, builder faas.HandlerBuilder) {
+	m.builders[name] = builder
+}
+
+func (m *manager) AddWorker(name string, s Starter) {
+	m.workers[name] = s
+}
+
+func (m *manager) ResourceServiceClient() (v1.ResourceServiceClient, error) {
 	m.connMutex.Lock()
 	defer m.connMutex.Unlock()
 
@@ -108,37 +126,36 @@ func (m *manager) resourceServiceClient() (nitricv1.ResourceServiceClient, error
 		m.conn = conn
 	}
 	if m.rsc == nil {
-		m.rsc = nitricv1.NewResourceServiceClient(m.conn)
+		m.rsc = v1.NewResourceServiceClient(m.conn)
 	}
 	return m.rsc, nil
 }
 
-func (m *manager) addStarter(name string, s Starter) {
-	m.blockers[name] = s
-}
+
 
 // Run will run the function and callback the required handlers when these events are received.
 func Run() error {
-	return run.Run()
+	return defaultManager.Run()
 }
 
 func (m *manager) Run() error {
 	wg := sync.WaitGroup{}
 	errList := &multierror.ErrorList{}
 
-	for _, blocker := range m.blockers {
+	for _, worker := range m.workers {
 		wg.Add(1)
 		go func(s Starter) {
 			defer wg.Done()
 
-			if err := s.Start(); err != nil {
-				if IsBuildEnvirnonment() && isEOF(err) {
+			if err := s.Start(); err != nil {				
+				if isBuildEnvirnonment() && isEOF(err) {
 					// ignore the EOF error when running code-as-config.
 					return
 				}
+
 				errList.Push(err)
 			}
-		}(blocker)
+		}(worker)
 	}
 
 	wg.Wait()
@@ -153,7 +170,7 @@ func (m *manager) Run() error {
 }
 
 // IsBuildEnvirnonment will return true if the code is running during config discovery.
-func IsBuildEnvirnonment() bool {
+func isBuildEnvirnonment() bool {
 	return strings.ToLower(os.Getenv("NITRIC_ENVIRONMENT")) == "build"
 }
 

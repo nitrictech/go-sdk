@@ -27,7 +27,7 @@ var _ = Describe("CollectionRef", func() {
 	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 	mc := &collectionRefImpl{
-		dc:   mdc,
+		documentClient:   mdc,
 		name: "test-mock",
 	}
 
@@ -42,7 +42,7 @@ var _ = Describe("CollectionRef", func() {
 			})
 
 			It("should share a client with the creating collection ref", func() {
-				Expect(qi.dc).To(Equal(mc.dc))
+				Expect(qi.documentClient).To(Equal(mc.documentClient))
 			})
 
 			It("should hold a reference to the its creating collection", func() {
@@ -66,7 +66,7 @@ var _ = Describe("CollectionRef", func() {
 			})
 
 			It("should share a client with it's creating collectionRef", func() {
-				Expect(di.dc).To(Equal(mc.dc))
+				Expect(di.documentClient).To(Equal(mc.documentClient))
 			})
 
 			It("should have a reference to its creating collectionRef", func() {
@@ -106,13 +106,13 @@ var _ = Describe("CollectionRef", func() {
 			mpc := &collectionRefImpl{
 				parentDocument: &documentRefImpl{
 					id: "test-parent",
-					dc: mdc,
+					documentClient: mdc,
 					col: &collectionRefImpl{
 						name: "test-mock-parent",
-						dc:   mdc,
+						documentClient:   mdc,
 					},
 				},
-				dc:   mdc,
+				documentClient:   mdc,
 				name: "test-mock-child",
 			}
 

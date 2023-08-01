@@ -22,62 +22,104 @@ import (
 	"github.com/nitrictech/go-sdk/faas"
 )
 
-var singularRates = []string{"minute", "hour", "day"}
+type Schedule interface {
+	Cron(cron string, middleware ...faas.EventMiddleware)
+	Every(rate string, middleware ...faas.EventMiddleware) error
+}
+
+type schedule struct {
+	Schedule
+
+	name string
+	manager Manager
+}
+
+
+
+// NewSchedule provides a new schedule, which can be configured with a rate/cron and a callback to run on the schedule.
+func NewSchedule(name string) Schedule {
+	return defaultManager.NewSchedule(name)
+}
+
+func (m *manager) NewSchedule(name string) Schedule {
+	return &schedule {
+		name: name,
+		manager: m,
+	}
+}
+
+func (s *schedule) Cron(cron string, middleware ...faas.EventMiddleware) {
+	f := s.manager.GetBuilder(s.name)
+	if f == nil {
+		f = faas.New()
+	}
+
+	f.Event(middleware...).
+		WithCronWorkerOpts(faas.CronWorkerOptions{
+			Description: s.name,
+			Cron: cron,
+		})
+
+	s.manager.AddWorker(fmt.Sprintf("schedule:%s/%s", s.name, cron), f)
+	s.manager.AddBuilder(s.name, f)
+}
 
 func rateSplit(rate string) (int, faas.Frequency, error) {
 	rateParts := strings.Split(rate, " ")
+
+	if len(rateParts) < 1 || len(rateParts) > 2 {
+		return -1, "", fmt.Errorf("invalid rate expression %s; rate should be in the form '[rate] [frequency]' e.g. '7 days'", rate)
+	}
+
+	// Handle a single rate e.g. 'day'
 	if len(rateParts) == 1 {
-		for _, r := range singularRates {
+		for _, r := range []string{"minute", "hour", "day"} {
 			if r == rateParts[0] {
 				return 1, faas.Frequency(r + "s"), nil
 			}
 		}
 	}
-	if len(rateParts) != 2 {
-		return 0, "", fmt.Errorf("not enough parts to rate expression %s", rate)
-	}
+
+	// Handle a full rate expression e.g. '7 days'
 	rateNum := rateParts[0]
 	rateType := rateParts[1]
 
 	num, err := strconv.Atoi(rateNum)
 	if err != nil {
-		return 0, "", fmt.Errorf("invalid rate expression %s; %w", rate, err)
+		return -1, "", fmt.Errorf("invalid rate expression %s; %w", rate, err)
 	}
 
-	for _, r := range singularRates {
-		if r+"s" == rateType {
+	for _, r := range faas.Frequencies {
+		if string(r) == rateType {
 			return num, faas.Frequency(rateType), nil
 		}
 	}
-	return 0, "", fmt.Errorf("invalid rate expression %s; %s must be one of [minutes, hours, days]", rate, rateType)
+
+	return -1, "", fmt.Errorf("invalid rate expression %s; %s must be one of [minutes, hours, days]", rate, rateType)
 }
 
-// NewSchedule provides a new schedule, which can be configured with a rate/cron and a callback to run on the schedule.
 // The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
-func NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error {
-	return run.NewSchedule(name, rate, handlers...)
-}
-
-func (m *manager) NewSchedule(name, rate string, handlers ...faas.EventMiddleware) error {
-	f, ok := m.builders[name]
-	if !ok {
+func (s *schedule) Every(rate string, middleware ...faas.EventMiddleware) error {
+	f := s.manager.GetBuilder(s.name)
+	if f == nil {
 		f = faas.New()
 	}
 
-	r, freq, err := rateSplit(rate)
+	rateNum, frequency, err := rateSplit(rate)
 	if err != nil {
 		return err
 	}
 
-	f.Event(handlers...).
+	f.Event(middleware...).
 		WithRateWorkerOpts(faas.RateWorkerOptions{
-			Description: name,
-			Rate:        r,
-			Frequency:   freq,
+			Description: s.name,
+			Frequency: frequency,
+			Rate: rateNum,
 		})
 
-	m.addStarter(fmt.Sprintf("schedule:%s/%s", name, rate), f)
-	m.builders[name] = f
+	s.manager.AddBuilder(s.name, f)
+	s.manager.AddWorker(fmt.Sprintf("schedule:%s/%s", s.name, rate), f)
 
 	return nil
 }
+

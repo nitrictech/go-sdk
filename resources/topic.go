@@ -20,7 +20,7 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/events"
 	"github.com/nitrictech/go-sdk/faas"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // TopicPermission defines the available permissions on a topic
@@ -31,26 +31,43 @@ const (
 	TopicPublishing TopicPermission = "publishing"
 )
 
-type topic struct {
-	events.Topic
-	mgr *manager
-}
-
-// Topic is a resource for pub/sub async messaging.
 type Topic interface {
 	events.Topic
+
+}
+
+type SubscribableTopic interface {
+	With(permissions ...TopicPermission) (Topic, error)
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
 	Subscribe(...faas.EventMiddleware)
 }
 
+type topic struct {
+	events.Topic
+
+	manager Manager
+}
+
+type subscribableTopic struct {
+	name string
+	manager Manager
+}
+
 // NewTopic creates a new Topic with the give permissions.
-func NewTopic(name string, permissions ...TopicPermission) (Topic, error) {
-	return run.NewTopic(name, permissions...)
+func NewTopic(name string) SubscribableTopic {
+	return &subscribableTopic{
+		name: name,
+		manager: defaultManager,
+	}
+}
+
+func (t *subscribableTopic) With(permissions ...TopicPermission) (Topic, error) {
+	return defaultManager.NewTopic(t.name, permissions...)
 }
 
 func (m *manager) NewTopic(name string, permissions ...TopicPermission) (Topic, error) {
-	rsc, err := m.resourceServiceClient()
+	rsc, err := m.ResourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -96,14 +113,19 @@ func (m *manager) NewTopic(name string, permissions ...TopicPermission) (Topic, 
 
 	return &topic{
 		Topic: m.evts.Topic(name),
-		mgr:   m,
+		manager:   m,
 	}, nil
 }
 
-func (t *topic) Subscribe(middleware ...faas.EventMiddleware) {
-	f := faas.New()
-	f.Event(middleware...)
-	f.WithSubscriptionWorkerOpts(faas.SubscriptionWorkerOptions{Topic: t.Name()})
+func (t *subscribableTopic) Subscribe(middleware ...faas.EventMiddleware) {
+	f := t.manager.GetBuilder(t.name)
+	if f == nil {
+		f = faas.New()
+	}
 
-	t.mgr.addStarter(fmt.Sprintf("topic:subscribe %s", t.Name()), f)
+	f.Event(middleware...)
+	f.WithSubscriptionWorkerOpts(faas.SubscriptionWorkerOptions{Topic: t.name})
+
+	t.manager.AddBuilder(t.name, f)
+	t.manager.AddWorker(fmt.Sprintf("topic:subscribe %s", t.name), f)
 }

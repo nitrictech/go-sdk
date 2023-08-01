@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -34,11 +34,11 @@ var _ = Describe("DocumentRef", func() {
 	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 	md := &documentRefImpl{
-		dc: mdc,
+		documentClient: mdc,
 		id: "test-doc",
 		col: &collectionRefImpl{
 			name: "test-col",
-			dc:   mdc,
+			documentClient:   mdc,
 		},
 	}
 
@@ -56,7 +56,7 @@ var _ = Describe("DocumentRef", func() {
 			})
 
 			It("should share the documentRefs document client reference", func() {
-				Expect(ci.dc).To(Equal(mdc))
+				Expect(ci.documentClient).To(Equal(mdc))
 			})
 
 			It("should have the document as a parent", func() {
@@ -67,15 +67,15 @@ var _ = Describe("DocumentRef", func() {
 		When("Creating a n-depth sub-collection reference", func() {
 			mc := &collectionRefImpl{
 				parentDocument: &documentRefImpl{
-					dc: mdc,
+					documentClient: mdc,
 					col: &collectionRefImpl{
 						name: "parent-collection",
-						dc:   mdc,
+						documentClient:   mdc,
 					},
 				},
 			}
 			mdp := &documentRefImpl{
-				dc:  mdc,
+				documentClient:  mdc,
 				col: mc,
 				id:  "test-doc",
 			}
@@ -101,11 +101,11 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
+				documentClient: mdc,
 				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
-					dc:   mdc,
+					documentClient:   mdc,
 				},
 			}
 
@@ -126,11 +126,11 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
+				documentClient: mdc,
 				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
-					dc:   mdc,
+					documentClient:   mdc,
 				},
 			}
 
@@ -152,11 +152,11 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
+				documentClient: mdc,
 				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
-					dc:   mdc,
+					documentClient:   mdc,
 				},
 			}
 
@@ -179,11 +179,11 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
+				documentClient: mdc,
 				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
-					dc:   mdc,
+					documentClient:   mdc,
 				},
 			}
 
@@ -207,11 +207,11 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
+				documentClient: mdc,
 				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
-					dc:   mdc,
+					documentClient:   mdc,
 				},
 			}
 
@@ -239,11 +239,11 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
+				documentClient: mdc,
 				id: "test-doc",
 				col: &collectionRefImpl{
 					name: "test-col",
-					dc:   mdc,
+					documentClient:   mdc,
 				},
 			}
 

@@ -21,11 +21,12 @@ import (
 	"strings"
 
 	"github.com/nitrictech/go-sdk/faas"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Route providers convenience functions to register a handler in a single method.
 type Route interface {
+	All(handler faas.HttpMiddleware, opts ...MethodOption)
 	Get(handler faas.HttpMiddleware, opts ...MethodOption)
 	Patch(handler faas.HttpMiddleware, opts ...MethodOption)
 	Put(handler faas.HttpMiddleware, opts ...MethodOption)
@@ -35,49 +36,71 @@ type Route interface {
 }
 
 type route struct {
-	apiPath string
+	path string
 	apiName string
-	m       *manager
+	middleware faas.HttpMiddleware
+	manager *manager       
 }
 
-func NewRoute(apiName, apiPath string) Route {
-	return run.NewRoute(apiName, apiPath)
-}
-
-func (m *manager) NewRoute(apiName, apiPath string) Route {
-	return &route{
-		m:       m,
-		apiPath: apiPath,
-		apiName: apiName,
+func composeRouteMiddleware(apiMiddleware faas.HttpMiddleware, routeMiddleware []faas.HttpMiddleware) faas.HttpMiddleware {
+	if apiMiddleware != nil && len(routeMiddleware) > 0 {
+		return faas.ComposeHttpMiddleware(apiMiddleware, faas.ComposeHttpMiddleware(routeMiddleware...))
 	}
+
+	if len(routeMiddleware) > 0 {
+		return faas.ComposeHttpMiddleware(routeMiddleware...)
+	}
+
+	return apiMiddleware
+}
+
+func (a *api) NewRoute(match string, middleware ...faas.HttpMiddleware) Route {
+	r, ok := a.routes[match]
+	if !ok {
+		r = &route{
+			manager:       a.manager,
+			path: path.Join(a.path, match),
+			apiName: a.name,
+			middleware: composeRouteMiddleware(a.middleware, middleware),
+		}
+	}
+
+	return r
 }
 
 func (r *route) AddMethodHandler(methods []string, handler faas.HttpMiddleware, opts ...MethodOption) {
-	bName := path.Join(r.apiName, r.apiPath, strings.Join(methods, "-"))
+	bName := path.Join(r.apiName, r.path, strings.Join(methods, "-"))
 
 	mo := &methodOptions{}
 	for _, o := range opts {
 		o(mo)
 	}
 
-	_, ok := r.m.builders[bName]
-	if !ok {
-		r.m.builders[bName] = faas.New().WithApiWorkerOpts(faas.ApiWorkerOptions{
+	b := r.manager.GetBuilder(bName)
+	if b == nil {
+		b = faas.New().WithApiWorkerOpts(faas.ApiWorkerOptions{
 			ApiName:          r.apiName,
-			Path:             r.apiPath,
+			Path:             r.path,
 			Security:         mo.security,
 			SecurityDisabled: mo.securityDisabled,
 		})
 	}
 
-	b := r.m.builders[bName]
-
-	for _, m := range methods {
-		b.Http(m, handler)
+	composedHandler := handler
+	if r.middleware != nil {
+		composedHandler = faas.ComposeHttpMiddleware(r.middleware, handler)
 	}
 
-	r.m.addStarter("route:"+bName, b)
-	r.m.builders[bName] = b
+	for _, m := range methods {
+		b.Http(m, composedHandler)
+	}
+
+	r.manager.AddBuilder(bName, b)
+	r.manager.AddWorker("route:"+bName, b)
+}
+
+func (r *route) All(handler faas.HttpMiddleware, opts ...MethodOption) {
+	r.AddMethodHandler([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions}, handler, opts...)
 }
 
 func (r *route) Get(handler faas.HttpMiddleware, opts ...MethodOption) {
@@ -116,6 +139,7 @@ type Api interface {
 	Post(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	Delete(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	Options(path string, handler faas.HttpMiddleware, opts ...MethodOption)
+	NewRoute(path string, middleware ...faas.HttpMiddleware) Route
 	Details(ctx context.Context) (*ApiDetails, error)
 	URL(ctx context.Context) (string, error)
 }
@@ -128,14 +152,15 @@ type ApiDetails struct {
 type api struct {
 	name          string
 	routes        map[string]Route
-	m             *manager
+	manager             *manager
 	securityRules map[string]interface{}
 	security      map[string][]string
 	path          string
+	middleware faas.HttpMiddleware
 }
 
 func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
-	rsc, err := m.resourceServiceClient()
+	rsc, err := m.ResourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +168,7 @@ func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
 	a := &api{
 		name:   name,
 		routes: map[string]Route{},
-		m:      m,
+		manager:      m,		
 	}
 
 	// Apply options
@@ -206,11 +231,11 @@ func (m *manager) NewApi(name string, opts ...ApiOption) (Api, error) {
 //
 // The returned API object can be used to register Routes and Methods, with Handlers.
 func NewApi(name string, opts ...ApiOption) (Api, error) {
-	return run.NewApi(name, opts...)
+	return defaultManager.NewApi(name, opts...)
 }
 
 func (a *api) Details(ctx context.Context) (*ApiDetails, error) {
-	rsc, err := a.m.resourceServiceClient()
+	rsc, err := a.manager.ResourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -252,71 +277,53 @@ func (a *api) URL(ctx context.Context) (string, error) {
 // Get adds a Get method handler to the path with any specified opts.
 // Note: to chain middleware use faas.ComposeHttpMiddlware()
 func (a *api) Get(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
-	matchPath := path.Join(a.path, match)
-	r, ok := a.routes[matchPath]
-	if !ok {
-		r = a.m.NewRoute(a.name, matchPath)
-	}
+	r := a.NewRoute(match)
+
 	r.Get(handler, opts...)
-	a.routes[matchPath] = r
+	a.routes[match] = r
 }
 
 // Post adds a Post method handler to the path with any specified opts.
 // Note: to chain middleware use faas.ComposeHttpMiddlware()
 func (a *api) Post(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
-	matchPath := path.Join(a.path, match)
-	r, ok := a.routes[matchPath]
-	if !ok {
-		r = NewRoute(a.name, matchPath)
-	}
+	r := a.NewRoute(match)
+
 	r.Post(handler, opts...)
-	a.routes[matchPath] = r
+	a.routes[match] = r
 }
 
 // Patch adds a Patch method handler to the path with any specified opts.
 // Note: to chain middleware use faas.ComposeHttpMiddlware()
 func (a *api) Patch(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
-	matchPath := path.Join(a.path, match)
-	r, ok := a.routes[matchPath]
-	if !ok {
-		r = NewRoute(a.name, matchPath)
-	}
+	r := a.NewRoute(match)
+
 	r.Patch(handler, opts...)
-	a.routes[matchPath] = r
+	a.routes[match] = r
 }
 
 // Put adds a Put method handler to the path with any specified opts.
 // Note: to chain middleware use faas.ComposeHttpMiddlware()
 func (a *api) Put(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
-	matchPath := path.Join(a.path, match)
-	r, ok := a.routes[matchPath]
-	if !ok {
-		r = NewRoute(a.name, matchPath)
-	}
+	r := a.NewRoute(match)
+
 	r.Put(handler, opts...)
-	a.routes[matchPath] = r
+	a.routes[match] = r
 }
 
 // Delete adds a Delete method handler to the path with any specified opts.
 // Note: to chain middleware use faas.ComposeHttpMiddlware()
 func (a *api) Delete(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
-	matchPath := path.Join(a.path, match)
-	r, ok := a.routes[matchPath]
-	if !ok {
-		r = NewRoute(a.name, matchPath)
-	}
+	r := a.NewRoute(match)
+
 	r.Delete(handler, opts...)
-	a.routes[matchPath] = r
+	a.routes[match] = r
 }
 
 // Options adds an Options method handler to the path with any specified opts.
 // Note: to chain middleware use faas.ComposeHttpMiddlware()
 func (a *api) Options(match string, handler faas.HttpMiddleware, opts ...MethodOption) {
-	path := path.Join(a.path, match)
-	r, ok := a.routes[path]
-	if !ok {
-		r = NewRoute(a.name, path)
-	}
+	r := a.NewRoute(match)
+
 	r.Options(handler, opts...)
-	a.routes[path] = r
+	a.routes[match] = r
 }

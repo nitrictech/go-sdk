@@ -24,11 +24,11 @@ import (
 var _ = Describe("schedule", func() {
 	Context("New", func() {
 		m := &manager{
-			blockers: map[string]Starter{},
+			workers: map[string]Starter{},
 			builders: map[string]faas.HandlerBuilder{},
 		}
 		When("valid args", func() {
-			err := m.NewSchedule("regular", "4 minutes", func(ec *faas.EventContext, eh faas.EventHandler) (*faas.EventContext, error) {
+			err := m.NewSchedule("regular").Every("4 minutes", func(ec *faas.EventContext, eh faas.EventHandler) (*faas.EventContext, error) {
 				return eh(ec)
 			})
 
@@ -39,7 +39,7 @@ var _ = Describe("schedule", func() {
 			})
 		})
 		When("invalid schedule", func() {
-			err := m.NewSchedule("invalid", "four minutes", func(ec *faas.EventContext, eh faas.EventHandler) (*faas.EventContext, error) {
+			err := m.NewSchedule("invalid").Every("four minutes", func(ec *faas.EventContext, eh faas.EventHandler) (*faas.EventContext, error) {
 				return eh(ec)
 			})
 

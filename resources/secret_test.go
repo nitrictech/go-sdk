@@ -24,7 +24,7 @@ import (
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	"github.com/nitrictech/go-sdk/mocks/mockapi"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("secrets", func() {
@@ -36,7 +36,7 @@ var _ = Describe("secrets", func() {
 			mockSecrets := mockapi.NewMockSecrets(ctrl)
 
 			m := &manager{
-				blockers: map[string]Starter{},
+				workers: map[string]Starter{},
 				conn:     mockConn,
 				rsc:      mockClient,
 				secrets:  mockSecrets,
@@ -64,7 +64,7 @@ var _ = Describe("secrets", func() {
 								Type: nitricv1.ResourceType_Function,
 							}},
 							Actions: []nitricv1.Action{
-								nitricv1.Action_SecretAccess, nitricv1.Action_SecretPut,
+								nitricv1.Action_SecretPut, nitricv1.Action_SecretAccess,
 							},
 							Resources: []*nitricv1.Resource{{
 								Type: nitricv1.ResourceType_Secret,
@@ -76,7 +76,7 @@ var _ = Describe("secrets", func() {
 
 			mockSecretRef := mockapi.NewMockSecretRef(ctrl)
 			mockSecrets.EXPECT().Secret("gold").Return(mockSecretRef)
-			b, err := m.NewSecret("gold", SecretReading, SecretWriting)
+			b, err := m.NewSecret("gold", SecretPutting, SecretAccessing)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

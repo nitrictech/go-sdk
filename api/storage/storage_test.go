@@ -54,7 +54,7 @@ var _ = Describe("Storage", func() {
 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
 			sc := &storageImpl{
-				sc: mockStorage,
+				storageClient: mockStorage,
 			}
 
 			bucket := sc.Bucket("test-bucket")
@@ -69,7 +69,7 @@ var _ = Describe("Storage", func() {
 			})
 
 			It("should share the storage clients gRPC client", func() {
-				Expect(bucketI.sc).To(Equal(mockStorage))
+				Expect(bucketI.storageClient).To(Equal(mockStorage))
 			})
 		})
 	})

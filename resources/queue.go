@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/queues"
-	nitricv1 "github.com/nitrictech/go-sdk/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type QueuePermission string
@@ -31,13 +31,28 @@ const (
 
 var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceving}
 
+type Queue interface {
+	With(...QueuePermission) (queues.Queue, error)
+}
+
+type queue struct {
+	name string
+	manager Manager
+}
+
+func NewQueue(name string) *queue {
+	return &queue{
+		name: name,
+		manager: defaultManager,
+	}
+}
 // NewQueue registers this queue as a required resource for the calling function/container.
-func NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
-	return run.NewQueue(name, permissions...)
+func (q *queue) With(permissions ...QueuePermission) (queues.Queue, error) {
+	return defaultManager.NewQueue(q.name, permissions...)
 }
 
 func (m *manager) NewQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
-	rsc, err := m.resourceServiceClient()
+	rsc, err := m.ResourceServiceClient()
 	if err != nil {
 		return nil, err
 	}

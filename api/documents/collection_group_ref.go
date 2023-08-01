@@ -14,7 +14,7 @@
 
 package documents
 
-import v1 "github.com/nitrictech/go-sdk/nitric/v1"
+import v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 
 // CollectionGroupRef - A reference to a chain of collections not tied to document keys for building sub collection queries
 type CollectionGroupRef interface {
@@ -31,7 +31,7 @@ type CollectionGroupRef interface {
 }
 
 type collectionGroupRefImpl struct {
-	dc     v1.DocumentServiceClient
+	documentClient     v1.DocumentServiceClient
 	parent *collectionGroupRefImpl
 	name   string
 }
@@ -41,7 +41,7 @@ func (c *collectionGroupRefImpl) Name() string {
 }
 
 func (c *collectionGroupRefImpl) Query() Query {
-	return newQuery(c.toColRef(), c.dc)
+	return newQuery(c.toColRef(), c.documentClient)
 }
 
 func (c *collectionGroupRefImpl) Parent() CollectionGroupRef {
@@ -54,9 +54,9 @@ func (c *collectionGroupRefImpl) toColRef() CollectionRef {
 	if c.parent != nil {
 		return &collectionRefImpl{
 			name: c.name,
-			dc:   c.dc,
+			documentClient:   c.documentClient,
 			parentDocument: &documentRefImpl{
-				dc:  c.dc,
+				documentClient:  c.documentClient,
 				col: c.parent.toColRef(),
 			},
 		}
@@ -64,7 +64,7 @@ func (c *collectionGroupRefImpl) toColRef() CollectionRef {
 
 	return &collectionRefImpl{
 		name: c.name,
-		dc:   c.dc,
+		documentClient:   c.documentClient,
 	}
 }
 
@@ -73,14 +73,14 @@ func fromColRef(col CollectionRef, dc v1.DocumentServiceClient) *collectionGroup
 	if col.Parent() != nil {
 		pDoc := col.Parent()
 		return &collectionGroupRefImpl{
-			dc:     dc,
+			documentClient:     dc,
 			parent: fromColRef(pDoc.Parent(), dc),
 			name:   col.Name(),
 		}
 	}
 
 	return &collectionGroupRefImpl{
-		dc:   dc,
+		documentClient:   dc,
 		name: col.Name(),
 	}
 }

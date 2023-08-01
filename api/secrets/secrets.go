@@ -20,7 +20,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Secrets - Base client for the Nitric Secrets service
@@ -30,13 +30,13 @@ type Secrets interface {
 }
 
 type secretsImpl struct {
-	sc v1.SecretServiceClient
+	secretClient v1.SecretServiceClient
 }
 
 func (s *secretsImpl) Secret(name string) SecretRef {
 	return &secretRefImpl{
 		name: name,
-		sc:   s.sc,
+		secretClient:   s.secretClient,
 	}
 }
 
@@ -57,6 +57,6 @@ func New() (Secrets, error) {
 	sClient := v1.NewSecretServiceClient(conn)
 
 	return &secretsImpl{
-		sc: sClient,
+		secretClient: sClient,
 	}, nil
 }

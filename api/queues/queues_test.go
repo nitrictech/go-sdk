@@ -51,7 +51,7 @@ var _ = Describe("Queues", func() {
 			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
 
 			queues := &queuesImpl{
-				c: mockQ,
+				queueClient: mockQ,
 			}
 
 			q := queues.Queue("test-queue")
@@ -67,7 +67,7 @@ var _ = Describe("Queues", func() {
 			})
 
 			It("Should share a client with the Queues client", func() {
-				Expect(qImpl.c).To(Equal(mockQ))
+				Expect(qImpl.queueClient).To(Equal(mockQ))
 			})
 		})
 	})

@@ -14,9 +14,12 @@
 
 package resources
 
+import "github.com/nitrictech/go-sdk/faas"
+
 type (
 	ApiOption    = func(api *api)
 	MethodOption = func(mo *methodOptions)
+	RouteOption = func(route *route)
 )
 
 type JwtSecurityRule struct {
@@ -27,6 +30,16 @@ type JwtSecurityRule struct {
 type methodOptions struct {
 	security         map[string][]string
 	securityDisabled bool
+}
+
+func WithMiddleware(middleware faas.HttpMiddleware) ApiOption {
+	return func(api *api) {
+		if api.middleware != nil {
+			api.middleware = faas.ComposeHttpMiddleware(api.middleware, middleware)
+		} else {
+			api.middleware = middleware
+		}
+	}
 }
 
 func WithSecurityJwtRule(name string, rule JwtSecurityRule) ApiOption {
@@ -49,6 +62,24 @@ func WithSecurity(name string, scopes []string) ApiOption {
 	}
 }
 
+// WithPath - Prefixes API with the given path
+func WithPath(path string) ApiOption {
+	return func(api *api) {
+		api.path = path
+	}
+}
+
+func WithRouteMiddleware(middleware faas.HttpMiddleware) RouteOption {
+	return func(route *route) {
+		if route.middleware != nil {
+			route.middleware = faas.ComposeHttpMiddleware(route.middleware, middleware)
+		} else {
+			route.middleware = middleware
+		}
+	}
+}
+
+
 func WithNoMethodSecurity() MethodOption {
 	return func(mo *methodOptions) {
 		mo.securityDisabled = true
@@ -69,9 +100,4 @@ func WithMethodSecurity(name string, scopes []string) MethodOption {
 	}
 }
 
-// WithPath - Prefixes API with the given path
-func WithPath(path string) ApiOption {
-	return func(api *api) {
-		api.path = path
-	}
-}
+

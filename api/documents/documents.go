@@ -20,7 +20,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Documents
@@ -30,13 +30,13 @@ type Documents interface {
 }
 
 type documentsImpl struct {
-	dc v1.DocumentServiceClient
+	documentClient v1.DocumentServiceClient
 }
 
 // Collection - Create a new collection reference
 func (d *documentsImpl) Collection(col string) CollectionRef {
 	return &collectionRefImpl{
-		dc:             d.dc,
+		documentClient:             d.documentClient,
 		name:           col,
 		parentDocument: nil,
 	}
@@ -54,6 +54,6 @@ func New() (Documents, error) {
 	dc := v1.NewDocumentServiceClient(conn)
 
 	return &documentsImpl{
-		dc: dc,
+		documentClient: dc,
 	}, nil
 }
