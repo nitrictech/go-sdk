@@ -5,8 +5,6 @@ GOLANGCI_LINT_CACHE=${HOME}/.cache/golangci-lint
 endif
 GOLANGCI_LINT ?= GOLANGCI_LINT_CACHE=$(GOLANGCI_LINT_CACHE) go run github.com/golangci/golangci-lint/cmd/golangci-lint
 
-NITRIC_VERSION=v0.32.0
-
 include tools/tools.mk
 
 .PHONY: check
@@ -44,15 +42,7 @@ ifndef GOPATH
   $(error GOPATH is undefined)
 endif
 
-${NITRIC_VERSION}-contracts.tgz:
-	curl -L https://github.com/nitrictech/nitric/releases/download/${NITRIC_VERSION}/contracts.tgz -o ${NITRIC_VERSION}-contracts.tgz
-
-generate-proto: check-gopath install-tools ${NITRIC_VERSION}-contracts.tgz
-	rm -rf contracts
-	tar xvzf ${NITRIC_VERSION}-contracts.tgz
-	$(PROTOC) --go_out=./ --go-grpc_out=require_unimplemented_servers=false:. -I contracts/ contracts/*/*/**/*.proto
-
-generate: generate-proto
+generate:
 	go run github.com/golang/mock/mockgen github.com/nitrictech/nitric/core/pkg/api/nitric/v1 DocumentServiceClient,EventServiceClient,TopicServiceClient,QueueServiceClient,StorageServiceClient,FaasServiceClient,FaasService_TriggerStreamClient,DocumentService_QueryStreamClient,SecretServiceClient,ResourceServiceClient > mocks/clients.go
 	go run github.com/golang/mock/mockgen github.com/nitrictech/nitric/core/pkg/api/nitric/v1 DocumentServiceServer,EventServiceServer,TopicServiceServer,QueueServiceServer,StorageServiceServer,FaasServiceServer,FaasService_TriggerStreamServer,DocumentService_QueryStreamServer,SecretServiceServer > mocks/servers.go
 	go run github.com/golang/mock/mockgen -package mock_v1 google.golang.org/grpc ClientConnInterface > mocks/grpc_clientconn.go
