@@ -26,10 +26,10 @@ type QueuePermission string
 
 const (
 	QueueSending  QueuePermission = "sending"
-	QueueReceving QueuePermission = "receiving"
+	QueueReceiving QueuePermission = "receiving"
 )
 
-var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceving}
+var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceiving}
 
 type Queue interface {
 	With(...QueuePermission) (queues.Queue, error)
@@ -77,7 +77,7 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 	actions := []nitricv1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case QueueReceving:
+		case QueueReceiving:
 			actions = append(actions, nitricv1.Action_QueueReceive)
 		case QueueSending:
 			actions = append(actions, nitricv1.Action_QueueSend)
