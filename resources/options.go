@@ -19,7 +19,6 @@ import "github.com/nitrictech/go-sdk/faas"
 type (
 	ApiOption    = func(api *api)
 	MethodOption = func(mo *methodOptions)
-	RouteOption = func(route *route)
 )
 
 type JwtSecurityRule struct {
@@ -32,12 +31,12 @@ type methodOptions struct {
 	securityDisabled bool
 }
 
-func WithMiddleware(middleware faas.HttpMiddleware) ApiOption {
+func WithMiddleware(middleware ...faas.HttpMiddleware) ApiOption {
 	return func(api *api) {
 		if api.middleware != nil {
-			api.middleware = faas.ComposeHttpMiddleware(api.middleware, middleware)
+			api.middleware = faas.ComposeHttpMiddleware(api.middleware, faas.ComposeHttpMiddleware(middleware...))
 		} else {
-			api.middleware = middleware
+			api.middleware = faas.ComposeHttpMiddleware(middleware...)
 		}
 	}
 }
@@ -66,16 +65,6 @@ func WithSecurity(name string, scopes []string) ApiOption {
 func WithPath(path string) ApiOption {
 	return func(api *api) {
 		api.path = path
-	}
-}
-
-func WithRouteMiddleware(middleware faas.HttpMiddleware) RouteOption {
-	return func(route *route) {
-		if route.middleware != nil {
-			route.middleware = faas.ComposeHttpMiddleware(route.middleware, middleware)
-		} else {
-			route.middleware = middleware
-		}
 	}
 }
 
