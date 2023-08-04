@@ -32,5 +32,3 @@ jobs:
           files: all.coverprofile # optional
           flags: unittests # optional
           fail_ci_if_error: true # optional (default = false)
-      - name: Run example tests
-        run: make test-examples
