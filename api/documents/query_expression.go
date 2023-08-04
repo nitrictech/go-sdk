@@ -27,6 +27,7 @@ type queryOp string
 
 const (
 	queryOp_EQ         queryOp = "=="
+	queryOp_NE queryOp = "!="
 	queryOp_GT         queryOp = ">"
 	queryOp_GE         queryOp = ">="
 	queryOp_LT         queryOp = "<"
@@ -37,7 +38,7 @@ const (
 // IsValid - Determine if the QueryOp is a valid value
 func (o queryOp) IsValid() error {
 	switch o {
-	case queryOp_EQ, queryOp_GT, queryOp_GE, queryOp_LT, queryOp_LE, queryOp_StartsWith:
+	case queryOp_EQ, queryOp_NE, queryOp_GT, queryOp_GE, queryOp_LT, queryOp_LE, queryOp_StartsWith:
 		return nil
 	default:
 		return errors.New(
@@ -86,6 +87,14 @@ func (q *queryExpressionBuilder) Eq(val *value) *queryExpression {
 		field: q.field,
 		op:    queryOp_EQ,
 		val:   val,
+	}
+}
+
+func (q *queryExpressionBuilder) Ne(val *value) *queryExpression {
+	return &queryExpression{
+		field: q.field,
+		op: queryOp_NE,
+		val: val,
 	}
 }
 
