@@ -30,13 +30,13 @@ var _ = Describe("api", func() {
 	Context("New", func() {
 		It("can register one method per routes", func() {
 			m := &manager{
-				workers: map[string]Starter{},
+				workers:  map[string]Starter{},
 				builders: map[string]faas.HandlerBuilder{},
 			}
 			a := &api{
-				name:   "testApi",
-				routes: map[string]Route{},
-				manager:      m,
+				name:    "testApi",
+				routes:  map[string]Route{},
+				manager: m,
 			}
 			a.Get("objects/", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
 			a.Post("objects/", func(hc *faas.HttpContext, hh faas.HttpHandler) (*faas.HttpContext, error) { return hc, nil })
@@ -58,7 +58,7 @@ var _ = Describe("api", func() {
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
 			mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 			m := &manager{
-				workers: map[string]Starter{},
+				workers:  map[string]Starter{},
 				builders: map[string]faas.HandlerBuilder{},
 				rsc:      mockClient,
 				conn:     mockConn,
@@ -80,9 +80,9 @@ var _ = Describe("api", func() {
 				},
 			}, nil)
 			a := &api{
-				name:   "testApi",
-				routes: map[string]Route{},
-				manager:      m,
+				name:    "testApi",
+				routes:  map[string]Route{},
+				manager: m,
 			}
 			ad, err := a.Details(context.TODO())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -103,7 +103,7 @@ var _ = Describe("api", func() {
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
 			mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 			m := &manager{
-				workers: map[string]Starter{},
+				workers:  map[string]Starter{},
 				builders: map[string]faas.HandlerBuilder{},
 				rsc:      mockClient,
 				conn:     mockConn,

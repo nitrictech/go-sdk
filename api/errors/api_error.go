@@ -15,6 +15,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 
 	multierror "github.com/missionMeteora/toolkit/errors"
@@ -66,9 +67,10 @@ func FromGrpcError(err error) error {
 }
 
 // Code - returns a nitric api error code from an error or Unknown if the error was not a nitric api error
-func Code(e error) codes.Code {
-	if ae, ok := e.(*ApiError); ok {
-		return ae.code
+func Code(err error) codes.Code {
+	var apiErr *ApiError
+	if ok := errors.As(err, &apiErr); ok {
+		return apiErr.code
 	}
 
 	return codes.Unknown

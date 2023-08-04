@@ -30,11 +30,9 @@ type Schedule interface {
 type schedule struct {
 	Schedule
 
-	name string
+	name    string
 	manager Manager
 }
-
-
 
 // NewSchedule provides a new schedule, which can be configured with a rate/cron and a callback to run on the schedule.
 func NewSchedule(name string) Schedule {
@@ -42,8 +40,8 @@ func NewSchedule(name string) Schedule {
 }
 
 func (m *manager) newSchedule(name string) Schedule {
-	return &schedule {
-		name: name,
+	return &schedule{
+		name:    name,
 		manager: m,
 	}
 }
@@ -57,7 +55,7 @@ func (s *schedule) Cron(cron string, middleware ...faas.EventMiddleware) {
 	f.Event(middleware...).
 		WithCronWorkerOpts(faas.CronWorkerOptions{
 			Description: s.name,
-			Cron: cron,
+			Cron:        cron,
 		})
 
 	s.manager.addWorker(fmt.Sprintf("schedule:%s/%s", s.name, cron), f)
@@ -113,8 +111,8 @@ func (s *schedule) Every(rate string, middleware ...faas.EventMiddleware) error 
 	f.Event(middleware...).
 		WithRateWorkerOpts(faas.RateWorkerOptions{
 			Description: s.name,
-			Frequency: frequency,
-			Rate: rateNum,
+			Frequency:   frequency,
+			Rate:        rateNum,
 		})
 
 	s.manager.addBuilder(s.name, f)
@@ -122,4 +120,3 @@ func (s *schedule) Every(rate string, middleware ...faas.EventMiddleware) error 
 
 	return nil
 }
-

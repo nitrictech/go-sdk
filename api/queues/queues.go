@@ -34,8 +34,8 @@ type queuesImpl struct {
 
 func (q *queuesImpl) Queue(name string) Queue {
 	return &queueImpl{
-		name: name,
-		queueClient:    q.queueClient,
+		name:        name,
+		queueClient: q.queueClient,
 	}
 }
 

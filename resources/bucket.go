@@ -26,7 +26,7 @@ import (
 type BucketPermission string
 
 type bucket struct {
-	name string
+	name    string
 	manager Manager
 }
 
@@ -47,7 +47,7 @@ var BucketEverything []BucketPermission = []BucketPermission{BucketReading, Buck
 // register the permissions required by the currently scoped function for this resource.
 func NewBucket(name string) Bucket {
 	return &bucket{
-		name: name,
+		name:    name,
 		manager: defaultManager,
 	}
 }
@@ -107,7 +107,7 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 	return m.storage.Bucket(name), nil
 }
 
-func (b *bucket) On(notificationType faas.NotificationType, notificationPrefixFilter string, middleware ...faas.BucketNotificationMiddleware) {	
+func (b *bucket) On(notificationType faas.NotificationType, notificationPrefixFilter string, middleware ...faas.BucketNotificationMiddleware) {
 	f := faas.New()
 
 	f.BucketNotification(middleware...)

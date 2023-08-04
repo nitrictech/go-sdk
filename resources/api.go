@@ -36,10 +36,10 @@ type Route interface {
 }
 
 type route struct {
-	path string
-	apiName string
+	path       string
+	apiName    string
 	middleware faas.HttpMiddleware
-	manager *manager       
+	manager    *manager
 }
 
 func composeRouteMiddleware(apiMiddleware faas.HttpMiddleware, routeMiddleware []faas.HttpMiddleware) faas.HttpMiddleware {
@@ -58,9 +58,9 @@ func (a *api) NewRoute(match string, middleware ...faas.HttpMiddleware) Route {
 	r, ok := a.routes[match]
 	if !ok {
 		r = &route{
-			manager:       a.manager,
-			path: path.Join(a.path, match),
-			apiName: a.name,
+			manager:    a.manager,
+			path:       path.Join(a.path, match),
+			apiName:    a.name,
 			middleware: composeRouteMiddleware(a.middleware, middleware),
 		}
 	}
@@ -152,11 +152,11 @@ type ApiDetails struct {
 type api struct {
 	name          string
 	routes        map[string]Route
-	manager             *manager
+	manager       *manager
 	securityRules map[string]interface{}
 	security      map[string][]string
 	path          string
-	middleware faas.HttpMiddleware
+	middleware    faas.HttpMiddleware
 }
 
 func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
@@ -166,9 +166,9 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 	}
 
 	a := &api{
-		name:   name,
-		routes: map[string]Route{},
-		manager:      m,		
+		name:    name,
+		routes:  map[string]Route{},
+		manager: m,
 	}
 
 	// Apply options

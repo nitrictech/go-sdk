@@ -35,8 +35,8 @@ type secretsImpl struct {
 
 func (s *secretsImpl) Secret(name string) SecretRef {
 	return &secretRefImpl{
-		name: name,
-		secretClient:   s.secretClient,
+		name:         name,
+		secretClient: s.secretClient,
 	}
 }
 

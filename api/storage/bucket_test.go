@@ -33,8 +33,8 @@ var _ = Describe("Bucket", func() {
 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
 			bucket := &bucketImpl{
-				name: "test-bucket",
-				storageClient:   mockStorage,
+				name:          "test-bucket",
+				storageClient: mockStorage,
 			}
 
 			object := bucket.File("test-object")
@@ -63,8 +63,8 @@ var _ = Describe("Bucket", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			bucketRef := &bucketImpl{
-				name: "test",
-				storageClient:   mockStorage,
+				name:          "test",
+				storageClient: mockStorage,
 			}
 
 			It("should return an error", func() {
@@ -89,8 +89,8 @@ var _ = Describe("Bucket", func() {
 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
 			bucketRef := &bucketImpl{
-				name: "test-bucket",
-				storageClient:   mockStorage,
+				name:          "test-bucket",
+				storageClient: mockStorage,
 			}
 
 			It("should list the files in the bucket", func() {

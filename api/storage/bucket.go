@@ -31,15 +31,15 @@ type Bucket interface {
 }
 
 type bucketImpl struct {
-	storageClient   v1.StorageServiceClient
-	name string
+	storageClient v1.StorageServiceClient
+	name          string
 }
 
 func (b *bucketImpl) File(key string) File {
 	return &fileImpl{
-		storageClient:     b.storageClient,
-		bucket: b.name,
-		key:    key,
+		storageClient: b.storageClient,
+		bucket:        b.name,
+		key:           key,
 	}
 }
 
@@ -55,9 +55,9 @@ func (b *bucketImpl) Files(ctx context.Context) ([]File, error) {
 
 	for _, f := range resp.Files {
 		fileRefs = append(fileRefs, &fileImpl{
-			storageClient:     b.storageClient,
-			bucket: b.name,
-			key:    f.Key,
+			storageClient: b.storageClient,
+			bucket:        b.name,
+			key:           f.Key,
 		})
 	}
 

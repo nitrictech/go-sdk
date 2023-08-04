@@ -18,15 +18,15 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
 	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	websocketv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/websocket/v1"
-	"google.golang.org/grpc"
 )
-
 
 type Websocket interface {
 	Name() string
@@ -39,9 +39,9 @@ type Websocket interface {
 type websocket struct {
 	Websocket
 
-	name string
+	name    string
 	manager Manager
-	client websocketv1.WebsocketServiceClient
+	client  websocketv1.WebsocketServiceClient
 }
 
 // NewCollection register this collection as a required resource for the calling function/container.
@@ -63,7 +63,7 @@ func (m *manager) newWebsocket(name string) (Websocket, error) {
 	}
 
 	wClient := websocketv1.NewWebsocketServiceClient(conn)
-	
+
 	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
@@ -91,9 +91,9 @@ func (m *manager) newWebsocket(name string) (Websocket, error) {
 	}
 
 	return &websocket{
-		manager:   m,
-		client: wClient,
-		name: name,
+		manager: m,
+		client:  wClient,
+		name:    name,
 	}, nil
 }
 
@@ -106,7 +106,7 @@ func (w *websocket) On(eventType faas.WebsocketEventType, middleware ...faas.Web
 
 	f.Websocket(middleware...).
 		WithWebsocketWorkerOptions(faas.WebsocketWorkerOptions{
-			Socket: w.name,
+			Socket:    w.name,
 			EventType: eventType,
 		})
 
@@ -115,9 +115,9 @@ func (w *websocket) On(eventType faas.WebsocketEventType, middleware ...faas.Web
 
 func (w *websocket) Send(ctx context.Context, connectionId string, message []byte) error {
 	_, err := w.client.Send(ctx, &websocketv1.WebsocketSendRequest{
-		Socket: w.name,
+		Socket:       w.name,
 		ConnectionId: connectionId,
-		Data: message,
+		Data:         message,
 	})
 
 	return err
@@ -125,7 +125,7 @@ func (w *websocket) Send(ctx context.Context, connectionId string, message []byt
 
 func (w *websocket) Close(ctx context.Context, connectionId string) error {
 	_, err := w.client.Close(ctx, &websocketv1.WebsocketCloseRequest{
-		Socket: w.name,
+		Socket:       w.name,
 		ConnectionId: connectionId,
 	})
 
@@ -151,7 +151,7 @@ func (w *websocket) details(ctx context.Context) (*v1.ResourceDetailsResponse, e
 func (w *websocket) URL(ctx context.Context) (string, error) {
 	resp, err := w.details(ctx)
 	if err != nil {
-		return "", err 
+		return "", err
 	}
 
 	return resp.GetWebsocket().GetUrl(), nil

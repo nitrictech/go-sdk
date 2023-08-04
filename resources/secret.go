@@ -26,30 +26,27 @@ type SecretPermission string
 
 const (
 	SecretAccessing SecretPermission = "accessing"
-	SecretPutting SecretPermission = "putting"
+	SecretPutting   SecretPermission = "putting"
 )
 
 var SecretEverything []SecretPermission = []SecretPermission{SecretAccessing, SecretPutting}
 
-type Secret interface {
-
-}
+type Secret interface{}
 
 type secret struct {
-	name string
+	name    string
 	manager Manager
 }
 
 func NewSecret(name string) *secret {
 	return &secret{
-		name: name,
+		name:    name,
 		manager: defaultManager,
 	}
 }
 
 func (s *secret) With(permissions ...SecretPermission) (secrets.SecretRef, error) {
 	return defaultManager.newSecret(s.name, permissions...)
-
 }
 
 func (m *manager) newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {

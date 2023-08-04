@@ -35,8 +35,8 @@ type storageImpl struct {
 
 func (s *storageImpl) Bucket(name string) Bucket {
 	return &bucketImpl{
-		storageClient:   s.storageClient,
-		name: name,
+		storageClient: s.storageClient,
+		name:          name,
 	}
 }
 

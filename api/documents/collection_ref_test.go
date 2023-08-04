@@ -27,8 +27,8 @@ var _ = Describe("CollectionRef", func() {
 	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 	mc := &collectionRefImpl{
-		documentClient:   mdc,
-		name: "test-mock",
+		documentClient: mdc,
+		name:           "test-mock",
 	}
 
 	Context("Query", func() {
@@ -105,15 +105,15 @@ var _ = Describe("CollectionRef", func() {
 		When("translating a collection reference with a parent to wire", func() {
 			mpc := &collectionRefImpl{
 				parentDocument: &documentRefImpl{
-					id: "test-parent",
+					id:             "test-parent",
 					documentClient: mdc,
 					col: &collectionRefImpl{
-						name: "test-mock-parent",
-						documentClient:   mdc,
+						name:           "test-mock-parent",
+						documentClient: mdc,
 					},
 				},
-				documentClient:   mdc,
-				name: "test-mock-child",
+				documentClient: mdc,
+				name:           "test-mock-child",
 			}
 
 			wc := mpc.ToWire()

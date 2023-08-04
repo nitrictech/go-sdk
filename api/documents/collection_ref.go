@@ -32,7 +32,7 @@ type CollectionRef interface {
 
 type collectionRefImpl struct {
 	name           string
-	documentClient             v1.DocumentServiceClient
+	documentClient v1.DocumentServiceClient
 	parentDocument DocumentRef
 }
 
@@ -49,9 +49,9 @@ func (c *collectionRefImpl) Name() string {
 // Doc - Return a document reference for this collection
 func (c *collectionRefImpl) Doc(key string) DocumentRef {
 	return &documentRefImpl{
-		id:  key,
-		documentClient:  c.documentClient,
-		col: c,
+		id:             key,
+		documentClient: c.documentClient,
+		col:            c,
 	}
 }
 
@@ -63,9 +63,9 @@ func (c *collectionRefImpl) Parent() DocumentRef {
 // Collection - Creates a collection group reference from a collection
 func (c *collectionRefImpl) Collection(name string) CollectionGroupRef {
 	return &collectionGroupRefImpl{
-		parent: fromColRef(c, c.documentClient),
-		documentClient:     c.documentClient,
-		name:   name,
+		parent:         fromColRef(c, c.documentClient),
+		documentClient: c.documentClient,
+		name:           name,
 	}
 }
 
@@ -91,8 +91,8 @@ func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (Colle
 
 	if c.GetParent() == nil {
 		return &collectionRefImpl{
-			name: c.GetName(),
-			documentClient:   dc,
+			name:           c.GetName(),
+			documentClient: dc,
 		}, nil
 	} else {
 		pd, err := documentRefFromWireKey(dc, c.GetParent())
@@ -102,7 +102,7 @@ func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (Colle
 
 		return &collectionRefImpl{
 			name:           c.GetName(),
-			documentClient:             dc,
+			documentClient: dc,
 			parentDocument: pd,
 		}, nil
 	}

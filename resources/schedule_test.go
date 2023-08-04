@@ -24,7 +24,7 @@ import (
 var _ = Describe("schedule", func() {
 	Context("New", func() {
 		m := &manager{
-			workers: map[string]Starter{},
+			workers:  map[string]Starter{},
 			builders: map[string]faas.HandlerBuilder{},
 		}
 		When("valid args", func() {

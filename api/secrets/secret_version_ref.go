@@ -30,9 +30,9 @@ type SecretVersionRef interface {
 }
 
 type secretVersionRefImpl struct {
-	secretClient      v1.SecretServiceClient
-	secret  SecretRef
-	version string
+	secretClient v1.SecretServiceClient
+	secret       SecretRef
+	version      string
 }
 
 func (s *secretVersionRefImpl) Secret() SecretRef {
@@ -58,9 +58,9 @@ func (s *secretVersionRefImpl) Access(ctx context.Context) (SecretValue, error) 
 
 	return &secretValueImpl{
 		version: &secretVersionRefImpl{
-			secretClient:      s.secretClient,
-			secret:  s.secret,
-			version: r.GetSecretVersion().GetVersion(),
+			secretClient: s.secretClient,
+			secret:       s.secret,
+			version:      r.GetSecretVersion().GetVersion(),
 		},
 		val: r.GetValue(),
 	}, nil

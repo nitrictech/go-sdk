@@ -62,7 +62,7 @@ type Manager interface {
 }
 
 type manager struct {
-	workers  map[string]Starter
+	workers   map[string]Starter
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
@@ -96,7 +96,7 @@ func New() Manager {
 	})
 
 	return &manager{
-		workers: map[string]Starter{},
+		workers:  map[string]Starter{},
 		builders: map[string]faas.HandlerBuilder{},
 	}
 }
@@ -131,8 +131,6 @@ func (m *manager) resourceServiceClient() (v1.ResourceServiceClient, error) {
 	return m.rsc, nil
 }
 
-
-
 // Run will run the function and callback the required handlers when these events are received.
 func Run() error {
 	return defaultManager.Run()
@@ -147,7 +145,7 @@ func (m *manager) Run() error {
 		go func(s Starter) {
 			defer wg.Done()
 
-			if err := s.Start(); err != nil {				
+			if err := s.Start(); err != nil {
 				if isBuildEnvirnonment() && isEOF(err) {
 					// ignore the EOF error when running code-as-config.
 					return

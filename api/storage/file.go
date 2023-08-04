@@ -47,9 +47,9 @@ type File interface {
 }
 
 type fileImpl struct {
-	bucket string
-	key    string
-	storageClient     v1.StorageServiceClient
+	bucket        string
+	key           string
+	storageClient v1.StorageServiceClient
 }
 
 func (o *fileImpl) Name() string {

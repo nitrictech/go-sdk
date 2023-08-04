@@ -37,9 +37,9 @@ var _ = Describe("secrets", func() {
 
 			m := &manager{
 				workers: map[string]Starter{},
-				conn:     mockConn,
-				rsc:      mockClient,
-				secrets:  mockSecrets,
+				conn:    mockConn,
+				rsc:     mockClient,
+				secrets: mockSecrets,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),

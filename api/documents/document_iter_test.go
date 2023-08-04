@@ -49,7 +49,7 @@ var _ = Describe("DocumentIter", func() {
 			}, nil)
 
 			di := &documentIterImpl{
-				documentClient:  mdc,
+				documentClient:       mdc,
 				documentStreamClient: strc,
 			}
 
@@ -71,7 +71,7 @@ var _ = Describe("DocumentIter", func() {
 			strc.EXPECT().Recv().Return(nil, status.Error(codes.Aborted, "mock-error"))
 
 			di := &documentIterImpl{
-				documentClient:  mdc,
+				documentClient:       mdc,
 				documentStreamClient: strc,
 			}
 

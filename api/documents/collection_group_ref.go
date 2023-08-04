@@ -31,9 +31,9 @@ type CollectionGroupRef interface {
 }
 
 type collectionGroupRefImpl struct {
-	documentClient     v1.DocumentServiceClient
-	parent *collectionGroupRefImpl
-	name   string
+	documentClient v1.DocumentServiceClient
+	parent         *collectionGroupRefImpl
+	name           string
 }
 
 func (c *collectionGroupRefImpl) Name() string {
@@ -53,18 +53,18 @@ func (c *collectionGroupRefImpl) Parent() CollectionGroupRef {
 func (c *collectionGroupRefImpl) toColRef() CollectionRef {
 	if c.parent != nil {
 		return &collectionRefImpl{
-			name: c.name,
-			documentClient:   c.documentClient,
+			name:           c.name,
+			documentClient: c.documentClient,
 			parentDocument: &documentRefImpl{
-				documentClient:  c.documentClient,
-				col: c.parent.toColRef(),
+				documentClient: c.documentClient,
+				col:            c.parent.toColRef(),
 			},
 		}
 	}
 
 	return &collectionRefImpl{
-		name: c.name,
-		documentClient:   c.documentClient,
+		name:           c.name,
+		documentClient: c.documentClient,
 	}
 }
 
@@ -73,14 +73,14 @@ func fromColRef(col CollectionRef, dc v1.DocumentServiceClient) *collectionGroup
 	if col.Parent() != nil {
 		pDoc := col.Parent()
 		return &collectionGroupRefImpl{
-			documentClient:     dc,
-			parent: fromColRef(pDoc.Parent(), dc),
-			name:   col.Name(),
+			documentClient: dc,
+			parent:         fromColRef(pDoc.Parent(), dc),
+			name:           col.Name(),
 		}
 	}
 
 	return &collectionGroupRefImpl{
-		documentClient:   dc,
-		name: col.Name(),
+		documentClient: dc,
+		name:           col.Name(),
 	}
 }

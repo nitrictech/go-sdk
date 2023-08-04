@@ -33,8 +33,8 @@ type Queue interface {
 }
 
 type queueImpl struct {
-	name string
-	queueClient    v1.QueueServiceClient
+	name        string
+	queueClient v1.QueueServiceClient
 }
 
 func (q *queueImpl) Name() string {
@@ -58,10 +58,10 @@ func (q *queueImpl) Receive(ctx context.Context, depth int) ([]ReceivedTask, err
 
 	for i, task := range r.GetTasks() {
 		rts[i] = &receivedTaskImpl{
-			queue:   q.name,
-			queueClient:      q.queueClient,
-			leaseId: task.GetLeaseId(),
-			task:    wireToTask(task),
+			queue:       q.name,
+			queueClient: q.queueClient,
+			leaseId:     task.GetLeaseId(),
+			task:        wireToTask(task),
 		}
 	}
 

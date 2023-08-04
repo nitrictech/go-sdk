@@ -42,10 +42,10 @@ type ReceivedTask interface {
 }
 
 type receivedTaskImpl struct {
-	queue   string
-	queueClient      v1.QueueServiceClient
-	leaseId string
-	task    *Task
+	queue       string
+	queueClient v1.QueueServiceClient
+	leaseId     string
+	task        *Task
 }
 
 func (r *receivedTaskImpl) Task() *Task {

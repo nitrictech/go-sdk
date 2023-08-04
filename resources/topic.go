@@ -33,7 +33,6 @@ const (
 
 type Topic interface {
 	events.Topic
-
 }
 
 type SubscribableTopic interface {
@@ -50,14 +49,14 @@ type topic struct {
 }
 
 type subscribableTopic struct {
-	name string
+	name    string
 	manager Manager
 }
 
 // NewTopic creates a new Topic with the give permissions.
 func NewTopic(name string) SubscribableTopic {
 	return &subscribableTopic{
-		name: name,
+		name:    name,
 		manager: defaultManager,
 	}
 }
@@ -112,8 +111,8 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 	}
 
 	return &topic{
-		Topic: m.evts.Topic(name),
-		manager:   m,
+		Topic:   m.evts.Topic(name),
+		manager: m,
 	}, nil
 }
 

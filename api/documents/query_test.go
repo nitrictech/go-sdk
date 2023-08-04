@@ -100,8 +100,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().Query(gomock.Any(), gomock.Any()).Return(nil, status.Error(codes.Unimplemented, "mock-error"))
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						documentClient:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -138,8 +138,8 @@ var _ = Describe("Query", func() {
 					}, nil)
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						documentClient:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -171,8 +171,8 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					documentClient:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.FromPagingToken("blah")
@@ -189,8 +189,8 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					documentClient:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.Where(&queryExpression{})
@@ -210,8 +210,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().QueryStream(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock-error"))
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						documentClient:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -234,8 +234,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().QueryStream(gomock.Any(), gomock.Any()).Return(strc, nil)
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						documentClient:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -268,8 +268,8 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					documentClient:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.Where(&queryExpression{})

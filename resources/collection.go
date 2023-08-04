@@ -22,9 +22,8 @@ import (
 	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
-
 type collection struct {
-	name string
+	name    string
 	manager Manager
 }
 
@@ -43,9 +42,9 @@ const (
 var CollectionEverything []CollectionPermission = []CollectionPermission{CollectionReading, CollectionWriting, CollectionDeleting}
 
 // NewCollection register this collection as a required resource for the calling function/container.
-func NewCollection(name string) Collection  {
+func NewCollection(name string) Collection {
 	return &collection{
-		name: name,
+		name:    name,
 		manager: defaultManager,
 	}
 }

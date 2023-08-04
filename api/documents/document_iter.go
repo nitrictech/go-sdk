@@ -15,9 +15,10 @@
 package documents
 
 import (
+	"errors"
 	"io"
 
-	"github.com/nitrictech/go-sdk/api/errors"
+	sdk_errors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
@@ -29,24 +30,24 @@ type DocumentIter interface {
 }
 
 type documentIterImpl struct {
-	documentClient  v1.DocumentServiceClient
+	documentClient       v1.DocumentServiceClient
 	documentStreamClient v1.DocumentService_QueryStreamClient
 }
 
 // Next - Returns the next document in the iterator or io.EOF when done
 func (i *documentIterImpl) Next() (Document, error) {
 	res, err := i.documentStreamClient.Recv()
-
-	if err != nil && err != io.EOF {
-		return nil, errors.FromGrpcError(err)
-	} else if err == io.EOF {
-		return nil, io.EOF
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil, io.EOF
+		}
+		return nil, sdk_errors.FromGrpcError(err)
 	}
 
 	ref, err := documentRefFromWireKey(i.documentClient, res.GetDocument().GetKey())
 	if err != nil {
-		return nil, errors.NewWithCause(codes.Internal, "DocumentIter.Next", err)
-	}	
+		return nil, sdk_errors.NewWithCause(codes.Internal, "DocumentIter.Next", err)
+	}
 
 	return &documentImpl{
 		ref:     ref,

@@ -17,9 +17,10 @@ package faas
 import (
 	"context"
 
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type DataRequest interface {
@@ -135,10 +136,10 @@ type WebsocketRequest interface {
 type websocketRequestImpl struct {
 	dataRequestImpl
 
-	socket string
-	eventType WebsocketEventType
+	socket       string
+	eventType    WebsocketEventType
 	connectionId string
-	queryParams map[string]*v1.QueryValue
+	queryParams  map[string]*v1.QueryValue
 }
 
 func (w *websocketRequestImpl) Socket() string {

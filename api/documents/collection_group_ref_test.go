@@ -27,11 +27,11 @@ var _ = Describe("CollectionGroupRef", func() {
 	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 	mcg := &collectionGroupRefImpl{
-		documentClient:   mdc,
-		name: "test-mock",
+		documentClient: mdc,
+		name:           "test-mock",
 		parent: &collectionGroupRefImpl{
-			documentClient:   mdc,
-			name: "test-mock-parent",
+			documentClient: mdc,
+			name:           "test-mock-parent",
 		},
 	}
 
@@ -112,8 +112,8 @@ var _ = Describe("CollectionGroupRef", func() {
 				parentDocument: &documentRefImpl{
 					documentClient: mdc,
 					col: &collectionRefImpl{
-						name: "test-mock-parent",
-						documentClient:   mdc,
+						name:           "test-mock-parent",
+						documentClient: mdc,
 					},
 					id: "test",
 				},

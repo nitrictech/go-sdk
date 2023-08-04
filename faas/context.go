@@ -31,7 +31,7 @@ type triggerContextImpl struct {
 	http               *HttpContext
 	event              *EventContext
 	bucketNotification *BucketNotificationContext
-	websocket *WebsocketContext
+	websocket          *WebsocketContext
 }
 
 func (t triggerContextImpl) Http() *HttpContext {
@@ -135,10 +135,10 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *v1.TriggerRequest) (*trigg
 					mimeType:     triggerReq.GetMimeType(),
 					traceContext: tc,
 				},
-				socket: websocket.Socket,
+				socket:       websocket.Socket,
 				connectionId: websocket.ConnectionId,
-				eventType: evtType,
-				queryParams: websocket.QueryParams,				
+				eventType:    evtType,
+				queryParams:  websocket.QueryParams,
 			},
 			Response: &WebsocketResponse{
 				Success: true,
@@ -161,7 +161,7 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *v1.TriggerRequest) (*trigg
 
 		trigCtx.bucketNotification = &BucketNotificationContext{
 			Request: &bucketNotificationRequestImpl{
-				key: notification.GetBucket().Key,
+				key:              notification.GetBucket().Key,
 				notificationType: notificationType,
 			},
 			Response: &BucketNotificationResponse{
@@ -250,7 +250,7 @@ type BucketNotificationContext struct {
 }
 
 type WebsocketContext struct {
-	Request WebsocketRequest
+	Request  WebsocketRequest
 	Response *WebsocketResponse
-	Extras map[string]interface{}
+	Extras   map[string]interface{}
 }

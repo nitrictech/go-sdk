@@ -68,7 +68,6 @@ func WithPath(path string) ApiOption {
 	}
 }
 
-
 func WithNoMethodSecurity() MethodOption {
 	return func(mo *methodOptions) {
 		mo.securityDisabled = true
@@ -88,5 +87,3 @@ func WithMethodSecurity(name string, scopes []string) MethodOption {
 		}
 	}
 }
-
-

@@ -36,16 +36,17 @@ type Queue interface {
 }
 
 type queue struct {
-	name string
+	name    string
 	manager Manager
 }
 
 func NewQueue(name string) *queue {
 	return &queue{
-		name: name,
+		name:    name,
 		manager: defaultManager,
 	}
 }
+
 // NewQueue registers this queue as a required resource for the calling function/container.
 func (q *queue) With(permissions ...QueuePermission) (queues.Queue, error) {
 	return defaultManager.newQueue(q.name, permissions...)

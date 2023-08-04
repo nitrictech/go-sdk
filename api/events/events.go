@@ -42,8 +42,8 @@ func (s *eventsImpl) Topic(name string) Topic {
 	// Just return the straight topic reference
 	// we can fail if the topic does not exist
 	return &topicImpl{
-		name: name,
-		eventClient:   s.eventClient,
+		name:        name,
+		eventClient: s.eventClient,
 	}
 }
 

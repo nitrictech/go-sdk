@@ -36,7 +36,7 @@ type documentsImpl struct {
 // Collection - Create a new collection reference
 func (d *documentsImpl) Collection(col string) CollectionRef {
 	return &collectionRefImpl{
-		documentClient:             d.documentClient,
+		documentClient: d.documentClient,
 		name:           col,
 		parentDocument: nil,
 	}

@@ -37,9 +37,9 @@ var _ = Describe("bucket", func() {
 
 			m := &manager{
 				workers: map[string]Starter{},
-				conn:     mockConn,
-				rsc:      mockClient,
-				storage:  mockStorage,
+				conn:    mockConn,
+				rsc:     mockClient,
+				storage: mockStorage,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),

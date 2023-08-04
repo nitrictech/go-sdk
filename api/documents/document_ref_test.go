@@ -35,10 +35,10 @@ var _ = Describe("DocumentRef", func() {
 
 	md := &documentRefImpl{
 		documentClient: mdc,
-		id: "test-doc",
+		id:             "test-doc",
 		col: &collectionRefImpl{
-			name: "test-col",
-			documentClient:   mdc,
+			name:           "test-col",
+			documentClient: mdc,
 		},
 	}
 
@@ -69,15 +69,15 @@ var _ = Describe("DocumentRef", func() {
 				parentDocument: &documentRefImpl{
 					documentClient: mdc,
 					col: &collectionRefImpl{
-						name: "parent-collection",
-						documentClient:   mdc,
+						name:           "parent-collection",
+						documentClient: mdc,
 					},
 				},
 			}
 			mdp := &documentRefImpl{
-				documentClient:  mdc,
-				col: mc,
-				id:  "test-doc",
+				documentClient: mdc,
+				col:            mc,
+				id:             "test-doc",
 			}
 
 			_, err := mdp.Collection("test-collection")
@@ -102,10 +102,10 @@ var _ = Describe("DocumentRef", func() {
 
 			md := &documentRefImpl{
 				documentClient: mdc,
-				id: "test-doc",
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					documentClient:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
@@ -127,10 +127,10 @@ var _ = Describe("DocumentRef", func() {
 
 			md := &documentRefImpl{
 				documentClient: mdc,
-				id: "test-doc",
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					documentClient:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
@@ -153,10 +153,10 @@ var _ = Describe("DocumentRef", func() {
 
 			md := &documentRefImpl{
 				documentClient: mdc,
-				id: "test-doc",
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					documentClient:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
@@ -180,10 +180,10 @@ var _ = Describe("DocumentRef", func() {
 
 			md := &documentRefImpl{
 				documentClient: mdc,
-				id: "test-doc",
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					documentClient:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
@@ -208,10 +208,10 @@ var _ = Describe("DocumentRef", func() {
 
 			md := &documentRefImpl{
 				documentClient: mdc,
-				id: "test-doc",
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					documentClient:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
@@ -240,10 +240,10 @@ var _ = Describe("DocumentRef", func() {
 
 			md := &documentRefImpl{
 				documentClient: mdc,
-				id: "test-doc",
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					documentClient:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 

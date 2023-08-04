@@ -55,16 +55,16 @@ type HandlerProvider interface {
 type faasClientImpl struct {
 	apiWorkerOpts                ApiWorkerOptions
 	rateWorkerOpts               RateWorkerOptions
-	cronWorkerOpts CronWorkerOptions
+	cronWorkerOpts               CronWorkerOptions
 	subscriptionWorkerOpts       SubscriptionWorkerOptions
 	bucketNotificationWorkerOpts BucketNotificationWorkerOptions
-	websocketWorkerOpts WebsocketWorkerOptions
-	
-	http                         map[string]HttpMiddleware
-	event                        EventMiddleware
-	bucketNotification           BucketNotificationMiddleware
-	websocket WebsocketMiddleware
-	trig                         TriggerMiddleware
+	websocketWorkerOpts          WebsocketWorkerOptions
+
+	http               map[string]HttpMiddleware
+	event              EventMiddleware
+	bucketNotification BucketNotificationMiddleware
+	websocket          WebsocketMiddleware
+	trig               TriggerMiddleware
 }
 
 func (f *faasClientImpl) String() string {
@@ -209,7 +209,7 @@ func (f *faasClientImpl) startWithClient(fsc v1.FaasServiceClient) error {
 				BucketNotification: &v1.BucketNotificationWorker{
 					Bucket: f.bucketNotificationWorkerOpts.Bucket,
 					Config: &v1.BucketNotificationConfig{
-						NotificationType: notificationType,
+						NotificationType:         notificationType,
 						NotificationPrefixFilter: f.bucketNotificationWorkerOpts.NotificationPrefixFilter,
 					},
 				},
@@ -255,7 +255,7 @@ func (f *faasClientImpl) startWithClient(fsc v1.FaasServiceClient) error {
 			initRequest.Worker = &v1.InitRequest_Websocket{
 				Websocket: &v1.WebsocketWorker{
 					Socket: f.websocketWorkerOpts.Socket,
-					Event: evtType,
+					Event:  evtType,
 				},
 			}
 		}

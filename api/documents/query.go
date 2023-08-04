@@ -41,11 +41,11 @@ type Query interface {
 
 // Defacto Query interface implementation
 type queryImpl struct {
-	col   CollectionRef
-	documentClient    v1.DocumentServiceClient
+	col            CollectionRef
+	documentClient v1.DocumentServiceClient
 	pagingToken    interface{}
-	expressions  []*queryExpression
-	limit int
+	expressions    []*queryExpression
+	limit          int
 }
 
 func (q *queryImpl) Where(qes ...*queryExpression) Query {
@@ -150,15 +150,15 @@ func (q *queryImpl) Stream(ctx context.Context) (DocumentIter, error) {
 
 	// TODO: Return result iterator
 	return &documentIterImpl{
-		documentClient:  q.documentClient,
+		documentClient:       q.documentClient,
 		documentStreamClient: r,
 	}, nil
 }
 
 func newQuery(col CollectionRef, dc v1.DocumentServiceClient) Query {
 	return &queryImpl{
-		documentClient:   dc,
-		col:  col,
-		expressions: make([]*queryExpression, 0),
+		documentClient: dc,
+		col:            col,
+		expressions:    make([]*queryExpression, 0),
 	}
 }

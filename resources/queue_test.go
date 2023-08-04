@@ -37,9 +37,9 @@ var _ = Describe("queue", func() {
 
 			m := &manager{
 				workers: map[string]Starter{},
-				conn:     mockConn,
-				rsc:      mockClient,
-				queues:   mockQueues,
+				conn:    mockConn,
+				rsc:     mockClient,
+				queues:  mockQueues,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),

@@ -37,9 +37,9 @@ var _ = Describe("collection", func() {
 
 			m := &manager{
 				workers: map[string]Starter{},
-				conn:     mockConn,
-				rsc:      mockClient,
-				docs:     mockDocuments,
+				conn:    mockConn,
+				rsc:     mockClient,
+				docs:    mockDocuments,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),

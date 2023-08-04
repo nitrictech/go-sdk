@@ -66,9 +66,9 @@ func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef
 		}
 
 		return &documentRefImpl{
-			documentClient:  dc,
-			col: col,
-			id:  k.GetId(),
+			documentClient: dc,
+			col:            col,
+			id:             k.GetId(),
 		}, nil
 	} else {
 		if dc == nil {
@@ -113,7 +113,7 @@ func (d *documentRefImpl) Collection(c string) (CollectionRef, error) {
 
 	return &collectionRefImpl{
 		name:           c,
-		documentClient:             d.documentClient,
+		documentClient: d.documentClient,
 		parentDocument: d,
 	}, nil
 }

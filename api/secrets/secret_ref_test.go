@@ -44,8 +44,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				secretClient:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			sv := s.Version("test")
@@ -75,8 +75,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				secretClient:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			sv := s.Latest()
@@ -106,8 +106,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				secretClient:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			// NOTE: Using a single It here to correctly assert the number
@@ -152,8 +152,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				secretClient:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			It("should pass through the error", func() {

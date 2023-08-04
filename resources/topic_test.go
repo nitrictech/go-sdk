@@ -37,9 +37,9 @@ var _ = Describe("topics", func() {
 
 			m := &manager{
 				workers: map[string]Starter{},
-				conn:     mockConn,
-				rsc:      mockClient,
-				evts:     mockEvents,
+				conn:    mockConn,
+				rsc:     mockClient,
+				evts:    mockEvents,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),

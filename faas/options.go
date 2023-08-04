@@ -43,7 +43,7 @@ type RateWorkerOptions struct {
 
 type CronWorkerOptions struct {
 	Description string
-	Cron string
+	Cron        string
 }
 
 // TOPICS
@@ -59,7 +59,7 @@ type NotificationType string
 var NotificationTypes = []NotificationType{WriteNotification, DeleteNotification}
 
 const (
-	WriteNotification NotificationType = "write"
+	WriteNotification  NotificationType = "write"
 	DeleteNotification NotificationType = "delete"
 )
 
@@ -87,13 +87,13 @@ type WebsocketEventType string
 var WebsocketEventTypes = []WebsocketEventType{WebsocketConnect, WebsocketDisconnect, WebsocketMessage}
 
 const (
-	WebsocketConnect WebsocketEventType = "connect"
+	WebsocketConnect    WebsocketEventType = "connect"
 	WebsocketDisconnect WebsocketEventType = "disconnect"
-	WebsocketMessage WebsocketEventType = "message"
+	WebsocketMessage    WebsocketEventType = "message"
 )
 
 type WebsocketWorkerOptions struct {
-	Socket string
+	Socket    string
 	EventType WebsocketEventType
 }
 

@@ -27,7 +27,7 @@ type queryOp string
 
 const (
 	queryOp_EQ         queryOp = "=="
-	queryOp_NE queryOp = "!="
+	queryOp_NE         queryOp = "!="
 	queryOp_GT         queryOp = ">"
 	queryOp_GE         queryOp = ">="
 	queryOp_LT         queryOp = "<"
@@ -93,8 +93,8 @@ func (q *queryExpressionBuilder) Eq(val *value) *queryExpression {
 func (q *queryExpressionBuilder) Ne(val *value) *queryExpression {
 	return &queryExpression{
 		field: q.field,
-		op: queryOp_NE,
-		val: val,
+		op:    queryOp_NE,
+		val:   val,
 	}
 }
 

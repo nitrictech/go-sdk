@@ -119,9 +119,9 @@ var _ = Describe("Task", func() {
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(&v1.QueueCompleteResponse{}, nil)
 
 				t := &receivedTaskImpl{
-					queueClient:      mockQc,
-					queue:   "test-queue",
-					leaseId: "1234",
+					queueClient: mockQc,
+					queue:       "test-queue",
+					leaseId:     "1234",
 					task: &Task{
 						ID:          "1234",
 						PayloadType: "test-payload",
@@ -144,9 +144,9 @@ var _ = Describe("Task", func() {
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
 				t := &receivedTaskImpl{
-					queueClient:      mockQc,
-					queue:   "test-queue",
-					leaseId: "1234",
+					queueClient: mockQc,
+					queue:       "test-queue",
+					leaseId:     "1234",
 					task: &Task{
 						ID:          "1234",
 						PayloadType: "test-payload",
