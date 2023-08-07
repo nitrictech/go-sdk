@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package nitric
 
 import (
 	"context"
@@ -27,29 +27,29 @@ import (
 	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
-var _ = Describe("collection", func() {
+var _ = Describe("topics", func() {
 	ctrl := gomock.NewController(GinkgoT())
 	Context("New", func() {
 		mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 		When("valid args", func() {
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
-			mockDocuments := mockapi.NewMockDocuments(ctrl)
+			mockEvents := mockapi.NewMockEvents(ctrl)
 
 			m := &manager{
 				workers: map[string]Starter{},
 				conn:    mockConn,
 				rsc:     mockClient,
-				docs:    mockDocuments,
+				evts:    mockEvents,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),
 				&nitricv1.ResourceDeclareRequest{
 					Resource: &nitricv1.Resource{
-						Type: nitricv1.ResourceType_Collection,
-						Name: "gold",
+						Type: nitricv1.ResourceType_Topic,
+						Name: "news",
 					},
-					Config: &nitricv1.ResourceDeclareRequest_Collection{
-						Collection: &nitricv1.CollectionResource{},
+					Config: &nitricv1.ResourceDeclareRequest_Topic{
+						Topic: &nitricv1.TopicResource{},
 					},
 				})
 
@@ -63,20 +63,18 @@ var _ = Describe("collection", func() {
 							Principals: []*nitricv1.Resource{{
 								Type: nitricv1.ResourceType_Function,
 							}},
-							Actions: []nitricv1.Action{
-								nitricv1.Action_CollectionDocumentRead, nitricv1.Action_CollectionList, nitricv1.Action_CollectionQuery, nitricv1.Action_CollectionDocumentWrite,
-							},
+							Actions: []nitricv1.Action{},
 							Resources: []*nitricv1.Resource{{
-								Type: nitricv1.ResourceType_Collection,
-								Name: "gold",
+								Type: nitricv1.ResourceType_Topic,
+								Name: "news",
 							}},
 						},
 					},
 				})
 
-			mockCollectionRef := mockapi.NewMockCollectionRef(ctrl)
-			mockDocuments.EXPECT().Collection("gold").Return(mockCollectionRef)
-			b, err := m.newCollection("gold", CollectionReading, CollectionWriting)
+			mockTopic := mockapi.NewMockTopic(ctrl)
+			mockEvents.EXPECT().Topic("news").Return(mockTopic)
+			b, err := m.newTopic("news")
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

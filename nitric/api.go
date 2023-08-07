@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package nitric
 
 import (
 	"context"
@@ -141,7 +141,6 @@ type Api interface {
 	Options(path string, handler faas.HttpMiddleware, opts ...MethodOption)
 	NewRoute(path string, middleware ...faas.HttpMiddleware) Route
 	Details(ctx context.Context) (*ApiDetails, error)
-	URL(ctx context.Context) (string, error)
 }
 
 type ApiDetails struct {
@@ -262,16 +261,6 @@ func (a *api) Details(ctx context.Context) (*ApiDetails, error) {
 	}
 
 	return d, nil
-}
-
-// URL returns the runtime URL of this API.
-func (a *api) URL(ctx context.Context) (string, error) {
-	d, err := a.Details(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	return d.URL, nil
 }
 
 // Get adds a Get method handler to the path with any specified opts.

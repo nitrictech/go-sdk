@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package nitric
 
 import (
 	"context"
@@ -24,59 +24,59 @@ import (
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	"github.com/nitrictech/go-sdk/mocks/mockapi"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
-var _ = Describe("bucket", func() {
+var _ = Describe("collection", func() {
 	ctrl := gomock.NewController(GinkgoT())
 	Context("New", func() {
 		mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 		When("valid args", func() {
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
-			mockStorage := mockapi.NewMockStorage(ctrl)
+			mockDocuments := mockapi.NewMockDocuments(ctrl)
 
 			m := &manager{
 				workers: map[string]Starter{},
 				conn:    mockConn,
 				rsc:     mockClient,
-				storage: mockStorage,
+				docs:    mockDocuments,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),
-				&v1.ResourceDeclareRequest{
-					Resource: &v1.Resource{
-						Type: v1.ResourceType_Bucket,
-						Name: "red",
+				&nitricv1.ResourceDeclareRequest{
+					Resource: &nitricv1.Resource{
+						Type: nitricv1.ResourceType_Collection,
+						Name: "gold",
 					},
-					Config: &v1.ResourceDeclareRequest_Bucket{
-						Bucket: &v1.BucketResource{},
+					Config: &nitricv1.ResourceDeclareRequest_Collection{
+						Collection: &nitricv1.CollectionResource{},
 					},
 				})
 
 			mockClient.EXPECT().Declare(context.Background(),
-				&v1.ResourceDeclareRequest{
-					Resource: &v1.Resource{
-						Type: v1.ResourceType_Policy,
+				&nitricv1.ResourceDeclareRequest{
+					Resource: &nitricv1.Resource{
+						Type: nitricv1.ResourceType_Policy,
 					},
-					Config: &v1.ResourceDeclareRequest_Policy{
-						Policy: &v1.PolicyResource{
-							Principals: []*v1.Resource{{
-								Type: v1.ResourceType_Function,
+					Config: &nitricv1.ResourceDeclareRequest_Policy{
+						Policy: &nitricv1.PolicyResource{
+							Principals: []*nitricv1.Resource{{
+								Type: nitricv1.ResourceType_Function,
 							}},
-							Actions: []v1.Action{
-								v1.Action_BucketFileGet, v1.Action_BucketFileList, v1.Action_BucketFilePut,
+							Actions: []nitricv1.Action{
+								nitricv1.Action_CollectionDocumentRead, nitricv1.Action_CollectionList, nitricv1.Action_CollectionQuery, nitricv1.Action_CollectionDocumentWrite,
 							},
-							Resources: []*v1.Resource{{
-								Type: v1.ResourceType_Bucket,
-								Name: "red",
+							Resources: []*nitricv1.Resource{{
+								Type: nitricv1.ResourceType_Collection,
+								Name: "gold",
 							}},
 						},
 					},
 				})
 
-			mockBucket := mockapi.NewMockBucket(ctrl)
-			mockStorage.EXPECT().Bucket("red").Return(mockBucket)
-			b, err := m.newBucket("red", BucketReading, BucketWriting)
+			mockCollectionRef := mockapi.NewMockCollectionRef(ctrl)
+			mockDocuments.EXPECT().Collection("gold").Return(mockCollectionRef)
+			b, err := m.newCollection("gold", CollectionReading, CollectionWriting)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())

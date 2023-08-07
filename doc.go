@@ -14,7 +14,7 @@
 
 // Package go-sdk is the Go SDK for the Nitric framework.
 //
-// Introduction
+// # Introduction
 //
 // The Go SDK supports the use of the Nitric framework with Go 1.17+. For more information, check out the main Nitric repo.
 //
@@ -23,32 +23,31 @@
 //
 // A good starting point is to check out [resources.NewApi] function.
 //
-//   exampleApi, err := resources.NewApi("example")
-//   if err != nil {
-//   	fmt.Println(err)
-//   	os.Exit(1)
-//   }
+//	exampleApi, err := resources.NewApi("example")
+//	if err != nil {
+//		fmt.Println(err)
+//		os.Exit(1)
+//	}
 //
-//   exampleApi.Get("/hello/:name", func(ctx *faas.HttpContext, next faas.HttpHandler) (*faas.HttpContext, error) {
-//   	params := ctx.Request.PathParams()
+//	exampleApi.Get("/hello/:name", func(ctx *faas.HttpContext, next faas.HttpHandler) (*faas.HttpContext, error) {
+//		params := ctx.Request.PathParams()
 //
-//   	if params == nil || len(params["name"]) == 0 {
-//   		ctx.Response.Body = []byte("error retrieving path params")
-//   		ctx.Response.Status = http.StatusBadRequest
-//   	} else {
-//   		ctx.Response.Body = []byte("Hello " + params["name"])
-//   		ctx.Response.Status = http.StatusOK
-//   	}
+//		if params == nil || len(params["name"]) == 0 {
+//			ctx.Response.Body = []byte("error retrieving path params")
+//			ctx.Response.Status = http.StatusBadRequest
+//		} else {
+//			ctx.Response.Body = []byte("Hello " + params["name"])
+//			ctx.Response.Status = http.StatusOK
+//		}
 //
-//   	return next(ctx)
-//   })
+//		return next(ctx)
+//	})
 //
-//   fmt.Println("running example API")
-//   if err := resources.Run(); err != nil {
-//   	fmt.Println(err)
-//   	os.Exit(1)
-//   }
-//
+//	fmt.Println("running example API")
+//	if err := resources.Run(); err != nil {
+//		fmt.Println(err)
+//		os.Exit(1)
+//	}
 package main
 
-import _ "github.com/nitrictech/go-sdk/resources"
+import _ "github.com/nitrictech/go-sdk/nitric"

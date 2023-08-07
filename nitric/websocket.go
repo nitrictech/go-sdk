@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package nitric
 
 import (
 	"context"
@@ -33,7 +33,6 @@ type Websocket interface {
 	On(eventType faas.WebsocketEventType, mwares ...faas.WebsocketMiddleware)
 	Send(ctx context.Context, connectionId string, message []byte) error
 	Close(ctx context.Context, connectionId string) error
-	URL(ctx context.Context) (string, error)
 }
 
 type websocket struct {
@@ -132,7 +131,7 @@ func (w *websocket) Close(ctx context.Context, connectionId string) error {
 	return err
 }
 
-func (w *websocket) details(ctx context.Context) (*v1.ResourceDetailsResponse, error) {
+func (w *websocket) Details(ctx context.Context) (*v1.ResourceDetailsResponse, error) {
 	rsc, err := w.manager.resourceServiceClient()
 	if err != nil {
 		return nil, err
@@ -146,13 +145,4 @@ func (w *websocket) details(ctx context.Context) (*v1.ResourceDetailsResponse, e
 	}
 
 	return rsc.Details(ctx, dec)
-}
-
-func (w *websocket) URL(ctx context.Context) (string, error) {
-	resp, err := w.details(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	return resp.GetWebsocket().GetUrl(), nil
 }

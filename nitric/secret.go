@@ -12,61 +12,58 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package nitric
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/queues"
+	"github.com/nitrictech/go-sdk/api/secrets"
 	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
-type QueuePermission string
+type SecretPermission string
 
 const (
-	QueueSending  QueuePermission = "sending"
-	QueueReceiving QueuePermission = "receiving"
+	SecretAccessing SecretPermission = "accessing"
+	SecretPutting   SecretPermission = "putting"
 )
 
-var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceiving}
+var SecretEverything []SecretPermission = []SecretPermission{SecretAccessing, SecretPutting}
 
-type Queue interface {
-	With(...QueuePermission) (queues.Queue, error)
-}
+type Secret interface{}
 
-type queue struct {
+type secret struct {
 	name    string
 	manager Manager
 }
 
-func NewQueue(name string) *queue {
-	return &queue{
+func NewSecret(name string) *secret {
+	return &secret{
 		name:    name,
 		manager: defaultManager,
 	}
 }
 
-// NewQueue registers this queue as a required resource for the calling function/container.
-func (q *queue) With(permissions ...QueuePermission) (queues.Queue, error) {
-	return defaultManager.newQueue(q.name, permissions...)
+func (s *secret) With(permissions ...SecretPermission) (secrets.SecretRef, error) {
+	return defaultManager.newSecret(s.name, permissions...)
 }
 
-func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
+func (m *manager) newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
 	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
 
 	colRes := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Queue,
+		Type: nitricv1.ResourceType_Secret,
 		Name: name,
 	}
 
 	dr := &nitricv1.ResourceDeclareRequest{
 		Resource: colRes,
-		Config: &nitricv1.ResourceDeclareRequest_Queue{
-			Queue: &nitricv1.QueueResource{},
+		Config: &nitricv1.ResourceDeclareRequest_Secret{
+			Secret: &nitricv1.SecretResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -77,16 +74,13 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 	actions := []nitricv1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case QueueReceiving:
-			actions = append(actions, nitricv1.Action_QueueReceive)
-		case QueueSending:
-			actions = append(actions, nitricv1.Action_QueueSend)
+		case SecretAccessing:
+			actions = append(actions, nitricv1.Action_SecretAccess)
+		case SecretPutting:
+			actions = append(actions, nitricv1.Action_SecretPut)
 		default:
-			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
+			return nil, fmt.Errorf("secretPermission %s unknown", perm)
 		}
-	}
-	if len(actions) > 0 {
-		actions = append(actions, nitricv1.Action_QueueDetail, nitricv1.Action_QueueList)
 	}
 
 	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))
@@ -94,12 +88,12 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	if m.queues == nil {
-		m.queues, err = queues.New()
+	if m.secrets == nil {
+		m.secrets, err = secrets.New()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return m.queues.Queue(name), nil
+	return m.secrets.Secret(name), nil
 }

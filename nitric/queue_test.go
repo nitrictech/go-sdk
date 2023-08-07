@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package nitric
 
 import (
 	"context"
@@ -27,29 +27,29 @@ import (
 	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
-var _ = Describe("topics", func() {
+var _ = Describe("queue", func() {
 	ctrl := gomock.NewController(GinkgoT())
 	Context("New", func() {
 		mockConn := mock_v1.NewMockClientConnInterface(ctrl)
 		When("valid args", func() {
 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
-			mockEvents := mockapi.NewMockEvents(ctrl)
+			mockQueues := mockapi.NewMockQueues(ctrl)
 
 			m := &manager{
 				workers: map[string]Starter{},
 				conn:    mockConn,
 				rsc:     mockClient,
-				evts:    mockEvents,
+				queues:  mockQueues,
 			}
 
 			mockClient.EXPECT().Declare(context.Background(),
 				&nitricv1.ResourceDeclareRequest{
 					Resource: &nitricv1.Resource{
-						Type: nitricv1.ResourceType_Topic,
-						Name: "news",
+						Type: nitricv1.ResourceType_Queue,
+						Name: "wollies",
 					},
-					Config: &nitricv1.ResourceDeclareRequest_Topic{
-						Topic: &nitricv1.TopicResource{},
+					Config: &nitricv1.ResourceDeclareRequest_Queue{
+						Queue: &nitricv1.QueueResource{},
 					},
 				})
 
@@ -63,18 +63,22 @@ var _ = Describe("topics", func() {
 							Principals: []*nitricv1.Resource{{
 								Type: nitricv1.ResourceType_Function,
 							}},
-							Actions: []nitricv1.Action{},
+							Actions: []nitricv1.Action{
+								nitricv1.Action_QueueReceive,
+								nitricv1.Action_QueueDetail,
+								nitricv1.Action_QueueList,
+							},
 							Resources: []*nitricv1.Resource{{
-								Type: nitricv1.ResourceType_Topic,
-								Name: "news",
+								Type: nitricv1.ResourceType_Queue,
+								Name: "wollies",
 							}},
 						},
 					},
 				})
 
-			mockTopic := mockapi.NewMockTopic(ctrl)
-			mockEvents.EXPECT().Topic("news").Return(mockTopic)
-			b, err := m.newTopic("news")
+			mockQueue := mockapi.NewMockQueue(ctrl)
+			mockQueues.EXPECT().Queue("wollies").Return(mockQueue)
+			b, err := m.newQueue("wollies", QueueReceiving)
 
 			It("should not return an error", func() {
 				Expect(err).ShouldNot(HaveOccurred())
