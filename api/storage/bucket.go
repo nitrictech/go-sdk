@@ -17,7 +17,7 @@ package storage
 import (
 	"context"
 
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Cloud storage bucket resource for large file storage.
@@ -26,23 +26,25 @@ type Bucket interface {
 	File(key string) File
 	// Files - Get all file references for this bucket
 	Files(ctx context.Context) ([]File, error)
+	// Name - Get the name of the bucket
+	Name() string
 }
 
 type bucketImpl struct {
-	sc   v1.StorageServiceClient
-	name string
+	storageClient v1.StorageServiceClient
+	name          string
 }
 
 func (b *bucketImpl) File(key string) File {
 	return &fileImpl{
-		sc:     b.sc,
-		bucket: b.name,
-		key:    key,
+		storageClient: b.storageClient,
+		bucket:        b.name,
+		key:           key,
 	}
 }
 
 func (b *bucketImpl) Files(ctx context.Context) ([]File, error) {
-	resp, err := b.sc.ListFiles(ctx, &v1.StorageListFilesRequest{
+	resp, err := b.storageClient.ListFiles(ctx, &v1.StorageListFilesRequest{
 		BucketName: b.name,
 	})
 	if err != nil {
@@ -53,11 +55,15 @@ func (b *bucketImpl) Files(ctx context.Context) ([]File, error) {
 
 	for _, f := range resp.Files {
 		fileRefs = append(fileRefs, &fileImpl{
-			sc:     b.sc,
-			bucket: b.name,
-			key:    f.Key,
+			storageClient: b.storageClient,
+			bucket:        b.name,
+			key:           f.Key,
 		})
 	}
 
 	return fileRefs, nil
+}
+
+func (b *bucketImpl) Name() string {
+	return b.name
 }

@@ -19,7 +19,7 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -42,10 +42,10 @@ type ReceivedTask interface {
 }
 
 type receivedTaskImpl struct {
-	queue   string
-	qc      v1.QueueServiceClient
-	leaseId string
-	task    *Task
+	queue       string
+	queueClient v1.QueueServiceClient
+	leaseId     string
+	task        *Task
 }
 
 func (r *receivedTaskImpl) Task() *Task {
@@ -57,7 +57,7 @@ func (r *receivedTaskImpl) Queue() string {
 }
 
 func (r *receivedTaskImpl) Complete(ctx context.Context) error {
-	_, err := r.qc.Complete(ctx, &v1.QueueCompleteRequest{
+	_, err := r.queueClient.Complete(ctx, &v1.QueueCompleteRequest{
 		Queue:   r.queue,
 		LeaseId: r.leaseId,
 	})

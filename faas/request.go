@@ -19,6 +19,8 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type DataRequest interface {
@@ -102,4 +104,62 @@ type eventRequestImpl struct {
 
 func (e *eventRequestImpl) Topic() string {
 	return e.topic
+}
+
+type BucketNotificationRequest interface {
+	Key() string
+	NotificationType() NotificationType
+}
+
+type bucketNotificationRequestImpl struct {
+	key              string
+	notificationType NotificationType
+}
+
+func (b *bucketNotificationRequestImpl) Key() string {
+	return b.key
+}
+
+func (b *bucketNotificationRequestImpl) NotificationType() NotificationType {
+	return b.notificationType
+}
+
+type WebsocketRequest interface {
+	DataRequest
+
+	Socket() string
+	EventType() WebsocketEventType
+	ConnectionID() string
+	QueryParams() map[string][]string
+}
+
+type websocketRequestImpl struct {
+	dataRequestImpl
+
+	socket       string
+	eventType    WebsocketEventType
+	connectionId string
+	queryParams  map[string]*v1.QueryValue
+}
+
+func (w *websocketRequestImpl) Socket() string {
+	return w.socket
+}
+
+func (w *websocketRequestImpl) EventType() WebsocketEventType {
+	return w.eventType
+}
+
+func (w *websocketRequestImpl) ConnectionID() string {
+	return w.connectionId
+}
+
+func (w *websocketRequestImpl) QueryParams() map[string][]string {
+	queryParams := map[string][]string{}
+
+	for k, v := range w.queryParams {
+		queryParams[k] = v.Value
+	}
+
+	return queryParams
 }

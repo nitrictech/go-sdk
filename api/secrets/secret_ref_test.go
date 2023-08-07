@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("secretRefImpl", func() {
@@ -44,8 +44,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			sv := s.Version("test")
@@ -57,7 +57,7 @@ var _ = Describe("secretRefImpl", func() {
 			})
 
 			It("should share a secret client references with its parent secret", func() {
-				Expect(svi.sc).To(Equal(s.sc))
+				Expect(svi.secretClient).To(Equal(s.secretClient))
 			})
 
 			It("should have a back reference to it's parent secret", func() {
@@ -75,8 +75,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			sv := s.Latest()
@@ -88,7 +88,7 @@ var _ = Describe("secretRefImpl", func() {
 			})
 
 			It("should share a secret client references with its parent secret", func() {
-				Expect(svi.sc).To(Equal(s.sc))
+				Expect(svi.secretClient).To(Equal(s.secretClient))
 			})
 
 			It("should have a back reference to it's parent secret", func() {
@@ -106,8 +106,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			// NOTE: Using a single It here to correctly assert the number
@@ -152,8 +152,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			It("should pass through the error", func() {

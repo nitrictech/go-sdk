@@ -19,7 +19,7 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Queue is a resource for async send/receive messaging.
@@ -33,8 +33,8 @@ type Queue interface {
 }
 
 type queueImpl struct {
-	name string
-	c    v1.QueueServiceClient
+	name        string
+	queueClient v1.QueueServiceClient
 }
 
 func (q *queueImpl) Name() string {
@@ -46,7 +46,7 @@ func (q *queueImpl) Receive(ctx context.Context, depth int) ([]ReceivedTask, err
 		return nil, errors.New(codes.InvalidArgument, "Queue.Receive: depth cannot be less than 1")
 	}
 
-	r, err := q.c.Receive(ctx, &v1.QueueReceiveRequest{
+	r, err := q.queueClient.Receive(ctx, &v1.QueueReceiveRequest{
 		Queue: q.name,
 		Depth: int32(depth),
 	})
@@ -58,10 +58,10 @@ func (q *queueImpl) Receive(ctx context.Context, depth int) ([]ReceivedTask, err
 
 	for i, task := range r.GetTasks() {
 		rts[i] = &receivedTaskImpl{
-			queue:   q.name,
-			qc:      q.c,
-			leaseId: task.GetLeaseId(),
-			task:    wireToTask(task),
+			queue:       q.name,
+			queueClient: q.queueClient,
+			leaseId:     task.GetLeaseId(),
+			task:        wireToTask(task),
 		}
 	}
 
@@ -84,7 +84,7 @@ func (q *queueImpl) Send(ctx context.Context, tasks []*Task) ([]*FailedTask, err
 	}
 
 	// Push the tasks to the queue
-	res, err := q.c.SendBatch(ctx, &v1.QueueSendBatchRequest{
+	res, err := q.queueClient.SendBatch(ctx, &v1.QueueSendBatchRequest{
 		Queue: q.name,
 		Tasks: wireTasks,
 	})

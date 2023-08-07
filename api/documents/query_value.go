@@ -17,7 +17,7 @@ package documents
 import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type value struct {

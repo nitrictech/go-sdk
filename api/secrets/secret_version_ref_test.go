@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("secretVersionRefImpl", func() {
@@ -63,7 +63,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 				secret: &secretRefImpl{
 					name: "test",
 				},
-				sc: mc,
+				secretClient: mc,
 			}
 
 			It("should return the secret version content", func() {
@@ -113,7 +113,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 				secret: &secretRefImpl{
 					name: "test",
 				},
-				sc: mc,
+				secretClient: mc,
 			}
 
 			It("should pass through the error", func() {

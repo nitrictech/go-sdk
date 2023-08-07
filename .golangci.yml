@@ -1,25 +1,24 @@
 run:
   timeout: "5m"
   skip-files:
-  - tools/tools.go
-  - doc.go
+    - tools/tools.go
+    - doc.go
 
 linters:
   disable-all: true
   enable:
-  - goimports
-  - gofmt
-  - whitespace
-  - staticcheck
-  - structcheck
-  - ineffassign
-  - varcheck
-  - unused
-  - deadcode
-  - misspell
-  - unconvert
-  - errcheck
-  - gofumpt
+    - goimports
+    - gofmt
+    - govet
+    - gofumpt
+    - whitespace
+    - staticcheck
+    - ineffassign
+    - unused
+    - misspell
+    - unconvert
+    - errcheck
+    - errorlint
 
 issues:
   max-issues-per-linter: 0
@@ -34,4 +33,9 @@ linters-settings:
   govet:
     check-shadowing: false
   stylecheck:
-    dot-import-whitelist: ["github.com/onsi/gomega", "github.com/onsi/ginkgo/v2", "github.com/onsi/gomega/gstruct"]
+    dot-import-whitelist:
+      [
+        "github.com/onsi/gomega",
+        "github.com/onsi/ginkgo/v2",
+        "github.com/onsi/gomega/gstruct",
+      ]

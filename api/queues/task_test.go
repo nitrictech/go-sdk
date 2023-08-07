@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -119,9 +119,9 @@ var _ = Describe("Task", func() {
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(&v1.QueueCompleteResponse{}, nil)
 
 				t := &receivedTaskImpl{
-					qc:      mockQc,
-					queue:   "test-queue",
-					leaseId: "1234",
+					queueClient: mockQc,
+					queue:       "test-queue",
+					leaseId:     "1234",
 					task: &Task{
 						ID:          "1234",
 						PayloadType: "test-payload",
@@ -144,9 +144,9 @@ var _ = Describe("Task", func() {
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
 				t := &receivedTaskImpl{
-					qc:      mockQc,
-					queue:   "test-queue",
-					leaseId: "1234",
+					queueClient: mockQc,
+					queue:       "test-queue",
+					leaseId:     "1234",
 					task: &Task{
 						ID:          "1234",
 						PayloadType: "test-payload",

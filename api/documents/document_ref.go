@@ -22,7 +22,7 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -50,7 +50,7 @@ type DocumentRef interface {
 
 type documentRefImpl struct {
 	// A shared reference to the top level document service client
-	dc v1.DocumentServiceClient
+	documentClient v1.DocumentServiceClient
 	// A reference to this documents collection
 	col CollectionRef
 	// The id for this document
@@ -66,9 +66,9 @@ func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef
 		}
 
 		return &documentRefImpl{
-			dc:  dc,
-			col: col,
-			id:  k.GetId(),
+			documentClient: dc,
+			col:            col,
+			id:             k.GetId(),
 		}, nil
 	} else {
 		if dc == nil {
@@ -113,14 +113,14 @@ func (d *documentRefImpl) Collection(c string) (CollectionRef, error) {
 
 	return &collectionRefImpl{
 		name:           c,
-		dc:             d.dc,
+		documentClient: d.documentClient,
 		parentDocument: d,
 	}, nil
 }
 
 // Delete - Deletes the document this reference refers to if it exists
 func (d *documentRefImpl) Delete(ctx context.Context) error {
-	_, err := d.dc.Delete(ctx, &v1.DocumentDeleteRequest{
+	_, err := d.documentClient.Delete(ctx, &v1.DocumentDeleteRequest{
 		Key: d.toWireKey(),
 	})
 
@@ -138,7 +138,7 @@ func (d *documentRefImpl) Set(ctx context.Context, content map[string]interface{
 		)
 	}
 
-	if _, err = d.dc.Set(ctx, &v1.DocumentSetRequest{
+	if _, err = d.documentClient.Set(ctx, &v1.DocumentSetRequest{
 		Key:     d.toWireKey(),
 		Content: sv,
 	}); err != nil {
@@ -154,7 +154,7 @@ type DecodeOption interface {
 
 // Get - Retrieves the Document this reference refers to if it exists
 func (d *documentRefImpl) Get(ctx context.Context) (Document, error) {
-	res, err := d.dc.Get(ctx, &v1.DocumentGetRequest{
+	res, err := d.documentClient.Get(ctx, &v1.DocumentGetRequest{
 		Key: d.toWireKey(),
 	})
 	if err != nil {

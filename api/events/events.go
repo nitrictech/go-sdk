@@ -22,7 +22,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Events
@@ -34,21 +34,21 @@ type Events interface {
 }
 
 type eventsImpl struct {
-	ec v1.EventServiceClient
-	tc v1.TopicServiceClient
+	eventClient v1.EventServiceClient
+	topicClient v1.TopicServiceClient
 }
 
 func (s *eventsImpl) Topic(name string) Topic {
 	// Just return the straight topic reference
 	// we can fail if the topic does not exist
 	return &topicImpl{
-		name: name,
-		ec:   s.ec,
+		name:        name,
+		eventClient: s.eventClient,
 	}
 }
 
 func (s *eventsImpl) Topics() ([]Topic, error) {
-	r, err := s.tc.List(context.TODO(), &v1.TopicListRequest{})
+	r, err := s.topicClient.List(context.TODO(), &v1.TopicListRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func New() (Events, error) {
 	tc := v1.NewTopicServiceClient(conn)
 
 	return &eventsImpl{
-		ec: ec,
-		tc: tc,
+		eventClient: ec,
+		topicClient: tc,
 	}, nil
 }

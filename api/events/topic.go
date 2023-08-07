@@ -20,7 +20,7 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -36,8 +36,8 @@ type Topic interface {
 }
 
 type topicImpl struct {
-	name string
-	ec   v1.EventServiceClient
+	name        string
+	eventClient v1.EventServiceClient
 }
 
 func (s *topicImpl) Name() string {
@@ -72,7 +72,7 @@ func (s *topicImpl) Publish(ctx context.Context, evt *Event, opts ...PublishOpti
 		opt(event)
 	}
 
-	r, err := s.ec.Publish(ctx, event)
+	r, err := s.eventClient.Publish(ctx, event)
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

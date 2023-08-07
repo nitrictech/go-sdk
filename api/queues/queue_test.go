@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -37,8 +37,8 @@ var _ = Describe("Queue", func() {
 			mockQ.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
 			q := &queueImpl{
-				name: "test-queue",
-				c:    mockQ,
+				name:        "test-queue",
+				queueClient: mockQ,
 			}
 
 			_, err := q.Send(context.TODO(), []*Task{
@@ -77,8 +77,8 @@ var _ = Describe("Queue", func() {
 			}, nil)
 
 			q := &queueImpl{
-				name: "test-queue",
-				c:    mockQ,
+				name:        "test-queue",
+				queueClient: mockQ,
 			}
 
 			fts, _ := q.Send(context.TODO(), []*Task{
@@ -134,8 +134,8 @@ var _ = Describe("Queue", func() {
 				}, nil)
 
 				q := &queueImpl{
-					name: "test-queue",
-					c:    mockQ,
+					name:        "test-queue",
+					queueClient: mockQ,
 				}
 
 				t, _ := q.Receive(context.TODO(), 1)

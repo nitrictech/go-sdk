@@ -45,7 +45,7 @@ var _ = Describe("Secrets", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			c := &secretsImpl{
-				sc: mc,
+				secretClient: mc,
 			}
 
 			It("should successfully return a correct secret reference", func() {

@@ -4,20 +4,19 @@
   </a>
 </p>
 
-<p align="center">
-  Build <a href="https://nitric.io">nitric</a> applications with Go.
-</p>
+<h2 align="center">
+  Build <a href="https://nitric.io">nitric</a> applications with Python
+</h2>
 
 <p align="center">
-  <img alt="Tests" src="https://github.com/nitrictech/go-sdk/actions/workflows/test.yaml/badge.svg?branch=main">
   <a href="https://codecov.io/gh/nitrictech/go-sdk">
-    <img alt="codecov" src="https://codecov.io/gh/nitrictech/go-sdk/branch/main/graph/badge.svg?token=TYH4QAZI07">
+    <img alt="codecov" src="https://img.shields.io/codecov/c/gh/nitrictech/go-sdk?style=for-the-badge&token=TYH4QAZI07">
   </a>
   <a href="https://github.com/nitrictech/go-sdk">
-    <img alt="Version" src="https://img.shields.io/github/v/release/nitrictech/go-sdk">
+    <img alt="Version" src="https://img.shields.io/github/v/release/nitrictech/go-sdk?style=for-the-badge">
   </a>
   <a href="https://goreportcard.com/badge/github.com/nitrictech/go-sdk">
-    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/nitrictech/go-sdk">
+    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/nitrictech/go-sdk?style=for-the-badge">
   </a>
 </p>
 
@@ -36,6 +35,8 @@ The SDK is in early stage development and APIs and interfaces are still subject 
 ## Get in touch
 
 - Ask questions in [GitHub discussions](https://github.com/nitrictech/nitric/discussions)
+
+- Join us on [Discord](https://discord.gg/Webemece5C)
 
 - Find us on [Twitter](https://twitter.com/nitric_io)
 

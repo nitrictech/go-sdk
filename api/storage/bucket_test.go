@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("Bucket", func() {
@@ -33,8 +33,8 @@ var _ = Describe("Bucket", func() {
 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
 			bucket := &bucketImpl{
-				name: "test-bucket",
-				sc:   mockStorage,
+				name:          "test-bucket",
+				storageClient: mockStorage,
 			}
 
 			object := bucket.File("test-object")
@@ -53,7 +53,7 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("should share the bucket references gRPC client", func() {
-				Expect(objectI.sc).To(Equal(mockStorage))
+				Expect(objectI.storageClient).To(Equal(mockStorage))
 			})
 		})
 	})
@@ -63,8 +63,8 @@ var _ = Describe("Bucket", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 			bucketRef := &bucketImpl{
-				name: "test",
-				sc:   mockStorage,
+				name:          "test",
+				storageClient: mockStorage,
 			}
 
 			It("should return an error", func() {
@@ -89,8 +89,8 @@ var _ = Describe("Bucket", func() {
 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
 			bucketRef := &bucketImpl{
-				name: "test-bucket",
-				sc:   mockStorage,
+				name:          "test-bucket",
+				storageClient: mockStorage,
 			}
 
 			It("should list the files in the bucket", func() {

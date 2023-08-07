@@ -20,7 +20,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Storage - Nitric storage API client
@@ -30,13 +30,13 @@ type Storage interface {
 }
 
 type storageImpl struct {
-	sc v1.StorageServiceClient
+	storageClient v1.StorageServiceClient
 }
 
 func (s *storageImpl) Bucket(name string) Bucket {
 	return &bucketImpl{
-		sc:   s.sc,
-		name: name,
+		storageClient: s.storageClient,
+		name:          name,
 	}
 }
 
@@ -57,6 +57,6 @@ func New() (Storage, error) {
 	sClient := v1.NewStorageServiceClient(conn)
 
 	return &storageImpl{
-		sc: sClient,
+		storageClient: sClient,
 	}, nil
 }

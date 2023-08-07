@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -36,7 +36,7 @@ var _ = Describe("Query", func() {
 		Context("Where", func() {
 			When("adding a where clause to a query", func() {
 				q := &queryImpl{
-					exps: make([]*queryExpression, 0),
+					expressions: make([]*queryExpression, 0),
 				}
 
 				r := q.Where(
@@ -48,8 +48,8 @@ var _ = Describe("Query", func() {
 				})
 
 				It("should append the expression to exps", func() {
-					Expect(q.exps).To(HaveLen(1))
-					e := q.exps[0]
+					Expect(q.expressions).To(HaveLen(1))
+					e := q.expressions[0]
 					Expect(e.field).To(Equal("test"))
 					Expect(e.op).To(Equal(queryOp_EQ))
 					Expect(e.val).To(Equal(StringValue("test")))
@@ -86,7 +86,7 @@ var _ = Describe("Query", func() {
 				})
 
 				It("should set the paging token", func() {
-					Expect(q.pt).To(Equal(map[string]interface{}{
+					Expect(q.pagingToken).To(Equal(map[string]interface{}{
 						"test": "test",
 					}))
 				})
@@ -100,8 +100,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().Query(gomock.Any(), gomock.Any()).Return(nil, status.Error(codes.Unimplemented, "mock-error"))
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -138,8 +138,8 @@ var _ = Describe("Query", func() {
 					}, nil)
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -171,8 +171,8 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					dc:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.FromPagingToken("blah")
@@ -189,8 +189,8 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					dc:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.Where(&queryExpression{})
@@ -210,8 +210,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().QueryStream(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock-error"))
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -234,8 +234,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().QueryStream(gomock.Any(), gomock.Any()).Return(strc, nil)
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -259,7 +259,7 @@ var _ = Describe("Query", func() {
 					})
 
 					It("should have a reference to the returned stream client", func() {
-						Expect(iter.str).To(Equal(strc))
+						Expect(iter.documentStreamClient).To(Equal(strc))
 					})
 				})
 			})
@@ -268,8 +268,8 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					dc:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.Where(&queryExpression{})

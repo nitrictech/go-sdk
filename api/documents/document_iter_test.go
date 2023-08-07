@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 	"github.com/nitrictech/protoutils"
 )
 
@@ -49,8 +49,8 @@ var _ = Describe("DocumentIter", func() {
 			}, nil)
 
 			di := &documentIterImpl{
-				dc:  mdc,
-				str: strc,
+				documentClient:       mdc,
+				documentStreamClient: strc,
 			}
 
 			doc, err := di.Next()
@@ -71,8 +71,8 @@ var _ = Describe("DocumentIter", func() {
 			strc.EXPECT().Recv().Return(nil, status.Error(codes.Aborted, "mock-error"))
 
 			di := &documentIterImpl{
-				dc:  mdc,
-				str: strc,
+				documentClient:       mdc,
+				documentStreamClient: strc,
 			}
 
 			_, err := di.Next()

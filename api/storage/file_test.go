@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/go-sdk/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("Object", func() {
@@ -34,9 +34,9 @@ var _ = Describe("Object", func() {
 
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning an error")
@@ -55,9 +55,9 @@ var _ = Describe("Object", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning a successful response")
@@ -79,9 +79,9 @@ var _ = Describe("Object", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning an error")
@@ -100,9 +100,9 @@ var _ = Describe("Object", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning a successful response")
@@ -122,9 +122,9 @@ var _ = Describe("Object", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning an error")
@@ -142,9 +142,9 @@ var _ = Describe("Object", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning a successful response")
@@ -179,9 +179,9 @@ var _ = Describe("Object", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning an error")
@@ -204,9 +204,9 @@ var _ = Describe("Object", func() {
 				ctrl := gomock.NewController(GinkgoT())
 				mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 				obj := &fileImpl{
-					bucket: "test-bucket",
-					key:    "test-object",
-					sc:     mockStorage,
+					bucket:        "test-bucket",
+					key:           "test-object",
+					storageClient: mockStorage,
 				}
 
 				By("the gRPC server returning a successful response")
