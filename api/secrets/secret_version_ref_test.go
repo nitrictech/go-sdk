@@ -15,13 +15,15 @@
 package secrets
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("secretVersionRefImpl", func() {
@@ -61,7 +63,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 				secret: &secretRefImpl{
 					name: "test",
 				},
-				sc: mc,
+				secretClient: mc,
 			}
 
 			It("should return the secret version content", func() {
@@ -85,7 +87,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 					Value: []byte("testing"),
 				}, nil).Times(1)
 
-				svv, err := sv.Access()
+				svv, err := sv.Access(context.TODO())
 
 				By("not returning an error")
 				Expect(err).ToNot(HaveOccurred())
@@ -111,7 +113,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 				secret: &secretRefImpl{
 					name: "test",
 				},
-				sc: mc,
+				secretClient: mc,
 			}
 
 			It("should pass through the error", func() {
@@ -120,7 +122,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 				By("calling the service with the correct input")
 				mc.EXPECT().Access(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock-error")).Times(1)
 
-				c, err := sv.Access()
+				c, err := sv.Access(context.TODO())
 
 				By("returning an error")
 				Expect(err).To(HaveOccurred())

@@ -17,9 +17,9 @@ package documents
 import (
 	"fmt"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // QueryOp - Enum for query operations
@@ -27,6 +27,7 @@ type queryOp string
 
 const (
 	queryOp_EQ         queryOp = "=="
+	queryOp_NE         queryOp = "!="
 	queryOp_GT         queryOp = ">"
 	queryOp_GE         queryOp = ">="
 	queryOp_LT         queryOp = "<"
@@ -37,7 +38,7 @@ const (
 // IsValid - Determine if the QueryOp is a valid value
 func (o queryOp) IsValid() error {
 	switch o {
-	case queryOp_EQ, queryOp_GT, queryOp_GE, queryOp_LT, queryOp_LE, queryOp_StartsWith:
+	case queryOp_EQ, queryOp_NE, queryOp_GT, queryOp_GE, queryOp_LT, queryOp_LE, queryOp_StartsWith:
 		return nil
 	default:
 		return errors.New(
@@ -53,11 +54,11 @@ type queryExpression struct {
 	val   *value
 }
 
-func (q *queryExpression) toWire() (*v1.Expression, error) {
+func (q *queryExpression) ToWire() (*v1.Expression, error) {
 	if q.field == "" {
 		return nil, errors.New(
 			codes.InvalidArgument,
-			"queryExpress.toWire: provide non-blank field name",
+			"queryExpress.ToWire: provide non-blank field name",
 		)
 	}
 
@@ -65,8 +66,7 @@ func (q *queryExpression) toWire() (*v1.Expression, error) {
 		return nil, err
 	}
 
-	wv, err := q.val.toWire()
-
+	wv, err := q.val.ToWire()
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +86,14 @@ func (q *queryExpressionBuilder) Eq(val *value) *queryExpression {
 	return &queryExpression{
 		field: q.field,
 		op:    queryOp_EQ,
+		val:   val,
+	}
+}
+
+func (q *queryExpressionBuilder) Ne(val *value) *queryExpression {
+	return &queryExpression{
+		field: q.field,
+		op:    queryOp_NE,
 		val:   val,
 	}
 }

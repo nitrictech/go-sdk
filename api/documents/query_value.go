@@ -15,9 +15,9 @@
 package documents
 
 import (
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type value struct {
@@ -54,7 +54,7 @@ func BoolValue(val bool) *value {
 	}
 }
 
-func (v *value) toWire() (*v1.ExpressionValue, error) {
+func (v *value) ToWire() (*v1.ExpressionValue, error) {
 	if v.number_value != nil {
 		return &v1.ExpressionValue{
 			Kind: &v1.ExpressionValue_IntValue{
@@ -81,5 +81,5 @@ func (v *value) toWire() (*v1.ExpressionValue, error) {
 		}, nil
 	}
 
-	return nil, errors.New(codes.InvalidArgument, "value.toWire: Invalid Query Value")
+	return nil, errors.New(codes.InvalidArgument, "value.ToWire: Invalid Query Value")
 }

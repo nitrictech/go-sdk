@@ -15,9 +15,10 @@
 package faas
 
 import (
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("Faas", func() {
@@ -49,6 +50,9 @@ var _ = Describe("Faas", func() {
 						},
 						QueryParams: map[string]*v1.QueryValue{
 							"q": {Value: []string{"my-query"}},
+						},
+						PathParams: map[string]string{
+							"id": "123456",
 						},
 					},
 				},
@@ -88,6 +92,10 @@ var _ = Describe("Faas", func() {
 
 			It("should have initialized extra context", func() {
 				Expect(ctx.Http().Extras).To(BeEquivalentTo(map[string]interface{}{}))
+			})
+
+			It("should have the provided pathParams", func() {
+				Expect(ctx.Http().Request.PathParams()["id"]).To(Equal("123456"))
 			})
 		})
 
@@ -158,7 +166,7 @@ var _ = Describe("Faas", func() {
 
 			// TODO: Deprecated, remove for v1
 			It("should have the provided old headers", func() {
-				Expect(resp.GetHttp().GetHeadersOld()).To(BeEquivalentTo(map[string]string{
+				Expect(resp.GetHttp().GetHeadersOld()).To(BeEquivalentTo(map[string]string{ //nolint:staticcheck
 					"Content-Type": "text/plain",
 				}))
 			})

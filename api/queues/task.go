@@ -17,10 +17,10 @@ package queues
 import (
 	"context"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	"google.golang.org/protobuf/types/known/structpb"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
 type Task struct {
@@ -35,17 +35,17 @@ type Task struct {
 type ReceivedTask interface {
 	// Queue - Returns the name of the queue this task was retrieved from
 	Queue() string
-	// Task - Returns the Task data contained in this Recieved Task instance
+	// Task - Returns the Task data contained in this Received Task instance
 	Task() *Task
 	// Complete - Completes the task removing it from the queue
-	Complete() error
+	Complete(context.Context) error
 }
 
 type receivedTaskImpl struct {
-	queue   string
-	qc      v1.QueueServiceClient
-	leaseId string
-	task    *Task
+	queue       string
+	queueClient v1.QueueServiceClient
+	leaseId     string
+	task        *Task
 }
 
 func (r *receivedTaskImpl) Task() *Task {
@@ -56,8 +56,8 @@ func (r *receivedTaskImpl) Queue() string {
 	return r.queue
 }
 
-func (r *receivedTaskImpl) Complete() error {
-	_, err := r.qc.Complete(context.TODO(), &v1.QueueCompleteRequest{
+func (r *receivedTaskImpl) Complete(ctx context.Context) error {
+	_, err := r.queueClient.Complete(ctx, &v1.QueueCompleteRequest{
 		Queue:   r.queue,
 		LeaseId: r.leaseId,
 	})
@@ -74,7 +74,7 @@ type FailedTask struct {
 
 func taskToWire(task *Task) (*v1.NitricTask, error) {
 	// Convert payload to Protobuf Struct
-	payloadStruct, err := structpb.NewStruct(task.Payload)
+	payloadStruct, err := protoutils.NewStruct(task.Payload)
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Internal,

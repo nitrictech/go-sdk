@@ -17,17 +17,21 @@ package faas
 import (
 	"fmt"
 
-	pb "github.com/nitrictech/apis/go/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type TriggerContext interface {
 	Http() *HttpContext
 	Event() *EventContext
+	BucketNotification() *BucketNotificationContext
+	Websocket() *WebsocketContext
 }
 
 type triggerContextImpl struct {
-	http  *HttpContext
-	event *EventContext
+	http               *HttpContext
+	event              *EventContext
+	bucketNotification *BucketNotificationContext
+	websocket          *WebsocketContext
 }
 
 func (t triggerContextImpl) Http() *HttpContext {
@@ -38,8 +42,21 @@ func (t triggerContextImpl) Event() *EventContext {
 	return t.event
 }
 
-func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*triggerContextImpl, error) {
+func (t triggerContextImpl) BucketNotification() *BucketNotificationContext {
+	return t.bucketNotification
+}
+
+func (t triggerContextImpl) Websocket() *WebsocketContext {
+	return t.websocket
+}
+
+func triggerContextFromGrpcTriggerRequest(triggerReq *v1.TriggerRequest) (*triggerContextImpl, error) {
 	trigCtx := &triggerContextImpl{}
+
+	tc := map[string]string{}
+	if triggerReq.TraceContext != nil {
+		tc = triggerReq.TraceContext.GetValues()
+	}
 
 	if triggerReq.GetHttp() != nil {
 		httpTrig := triggerReq.GetHttp()
@@ -49,10 +66,6 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 			for key, val := range httpTrig.GetHeaders() {
 				headers[key] = val.Value
 			}
-		} else if httpTrig.GetHeadersOld() != nil {
-			for key, val := range httpTrig.GetHeadersOld() {
-				headers[key] = []string{val}
-			}
 		}
 
 		query := make(map[string][]string)
@@ -60,22 +73,20 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 			for k, v := range httpTrig.GetQueryParams() {
 				query[k] = v.Value
 			}
-		} else if httpTrig.GetQueryParamsOld() != nil {
-			for k, v := range httpTrig.GetQueryParamsOld() {
-				query[k] = []string{v}
-			}
 		}
 
 		trigCtx.http = &HttpContext{
 			Request: &httpRequestImpl{
 				dataRequestImpl: dataRequestImpl{
-					data:     triggerReq.GetData(),
-					mimeType: triggerReq.GetMimeType(),
+					data:         triggerReq.GetData(),
+					mimeType:     triggerReq.GetMimeType(),
+					traceContext: tc,
 				},
-				method:  httpTrig.GetMethod(),
-				headers: headers,
-				query:   query,
-				path:    httpTrig.GetPath(),
+				method:     httpTrig.GetMethod(),
+				headers:    headers,
+				query:      query,
+				pathParams: httpTrig.PathParams,
+				path:       httpTrig.GetPath(),
 			},
 			Response: &HttpResponse{
 				Status: 200,
@@ -84,9 +95,7 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 				},
 				Body: []byte("Success"),
 			},
-			extraContext: &extraContext{
-				Extras: make(map[string]interface{}),
-			},
+			Extras: make(map[string]interface{}),
 		}
 	} else if triggerReq.GetTopic() != nil {
 		topic := triggerReq.GetTopic()
@@ -94,17 +103,71 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 		trigCtx.event = &EventContext{
 			Request: &eventRequestImpl{
 				dataRequestImpl: dataRequestImpl{
-					data:     triggerReq.GetData(),
-					mimeType: triggerReq.GetMimeType(),
+					data:         triggerReq.GetData(),
+					mimeType:     triggerReq.GetMimeType(),
+					traceContext: tc,
 				},
 				topic: topic.GetTopic(),
 			},
 			Response: &EventResponse{
 				Success: true,
 			},
-			extraContext: &extraContext{
-				Extras: make(map[string]interface{}),
+			Extras: make(map[string]interface{}),
+		}
+	} else if triggerReq.GetWebsocket() != nil {
+		websocket := triggerReq.GetWebsocket()
+
+		var evtType WebsocketEventType
+
+		switch websocket.Event {
+		case v1.WebsocketEvent_Connect:
+			evtType = WebsocketConnect
+		case v1.WebsocketEvent_Disconnect:
+			evtType = WebsocketDisconnect
+		case v1.WebsocketEvent_Message:
+			evtType = WebsocketMessage
+		}
+
+		trigCtx.websocket = &WebsocketContext{
+			Request: &websocketRequestImpl{
+				dataRequestImpl: dataRequestImpl{
+					data:         triggerReq.GetData(),
+					mimeType:     triggerReq.GetMimeType(),
+					traceContext: tc,
+				},
+				socket:       websocket.Socket,
+				connectionId: websocket.ConnectionId,
+				eventType:    evtType,
+				queryParams:  websocket.QueryParams,
 			},
+			Response: &WebsocketResponse{
+				Success: true,
+			},
+			Extras: make(map[string]interface{}),
+		}
+	} else if triggerReq.GetNotification() != nil {
+		notification := triggerReq.GetNotification()
+
+		var notificationType NotificationType
+
+		switch notification.GetBucket().Type {
+		case v1.BucketNotificationType_Created:
+			notificationType = WriteNotification
+		case v1.BucketNotificationType_Deleted:
+			notificationType = DeleteNotification
+		default:
+			return nil, fmt.Errorf("notification type %s is not supported", notification.GetBucket().Type)
+		}
+
+		trigCtx.bucketNotification = &BucketNotificationContext{
+			Request: &bucketNotificationRequestImpl{
+				key:              notification.GetBucket().Key,
+				notificationType: notificationType,
+			},
+			Response: &BucketNotificationResponse{
+				Success: true,
+			},
+			Extras: make(map[string]interface{}),
 		}
 	} else {
 		return nil, fmt.Errorf("invalid trigger request")
@@ -113,23 +176,22 @@ func triggerContextFromGrpcTriggerRequest(triggerReq *pb.TriggerRequest) (*trigg
 	return trigCtx, nil
 }
 
-func triggerContextToGrpcTriggerResponse(trig *triggerContextImpl) (*pb.TriggerResponse, error) {
+func triggerContextToGrpcTriggerResponse(trig *triggerContextImpl) (*v1.TriggerResponse, error) {
 	if trig.http != nil {
-
-		headers := make(map[string]*pb.HeaderValue)
+		headers := make(map[string]*v1.HeaderValue)
 		headersOld := make(map[string]string)
 
 		for k, v := range trig.http.Response.Headers {
 			headersOld[k] = v[0]
-			headers[k] = &pb.HeaderValue{
+			headers[k] = &v1.HeaderValue{
 				Value: v,
 			}
 		}
 
-		return &pb.TriggerResponse{
+		return &v1.TriggerResponse{
 			Data: trig.http.Response.Body,
-			Context: &pb.TriggerResponse_Http{
-				Http: &pb.HttpResponseContext{
+			Context: &v1.TriggerResponse_Http{
+				Http: &v1.HttpResponseContext{
 					Status:     int32(trig.http.Response.Status),
 					Headers:    headers,
 					HeadersOld: headersOld,
@@ -137,12 +199,30 @@ func triggerContextToGrpcTriggerResponse(trig *triggerContextImpl) (*pb.TriggerR
 			},
 		}, nil
 	} else if trig.event != nil {
-		return &pb.TriggerResponse{
+		return &v1.TriggerResponse{
 			// Don't actually need data available here
 			Data: []byte(""),
-			Context: &pb.TriggerResponse_Topic{
-				Topic: &pb.TopicResponseContext{
+			Context: &v1.TriggerResponse_Topic{
+				Topic: &v1.TopicResponseContext{
 					Success: trig.event.Response.Success,
+				},
+			},
+		}, nil
+	} else if trig.websocket != nil {
+		return &v1.TriggerResponse{
+			Data: []byte(""),
+			Context: &v1.TriggerResponse_Websocket{
+				Websocket: &v1.WebsocketResponseContext{
+					Success: trig.websocket.Response.Success,
+				},
+			},
+		}, nil
+	} else if trig.bucketNotification != nil {
+		return &v1.TriggerResponse{
+			Data: []byte(""),
+			Context: &v1.TriggerResponse_Notification{
+				Notification: &v1.NotificationResponseContext{
+					Success: trig.bucketNotification.Response.Success,
 				},
 			},
 		}, nil
@@ -151,18 +231,26 @@ func triggerContextToGrpcTriggerResponse(trig *triggerContextImpl) (*pb.TriggerR
 	return nil, fmt.Errorf("unsupported trigger context type")
 }
 
-type extraContext struct {
-	Extras map[string]interface{}
-}
-
 type HttpContext struct {
 	Request  HttpRequest
 	Response *HttpResponse
-	*extraContext
+	Extras   map[string]interface{}
 }
 
 type EventContext struct {
 	Request  EventRequest
 	Response *EventResponse
-	*extraContext
+	Extras   map[string]interface{}
+}
+
+type BucketNotificationContext struct {
+	Request  BucketNotificationRequest
+	Response *BucketNotificationResponse
+	Extras   map[string]interface{}
+}
+
+type WebsocketContext struct {
+	Request  WebsocketRequest
+	Response *WebsocketResponse
+	Extras   map[string]interface{}
 }

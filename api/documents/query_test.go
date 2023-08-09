@@ -15,6 +15,7 @@
 package documents
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
@@ -22,10 +23,10 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/structpb"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
 var _ = Describe("Query", func() {
@@ -35,7 +36,7 @@ var _ = Describe("Query", func() {
 		Context("Where", func() {
 			When("adding a where clause to a query", func() {
 				q := &queryImpl{
-					exps: make([]*queryExpression, 0),
+					expressions: make([]*queryExpression, 0),
 				}
 
 				r := q.Where(
@@ -47,8 +48,8 @@ var _ = Describe("Query", func() {
 				})
 
 				It("should append the expression to exps", func() {
-					Expect(q.exps).To(HaveLen(1))
-					e := q.exps[0]
+					Expect(q.expressions).To(HaveLen(1))
+					e := q.expressions[0]
 					Expect(e.field).To(Equal("test"))
 					Expect(e.op).To(Equal(queryOp_EQ))
 					Expect(e.val).To(Equal(StringValue("test")))
@@ -85,7 +86,7 @@ var _ = Describe("Query", func() {
 				})
 
 				It("should set the paging token", func() {
-					Expect(q.pt).To(Equal(map[string]interface{}{
+					Expect(q.pagingToken).To(Equal(map[string]interface{}{
 						"test": "test",
 					}))
 				})
@@ -99,8 +100,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().Query(gomock.Any(), gomock.Any()).Return(nil, status.Error(codes.Unimplemented, "mock-error"))
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -109,16 +110,16 @@ var _ = Describe("Query", func() {
 					})
 					q.Where(Condition("test").Eq(StringValue("test")))
 
-					_, err := q.Fetch()
+					_, err := q.Fetch(context.TODO())
 
 					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
-						Expect(err.Error()).To(Equal("Unimplemented: mock-error"))
+						Expect(err.Error()).To(Equal("Unimplemented: mock-error: \n rpc error: code = Unimplemented desc = mock-error"))
 					})
 				})
 
 				When("the gRPC server returns a successful response", func() {
-					sv, _ := structpb.NewStruct(map[string]interface{}{
+					sv, _ := protoutils.NewStruct(map[string]interface{}{
 						"test": "test",
 					})
 					mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
@@ -137,8 +138,8 @@ var _ = Describe("Query", func() {
 					}, nil)
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -149,7 +150,7 @@ var _ = Describe("Query", func() {
 						Condition("test").Eq(StringValue("test")),
 					)
 
-					r, err := q.Fetch()
+					r, err := q.Fetch(context.TODO())
 
 					It("should return documents", func() {
 						By("not returning an error")
@@ -170,13 +171,13 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					dc:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.FromPagingToken("blah")
 
-				_, err := q.Fetch()
+				_, err := q.Fetch(context.TODO())
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
@@ -188,13 +189,13 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					dc:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.Where(&queryExpression{})
 
-				_, err := q.Fetch()
+				_, err := q.Fetch(context.TODO())
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
@@ -209,8 +210,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().QueryStream(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock-error"))
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -219,11 +220,11 @@ var _ = Describe("Query", func() {
 					})
 					q.Where(Condition("test").Eq(StringValue("test")))
 
-					_, err := q.Stream()
+					_, err := q.Stream(context.TODO())
 
 					It("should unwrap the gRPC error", func() {
 						Expect(err).To(HaveOccurred())
-						Expect(err.Error()).To(Equal("Unknown: mock-error"))
+						Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock-error"))
 					})
 				})
 
@@ -233,8 +234,8 @@ var _ = Describe("Query", func() {
 					mdc.EXPECT().QueryStream(gomock.Any(), gomock.Any()).Return(strc, nil)
 
 					q := newQuery(&collectionRefImpl{
-						name: "test",
-						dc:   mdc,
+						name:           "test",
+						documentClient: mdc,
 					}, mdc)
 
 					q.Limit(100)
@@ -245,7 +246,7 @@ var _ = Describe("Query", func() {
 						Condition("test").Eq(StringValue("test")),
 					)
 
-					r, err := q.Stream()
+					r, err := q.Stream(context.TODO())
 
 					It("should not return an error", func() {
 						Expect(err).ToNot(HaveOccurred())
@@ -258,7 +259,7 @@ var _ = Describe("Query", func() {
 					})
 
 					It("should have a reference to the returned stream client", func() {
-						Expect(iter.str).To(Equal(strc))
+						Expect(iter.documentStreamClient).To(Equal(strc))
 					})
 				})
 			})
@@ -267,13 +268,13 @@ var _ = Describe("Query", func() {
 				mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 				q := newQuery(&collectionRefImpl{
-					name: "test",
-					dc:   mdc,
+					name:           "test",
+					documentClient: mdc,
 				}, mdc)
 
 				q.Where(&queryExpression{})
 
-				_, err := q.Stream()
+				_, err := q.Stream(context.TODO())
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())

@@ -40,8 +40,8 @@ var _ = Describe("QueryValue", func() {
 				Expect(nv.bool_value).To(BeNil())
 			})
 
-			When("translating toWire", func() {
-				ev, err := nv.toWire()
+			When("translating ToWire", func() {
+				ev, err := nv.ToWire()
 
 				It("should not return an error", func() {
 					Expect(err).ToNot(HaveOccurred())
@@ -74,8 +74,8 @@ var _ = Describe("QueryValue", func() {
 				Expect(nv.bool_value).To(BeNil())
 			})
 
-			When("translating toWire", func() {
-				ev, err := nv.toWire()
+			When("translating ToWire", func() {
+				ev, err := nv.ToWire()
 
 				It("should not return an error", func() {
 					Expect(err).ToNot(HaveOccurred())
@@ -108,8 +108,8 @@ var _ = Describe("QueryValue", func() {
 				Expect(nv.bool_value).To(BeNil())
 			})
 
-			When("translating toWire", func() {
-				ev, err := nv.toWire()
+			When("translating ToWire", func() {
+				ev, err := nv.ToWire()
 
 				It("should not return an error", func() {
 					Expect(err).ToNot(HaveOccurred())
@@ -142,8 +142,8 @@ var _ = Describe("QueryValue", func() {
 				Expect(nv.double_value).To(BeNil())
 			})
 
-			When("translating toWire", func() {
-				ev, err := nv.toWire()
+			When("translating ToWire", func() {
+				ev, err := nv.ToWire()
 
 				It("should not return an error", func() {
 					Expect(err).ToNot(HaveOccurred())
@@ -159,12 +159,12 @@ var _ = Describe("QueryValue", func() {
 	Context("InvalidValue", func() {
 		When("Provided an invalid value", func() {
 			v := &value{}
-			When("translating toWire", func() {
-				_, err := v.toWire()
+			When("translating ToWire", func() {
+				_, err := v.ToWire()
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(Equal("Invalid Argument: value.toWire: Invalid Query Value"))
+					Expect(err.Error()).To(Equal("Invalid Argument: value.ToWire: Invalid Query Value"))
 				})
 			})
 		})

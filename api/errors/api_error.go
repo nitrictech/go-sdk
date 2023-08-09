@@ -15,10 +15,13 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/errors/codes"
+	multierror "github.com/missionMeteora/toolkit/errors"
 	"google.golang.org/grpc/status"
+
+	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
 
 type ApiError struct {
@@ -43,22 +46,31 @@ func (a *ApiError) Error() string {
 // FromGrpcError - translates a standard grpc error to a nitric api error
 func FromGrpcError(err error) error {
 	if s, ok := status.FromError(err); ok {
+		errList := &multierror.ErrorList{}
+		errList.Push(err)
+		for _, item := range s.Details() {
+			errList.Push(fmt.Errorf("%v", item))
+		}
+
 		return &ApiError{
-			code: codes.Code(s.Code()),
-			msg:  s.Message(),
+			code:  codes.Code(s.Code()),
+			msg:   s.Message(),
+			cause: errList.Err(),
 		}
 	}
 
 	return &ApiError{
-		code: codes.Unknown,
-		msg:  err.Error(),
+		code:  codes.Unknown,
+		msg:   "error from grpc library",
+		cause: err,
 	}
 }
 
 // Code - returns a nitric api error code from an error or Unknown if the error was not a nitric api error
-func Code(e error) codes.Code {
-	if ae, ok := e.(*ApiError); ok {
-		return ae.code
+func Code(err error) codes.Code {
+	var apiErr *ApiError
+	if ok := errors.As(err, &apiErr); ok {
+		return apiErr.code
 	}
 
 	return codes.Unknown
@@ -79,5 +91,4 @@ func NewWithCause(c codes.Code, msg string, cause error) error {
 		msg:   msg,
 		cause: cause,
 	}
-
 }

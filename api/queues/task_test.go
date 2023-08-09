@@ -15,14 +15,16 @@
 package queues
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/types/known/structpb"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
 var _ = Describe("Task", func() {
@@ -57,7 +59,7 @@ var _ = Describe("Task", func() {
 
 	Context("wireToTask", func() {
 		When("translating a proto task to a task", func() {
-			pbs, _ := structpb.NewStruct(map[string]interface{}{
+			pbs, _ := protoutils.NewStruct(map[string]interface{}{
 				"test": "test",
 			})
 			t := wireToTask(&v1.NitricTask{
@@ -117,9 +119,9 @@ var _ = Describe("Task", func() {
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(&v1.QueueCompleteResponse{}, nil)
 
 				t := &receivedTaskImpl{
-					qc:      mockQc,
-					queue:   "test-queue",
-					leaseId: "1234",
+					queueClient: mockQc,
+					queue:       "test-queue",
+					leaseId:     "1234",
 					task: &Task{
 						ID:          "1234",
 						PayloadType: "test-payload",
@@ -129,7 +131,7 @@ var _ = Describe("Task", func() {
 					},
 				}
 
-				err := t.Complete()
+				err := t.Complete(context.TODO())
 
 				It("should not return an error", func() {
 					Expect(err).ToNot(HaveOccurred())
@@ -142,9 +144,9 @@ var _ = Describe("Task", func() {
 				mockQc.EXPECT().Complete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
 				t := &receivedTaskImpl{
-					qc:      mockQc,
-					queue:   "test-queue",
-					leaseId: "1234",
+					queueClient: mockQc,
+					queue:       "test-queue",
+					leaseId:     "1234",
 					task: &Task{
 						ID:          "1234",
 						PayloadType: "test-payload",
@@ -154,7 +156,7 @@ var _ = Describe("Task", func() {
 					},
 				}
 
-				err := t.Complete()
+				err := t.Complete(context.TODO())
 
 				It("should pass through the gRPC error", func() {
 					Expect(err).To(HaveOccurred())

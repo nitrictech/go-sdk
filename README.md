@@ -1,62 +1,47 @@
 <p align="center">
-  <img src="./docs/assets/dot_matrix_logo_go.png" alt="Nitric Logo"/>
+  <a href="https://nitric.io">
+    <img src="docs/assets/nitric-logo.svg" width="120" alt="Nitric Logo"/>
+  </a>
 </p>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/nitrictech/go-sdk)](https://goreportcard.com/report/github.com/nitrictech/go-sdk)
-![test status](https://github.com/nitrictech/go-sdk/actions/workflows/test.yaml/badge.svg?branch=main)
-[![codecov](https://codecov.io/gh/nitrictech/go-sdk/branch/main/graph/badge.svg?token=TYH4QAZI07)](https://codecov.io/gh/nitrictech/go-sdk)
+<h2 align="center">
+  Build <a href="https://nitric.io">nitric</a> applications with Python
+</h2>
 
-# Nitric SDK for Go
+<p align="center">
+  <a href="https://codecov.io/gh/nitrictech/go-sdk">
+    <img alt="codecov" src="https://img.shields.io/codecov/c/gh/nitrictech/go-sdk?style=for-the-badge&token=TYH4QAZI07">
+  </a>
+  <a href="https://github.com/nitrictech/go-sdk">
+    <img alt="Version" src="https://img.shields.io/github/v/release/nitrictech/go-sdk?style=for-the-badge">
+  </a>
+  <a href="https://goreportcard.com/badge/github.com/nitrictech/go-sdk">
+    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/nitrictech/go-sdk?style=for-the-badge">
+  </a>
+</p>
 
-Client libarary for interfacing with the Nitric APIs as well as the creation of golang functions with Nitric.
+# Go SDK for Nitric
 
-## Quick Start
+The Go SDK supports the use of the Nitric framework with GoLang 1.16. For more information, check out the main [Nitric repo](https://github.com/nitrictech/nitric).
 
-### Using the Nitric CLI
+Nitric SDKs provide an infrastructure-as-code style that lets you define resources in code. You can also write the functions that support the logic behind APIs, subscribers and schedules.
 
-1. Get the Nitric CLI
-2. Create a new Nitric Project `nitric make:project <my-new-project>`
-3. Select `function/golang15` as a starter function
+You can request the type of access you need to resources such as publishing for topics, without dealing directly with IAM or policy documents.
 
-## Using the Nitric SDK
+## Status
 
-### Creating a new API clients
-```go
-import "github.com/nitrictech/go-sdk/api/events"
+The SDK is in early stage development and APIs and interfaces are still subject to breaking changes. We’d love your feedback as we build additional functionality!
 
-// NitricFunction - Handles individual function requests (http, events, etc.)
-func createNitricClient() {
-	ec, err := events.New()
+## Get in touch
 
-  if err != nil {
-    // Do something with err
-  }
+- Ask questions in [GitHub discussions](https://github.com/nitrictech/nitric/discussions)
 
-	// use the new events client
-	// ec.Topic("my-topic").Publish(...)
-}
-```
+- Join us on [Discord](https://discord.gg/Webemece5C)
 
-### Starting a Nitric FaaS server
+- Find us on [Twitter](https://twitter.com/nitric_io)
 
-```go
-package main
+- Send us an [email](mailto:maintainers@nitric.io)
 
-import "github.com/nitrictech/go-sdk/faas"
+## Get Started
 
-// NitricFunction - Handles individual function requests (http, events, etc.)
-func NitricFunction(trigger *faas.NitricTrigger) (*faas.TriggerResponse, error) {
-	// Construct a default response base on the existing trigger context
-	resp := trigger.DefaultResponse()
-	resp.SetData([]byte("Hello Nitric"))
-
-	return resp, nil
-}
-
-func main() {
-	faas.Start(NitricFunction)
-}
-```
-<!-- TODO: Add additional examples but don't add too much noise to the landing README -->
-<!-- More specific usage examples can be found in [examples](./examples/README.md) -->
-
+Check out the [Nitric docs](https://nitric.io/docs) to see how to get started using Nitric.

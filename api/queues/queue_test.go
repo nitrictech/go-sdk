@@ -15,14 +15,16 @@
 package queues
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/types/known/structpb"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
 var _ = Describe("Queue", func() {
@@ -35,11 +37,11 @@ var _ = Describe("Queue", func() {
 			mockQ.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
 			q := &queueImpl{
-				name: "test-queue",
-				c:    mockQ,
+				name:        "test-queue",
+				queueClient: mockQ,
 			}
 
-			_, err := q.Send([]*Task{
+			_, err := q.Send(context.TODO(), []*Task{
 				{
 					ID:          "1234",
 					PayloadType: "test-payload",
@@ -51,13 +53,13 @@ var _ = Describe("Queue", func() {
 
 			It("should pass through the error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unknown: mock error"))
+				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
 			})
 		})
 
 		When("the task send succeeds", func() {
 			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
-			mockStruct, _ := structpb.NewStruct(map[string]interface{}{
+			mockStruct, _ := protoutils.NewStruct(map[string]interface{}{
 				"test": "test",
 			})
 
@@ -75,11 +77,11 @@ var _ = Describe("Queue", func() {
 			}, nil)
 
 			q := &queueImpl{
-				name: "test-queue",
-				c:    mockQ,
+				name:        "test-queue",
+				queueClient: mockQ,
 			}
 
-			fts, _ := q.Send([]*Task{
+			fts, _ := q.Send(context.TODO(), []*Task{
 				{
 					ID:          "1234",
 					PayloadType: "test-payload",
@@ -89,7 +91,7 @@ var _ = Describe("Queue", func() {
 				},
 			})
 
-			It("should recieve the failed tasks from the QueueSendBatchResponse", func() {
+			It("should receive the failed tasks from the QueueSendBatchResponse", func() {
 				Expect(fts).To(HaveLen(1))
 				Expect(fts[0].Reason).To(Equal("Failed to send task"))
 				Expect(fts[0].Task.ID).To(Equal("1234"))
@@ -106,7 +108,7 @@ var _ = Describe("Queue", func() {
 					name: "test-queue",
 				}
 
-				_, err := q.Receive(0)
+				_, err := q.Receive(context.TODO(), 0)
 
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
@@ -115,7 +117,7 @@ var _ = Describe("Queue", func() {
 			})
 
 			When("The grpc successfully returns", func() {
-				mockStruct, _ := structpb.NewStruct(map[string]interface{}{
+				mockStruct, _ := protoutils.NewStruct(map[string]interface{}{
 					"test": "test",
 				})
 				mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
@@ -132,13 +134,13 @@ var _ = Describe("Queue", func() {
 				}, nil)
 
 				q := &queueImpl{
-					name: "test-queue",
-					c:    mockQ,
+					name:        "test-queue",
+					queueClient: mockQ,
 				}
 
-				t, _ := q.Receive(1)
+				t, _ := q.Receive(context.TODO(), 1)
 
-				It("should recieve a single task", func() {
+				It("should receive a single task", func() {
 					Expect(t).To(HaveLen(1))
 				})
 

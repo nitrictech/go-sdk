@@ -23,3 +23,11 @@ type HttpResponse struct {
 type EventResponse struct {
 	Success bool
 }
+
+type BucketNotificationResponse struct {
+	Success bool
+}
+
+type WebsocketResponse struct {
+	Success bool
+}

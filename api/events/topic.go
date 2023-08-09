@@ -16,44 +16,63 @@ package events
 
 import (
 	"context"
+	"time"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	"google.golang.org/protobuf/types/known/structpb"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
-// Topic
+type PublishOption = func(*v1.EventPublishRequest)
+
+// Topic for pub/sub async messaging.
 type Topic interface {
+	// Name returns the Topic name.
 	Name() string
-	Publish(*Event) (*Event, error)
+
+	// Publish will publish the provided events on the topic.
+	Publish(context.Context, *Event, ...PublishOption) (*Event, error)
 }
 
 type topicImpl struct {
-	name string
-	ec   v1.EventServiceClient
+	name        string
+	eventClient v1.EventServiceClient
 }
 
 func (s *topicImpl) Name() string {
 	return s.name
 }
 
-func (s *topicImpl) Publish(evt *Event) (*Event, error) {
+// WithDelay - Delay event publishing by the given duration
+func WithDelay(duration time.Duration) func(*v1.EventPublishRequest) {
+	return func(epr *v1.EventPublishRequest) {
+		epr.Delay = uint32(duration.Seconds())
+	}
+}
+
+func (s *topicImpl) Publish(ctx context.Context, evt *Event, opts ...PublishOption) (*Event, error) {
 	// Convert payload to Protobuf Struct
-	payloadStruct, err := structpb.NewStruct(evt.Payload)
+	payloadStruct, err := protoutils.NewStruct(evt.Payload)
 	if err != nil {
 		return nil, errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
 	}
 
-	r, err := s.ec.Publish(context.TODO(), &v1.EventPublishRequest{
+	event := &v1.EventPublishRequest{
 		Topic: s.name,
 		Event: &v1.NitricEvent{
 			Id:          evt.ID,
 			Payload:     payloadStruct,
 			PayloadType: evt.PayloadType,
 		},
-	})
+	}
 
+	// Apply options to the event payload
+	for _, opt := range opts {
+		opt(event)
+	}
+
+	r, err := s.eventClient.Publish(ctx, event)
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

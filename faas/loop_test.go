@@ -18,30 +18,47 @@ import (
 	"io"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 type handlerSpy struct {
-	http  bool
-	event bool
-	trig  bool
+	http         bool
+	event        bool
+	trig         bool
+	panicRequest bool
 }
 
 func (h *handlerSpy) Http(ctx *HttpContext, _ HttpHandler) (*HttpContext, error) {
 	h.http = true
+
+	if h.panicRequest {
+		panic("http panic request")
+	}
+
 	return ctx, nil
 }
 
 func (h *handlerSpy) Event(ctx *EventContext, _ EventHandler) (*EventContext, error) {
 	h.event = true
+
+	if h.panicRequest {
+		panic("event panic request")
+	}
+
 	return ctx, nil
 }
 
 func (h *handlerSpy) Trigger(ctx TriggerContext, _ TriggerHandler) (TriggerContext, error) {
 	h.trig = true
+
+	if h.panicRequest {
+		panic("trig panic request")
+	}
+
 	return ctx, nil
 }
 
@@ -56,14 +73,13 @@ func awaitFaasLoop(str v1.FaasService_TriggerStreamClient, p HandlerProvider) er
 
 var _ = Describe("look", func() {
 	Context("faasLoop", func() {
-
 		When("receiving an error from the stream", func() {
 			It("should return an error", func() {
 				spy := &handlerSpy{}
 				ctrl := gomock.NewController(GinkgoT())
 				mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-				By("recieving the error from the stream")
+				By("receiving the error from the stream")
 				mockStream.EXPECT().Recv().Return(nil, io.EOF)
 
 				err := awaitFaasLoop(mockStream, &faasClientImpl{
@@ -120,7 +136,7 @@ var _ = Describe("look", func() {
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockHttpRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
@@ -130,7 +146,7 @@ var _ = Describe("look", func() {
 					mockStream.EXPECT().Send(defaultHttpResponse).Return(nil)
 
 					err := awaitFaasLoop(mockStream, &faasClientImpl{
-						http: spy.Http,
+						http: map[string]HttpMiddleware{"GET": spy.Http},
 					})
 
 					By("return the error")
@@ -149,7 +165,7 @@ var _ = Describe("look", func() {
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockHttpRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
@@ -204,7 +220,51 @@ var _ = Describe("look", func() {
 						},
 					}).Return(nil)
 
-					err := awaitFaasLoop(mockStream, &faasClientImpl{})
+					err := awaitFaasLoop(mockStream, &faasClientImpl{http: map[string]HttpMiddleware{}})
+
+					By("returning the error")
+					Expect(err).Should(HaveOccurred())
+
+					ctrl.Finish()
+				})
+			})
+
+			When("there is a panic in the handler", func() {
+				It("should return an error", func() {
+					spy := &handlerSpy{panicRequest: true}
+					ctrl := gomock.NewController(GinkgoT())
+					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
+
+					By("receiving requests from the stream")
+					gomock.InOrder(
+						mockStream.EXPECT().Recv().Return(mockHttpRequest, nil),
+						mockStream.EXPECT().Recv().Return(nil, io.EOF),
+					)
+
+					By("receiving a http error response from the loop")
+					mockStream.EXPECT().Send(&v1.ClientMessage{
+						Id: "1234",
+						Content: &v1.ClientMessage_TriggerResponse{
+							TriggerResponse: &v1.TriggerResponse{
+								Data: []byte("Internal Server Error"),
+								Context: &v1.TriggerResponse_Http{
+									Http: &v1.HttpResponseContext{
+										Status: 500,
+										HeadersOld: map[string]string{
+											"Content-Type": "text/plain",
+										},
+										Headers: map[string]*v1.HeaderValue{
+											"Content-Type": {Value: []string{"text/plain"}},
+										},
+									},
+								},
+							},
+						},
+					}).Return(nil)
+
+					err := awaitFaasLoop(mockStream, &faasClientImpl{
+						http: map[string]HttpMiddleware{"GET": spy.Http},
+					})
 
 					By("returning the error")
 					Expect(err).Should(HaveOccurred())
@@ -248,7 +308,7 @@ var _ = Describe("look", func() {
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockTopicRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
@@ -271,13 +331,54 @@ var _ = Describe("look", func() {
 				})
 			})
 
+			When("event handler panics", func() {
+				It("should return an error", func() {
+					spy := &handlerSpy{panicRequest: true}
+					ctrl := gomock.NewController(GinkgoT())
+					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
+
+					By("receiving the error from the stream")
+					gomock.InOrder(
+						mockStream.EXPECT().Recv().Return(mockTopicRequest, nil),
+						mockStream.EXPECT().Recv().Return(nil, io.EOF),
+					)
+
+					By("receiving a topic error response from the loop")
+					mockStream.EXPECT().Send(&v1.ClientMessage{
+						Id: "1234",
+						Content: &v1.ClientMessage_TriggerResponse{
+							TriggerResponse: &v1.TriggerResponse{
+								Data: []byte(""),
+								Context: &v1.TriggerResponse_Topic{
+									Topic: &v1.TopicResponseContext{
+										Success: false,
+									},
+								},
+							},
+						},
+					}).Return(nil)
+
+					err := awaitFaasLoop(mockStream, &faasClientImpl{
+						event: spy.Event,
+					})
+
+					By("return the error")
+					Expect(err).Should(HaveOccurred())
+
+					By("calling the handler")
+					Expect(spy.event).To(BeTrue())
+
+					ctrl.Finish()
+				})
+			})
+
 			When("there is an available trigger handler", func() {
 				It("should call the trigger handler", func() {
 					spy := &handlerSpy{}
 					ctrl := gomock.NewController(GinkgoT())
 					mockStream := mock_v1.NewMockFaasService_TriggerStreamClient(ctrl)
 
-					By("recieving the error from the stream")
+					By("receiving the error from the stream")
 					gomock.InOrder(
 						mockStream.EXPECT().Recv().Return(mockTopicRequest, nil),
 						mockStream.EXPECT().Recv().Return(nil, io.EOF),
@@ -326,7 +427,7 @@ var _ = Describe("look", func() {
 						},
 					}).Return(nil)
 
-					err := awaitFaasLoop(mockStream, &faasClientImpl{})
+					err := awaitFaasLoop(mockStream, &faasClientImpl{http: map[string]HttpMiddleware{}})
 
 					By("returning the error")
 					Expect(err).Should(HaveOccurred())

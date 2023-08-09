@@ -17,9 +17,9 @@ package documents
 import (
 	"context"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Query - Query interface for Document Service
@@ -33,23 +33,23 @@ type Query interface {
 	FromPagingToken(interface{}) Query
 
 	// Fetch - Return paged values
-	Fetch() (*FetchResult, error)
+	Fetch(ctx context.Context) (*FetchResult, error)
 
 	// Stream - Return an iterator containing values
-	Stream() (DocumentIter, error)
+	Stream(ctx context.Context) (DocumentIter, error)
 }
 
 // Defacto Query interface implementation
 type queryImpl struct {
-	col   CollectionRef
-	dc    v1.DocumentServiceClient
-	pt    interface{}
-	exps  []*queryExpression
-	limit int
+	col            CollectionRef
+	documentClient v1.DocumentServiceClient
+	pagingToken    interface{}
+	expressions    []*queryExpression
+	limit          int
 }
 
 func (q *queryImpl) Where(qes ...*queryExpression) Query {
-	q.exps = append(q.exps, qes...)
+	q.expressions = append(q.expressions, qes...)
 
 	return q
 }
@@ -60,7 +60,7 @@ func (q *queryImpl) Limit(limit int) Query {
 }
 
 func (q *queryImpl) FromPagingToken(token interface{}) Query {
-	q.pt = token
+	q.pagingToken = token
 	return q
 }
 
@@ -70,11 +70,10 @@ type FetchResult struct {
 }
 
 func (q *queryImpl) expressionsToWire() ([]*v1.Expression, error) {
-	expressions := make([]*v1.Expression, 0, len(q.exps))
+	expressions := make([]*v1.Expression, 0, len(q.expressions))
 
-	for _, e := range q.exps {
-		wexp, err := e.toWire()
-
+	for _, e := range q.expressions {
+		wexp, err := e.ToWire()
 		if err != nil {
 			return nil, err
 		}
@@ -85,17 +84,16 @@ func (q *queryImpl) expressionsToWire() ([]*v1.Expression, error) {
 	return expressions, nil
 }
 
-func (q *queryImpl) Fetch() (*FetchResult, error) {
+func (q *queryImpl) Fetch(ctx context.Context) (*FetchResult, error) {
 	// build the expressions list
 	expressions, err := q.expressionsToWire()
-
 	if err != nil {
 		return nil, err
 	}
 
 	var token map[string]string = nil
-	if q.pt != nil {
-		t, ok := q.pt.(map[string]string)
+	if q.pagingToken != nil {
+		t, ok := q.pagingToken.(map[string]string)
 
 		if !ok {
 			return nil, errors.New(codes.InvalidArgument, "Query.Fetch: Paging Token invalid")
@@ -103,13 +101,12 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 		token = t
 	}
 
-	r, err := q.dc.Query(context.TODO(), &v1.DocumentQueryRequest{
-		Collection:  q.col.toWire(),
+	r, err := q.documentClient.Query(ctx, &v1.DocumentQueryRequest{
+		Collection:  q.col.ToWire(),
 		Expressions: expressions,
 		Limit:       int32(q.limit),
 		PagingToken: token,
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
@@ -117,8 +114,7 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 	docs := make([]Document, 0, len(r.GetDocuments()))
 
 	for _, d := range r.GetDocuments() {
-		ref, err := documentRefFromWireKey(q.dc, d.GetKey())
-
+		ref, err := documentRefFromWireKey(q.documentClient, d.GetKey())
 		if err != nil {
 			// XXX: Potentially just log an error and continue
 			return nil, err
@@ -136,35 +132,33 @@ func (q *queryImpl) Fetch() (*FetchResult, error) {
 	}, nil
 }
 
-func (q *queryImpl) Stream() (DocumentIter, error) {
+func (q *queryImpl) Stream(ctx context.Context) (DocumentIter, error) {
 	// build the expressions list
 	expressions, err := q.expressionsToWire()
-
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := q.dc.QueryStream(context.TODO(), &v1.DocumentQueryStreamRequest{
-		Collection:  q.col.toWire(),
+	r, err := q.documentClient.QueryStream(ctx, &v1.DocumentQueryStreamRequest{
+		Collection:  q.col.ToWire(),
 		Expressions: expressions,
 		Limit:       int32(q.limit),
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
 
 	// TODO: Return result iterator
 	return &documentIterImpl{
-		dc:  q.dc,
-		str: r,
+		documentClient:       q.documentClient,
+		documentStreamClient: r,
 	}, nil
 }
 
 func newQuery(col CollectionRef, dc v1.DocumentServiceClient) Query {
 	return &queryImpl{
-		dc:   dc,
-		col:  col,
-		exps: make([]*queryExpression, 0),
+		documentClient: dc,
+		col:            col,
+		expressions:    make([]*queryExpression, 0),
 	}
 }

@@ -15,15 +15,16 @@
 package secrets
 
 import (
+	"os"
+
 	"github.com/golang/mock/gomock"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"os"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("Secrets", func() {
-
 	Context("New", func() {
 		When("Constructing a new Secrets client with no rpc server available", func() {
 			os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
@@ -44,7 +45,7 @@ var _ = Describe("Secrets", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			c := &secretsImpl{
-				sc: mc,
+				secretClient: mc,
 			}
 
 			It("should successfully return a correct secret reference", func() {

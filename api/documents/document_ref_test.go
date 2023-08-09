@@ -15,16 +15,18 @@
 package documents
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/structpb"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
 var _ = Describe("DocumentRef", func() {
@@ -32,11 +34,11 @@ var _ = Describe("DocumentRef", func() {
 	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 	md := &documentRefImpl{
-		dc: mdc,
-		id: "test-doc",
+		documentClient: mdc,
+		id:             "test-doc",
 		col: &collectionRefImpl{
-			name: "test-col",
-			dc:   mdc,
+			name:           "test-col",
+			documentClient: mdc,
 		},
 	}
 
@@ -54,7 +56,7 @@ var _ = Describe("DocumentRef", func() {
 			})
 
 			It("should share the documentRefs document client reference", func() {
-				Expect(ci.dc).To(Equal(mdc))
+				Expect(ci.documentClient).To(Equal(mdc))
 			})
 
 			It("should have the document as a parent", func() {
@@ -65,17 +67,17 @@ var _ = Describe("DocumentRef", func() {
 		When("Creating a n-depth sub-collection reference", func() {
 			mc := &collectionRefImpl{
 				parentDocument: &documentRefImpl{
-					dc: mdc,
+					documentClient: mdc,
 					col: &collectionRefImpl{
-						name: "parent-collection",
-						dc:   mdc,
+						name:           "parent-collection",
+						documentClient: mdc,
 					},
 				},
 			}
 			mdp := &documentRefImpl{
-				dc:  mdc,
-				col: mc,
-				id:  "test-doc",
+				documentClient: mdc,
+				col:            mc,
+				id:             "test-doc",
 			}
 
 			_, err := mdp.Collection("test-collection")
@@ -99,15 +101,15 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
-				id: "test-doc",
+				documentClient: mdc,
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					dc:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
-			err := md.Delete()
+			err := md.Delete(context.TODO())
 
 			It("should pass through the returned error", func() {
 				Expect(err).To(HaveOccurred())
@@ -124,15 +126,15 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
-				id: "test-doc",
+				documentClient: mdc,
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					dc:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
-			err := md.Delete()
+			err := md.Delete(context.TODO())
 
 			It("should not return an error", func() {
 				Expect(err).ToNot(HaveOccurred())
@@ -150,21 +152,21 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
-				id: "test-doc",
+				documentClient: mdc,
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					dc:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
-			err := md.Set(map[string]interface{}{
+			err := md.Set(context.TODO(), map[string]interface{}{
 				"test": "test",
 			})
 
 			It("should unwrap the returned error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unimplemented: mock-error"))
+				Expect(err.Error()).To(Equal("Unimplemented: mock-error: \n rpc error: code = Unimplemented desc = mock-error"))
 			})
 		})
 
@@ -177,15 +179,15 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
-				id: "test-doc",
+				documentClient: mdc,
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					dc:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
-			err := md.Set(map[string]interface{}{
+			err := md.Set(context.TODO(), map[string]interface{}{
 				"test": "test",
 			})
 
@@ -205,24 +207,24 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
-				id: "test-doc",
+				documentClient: mdc,
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					dc:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
-			_, err := md.Get()
+			_, err := md.Get(context.TODO())
 
 			It("should pass through the returned error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Unknown: mock-error"))
+				Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock-error"))
 			})
 		})
 
 		When("the grpc server returns a successful response", func() {
-			ms, _ := structpb.NewStruct(map[string]interface{}{
+			ms, _ := protoutils.NewStruct(map[string]interface{}{
 				"test": "test",
 			})
 			mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
@@ -237,15 +239,15 @@ var _ = Describe("DocumentRef", func() {
 			)
 
 			md := &documentRefImpl{
-				dc: mdc,
-				id: "test-doc",
+				documentClient: mdc,
+				id:             "test-doc",
 				col: &collectionRefImpl{
-					name: "test-col",
-					dc:   mdc,
+					name:           "test-col",
+					documentClient: mdc,
 				},
 			}
 
-			d, _ := md.Get()
+			d, _ := md.Get(context.TODO())
 
 			It("should provide the returned document", func() {
 				Expect(d.Content()).To(Equal(map[string]interface{}{

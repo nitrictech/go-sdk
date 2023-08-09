@@ -9,28 +9,26 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GOPATH: /home/runner/go
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Setup Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.17.1
-    - name: Install modules
-      run: make install-tools
-    - name: Check License Headers
-      run: make license-header-check
-    - name: Run Tests
-      run: make test-ci
-    - name: Check Licenses
-      run: make license-check
-    # Upload coverage report if main is set
-    - name: Upload Coverage Report
-      uses: codecov/codecov-action@v2
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: all.coverprofile # optional
-        flags: unittests # optional
-        fail_ci_if_error: true # optional (default = false)
-    - name: Run example tests
-      run: make test-examples
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+      - name: Check License Headers
+        run: make license-header-check
+      - name: Run Tests
+        run: make test-ci
+      - name: Check Licenses
+        run: make license-check
+      # Upload coverage report if main is set
+      - name: Upload Coverage Report
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: all.coverprofile # optional
+          flags: unittests # optional
+          fail_ci_if_error: true # optional (default = false)

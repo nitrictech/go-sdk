@@ -14,14 +14,19 @@
 
 package constants
 
-import "google.golang.org/grpc"
+import (
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"google.golang.org/grpc"
+)
 
 // DefaultOptions - Provides option defaults for creating a gRPC service connection with the Nitric Membrane
 func DefaultOptions() []grpc.DialOption {
 	return []grpc.DialOption{
 		// TODO: Look at authentication config with membrane
-		grpc.WithInsecure(),
+		grpc.WithInsecure(), //nolint:staticcheck
 		grpc.WithBlock(),
-		grpc.WithTimeout(NitricDialTimeout()),
+		grpc.WithTimeout(NitricDialTimeout()), //nolint:staticcheck
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	}
 }

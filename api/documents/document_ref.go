@@ -19,10 +19,11 @@ import (
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	"google.golang.org/protobuf/types/known/structpb"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
 // DocumentRef - Represents a reference to a document
@@ -35,13 +36,13 @@ type DocumentRef interface {
 	Id() string
 
 	// Get - Retrieve the value of the document
-	Get() (Document, error)
+	Get(context.Context) (Document, error)
 
 	// Set - Sets the value of the document
-	Set(map[string]interface{}) error
+	Set(context.Context, map[string]interface{}) error
 
 	// Delete - Deletes the document
-	Delete() error
+	Delete(context.Context) error
 
 	// Collection - Retrieve a child collection of this document
 	Collection(string) (CollectionRef, error)
@@ -49,7 +50,7 @@ type DocumentRef interface {
 
 type documentRefImpl struct {
 	// A shared reference to the top level document service client
-	dc v1.DocumentServiceClient
+	documentClient v1.DocumentServiceClient
 	// A reference to this documents collection
 	col CollectionRef
 	// The id for this document
@@ -60,15 +61,14 @@ type documentRefImpl struct {
 func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef, error) {
 	if dc != nil && k != nil {
 		col, err := collectionRefFromWire(dc, k.GetCollection())
-
 		if err != nil {
 			return nil, err
 		}
 
 		return &documentRefImpl{
-			dc:  dc,
-			col: col,
-			id:  k.GetId(),
+			documentClient: dc,
+			col:            col,
+			id:             k.GetId(),
 		}, nil
 	} else {
 		if dc == nil {
@@ -88,7 +88,7 @@ func documentRefFromWireKey(dc v1.DocumentServiceClient, k *v1.Key) (DocumentRef
 func (d *documentRefImpl) toWireKey() *v1.Key {
 	return &v1.Key{
 		Id:         d.id,
-		Collection: d.col.toWire(),
+		Collection: d.col.ToWire(),
 	}
 }
 
@@ -113,14 +113,14 @@ func (d *documentRefImpl) Collection(c string) (CollectionRef, error) {
 
 	return &collectionRefImpl{
 		name:           c,
-		dc:             d.dc,
+		documentClient: d.documentClient,
 		parentDocument: d,
 	}, nil
 }
 
 // Delete - Deletes the document this reference refers to if it exists
-func (d *documentRefImpl) Delete() error {
-	_, err := d.dc.Delete(context.TODO(), &v1.DocumentDeleteRequest{
+func (d *documentRefImpl) Delete(ctx context.Context) error {
+	_, err := d.documentClient.Delete(ctx, &v1.DocumentDeleteRequest{
 		Key: d.toWireKey(),
 	})
 
@@ -128,9 +128,8 @@ func (d *documentRefImpl) Delete() error {
 }
 
 // Set - Sets the contents of the document this reference refers to
-func (d *documentRefImpl) Set(content map[string]interface{}) error {
-	sv, err := structpb.NewStruct(content)
-
+func (d *documentRefImpl) Set(ctx context.Context, content map[string]interface{}) error {
+	sv, err := protoutils.NewStruct(content)
 	if err != nil {
 		return errors.NewWithCause(
 			codes.Internal,
@@ -139,7 +138,7 @@ func (d *documentRefImpl) Set(content map[string]interface{}) error {
 		)
 	}
 
-	if _, err = d.dc.Set(context.TODO(), &v1.DocumentSetRequest{
+	if _, err = d.documentClient.Set(ctx, &v1.DocumentSetRequest{
 		Key:     d.toWireKey(),
 		Content: sv,
 	}); err != nil {
@@ -154,11 +153,10 @@ type DecodeOption interface {
 }
 
 // Get - Retrieves the Document this reference refers to if it exists
-func (d *documentRefImpl) Get() (Document, error) {
-	res, err := d.dc.Get(context.TODO(), &v1.DocumentGetRequest{
+func (d *documentRefImpl) Get(ctx context.Context) (Document, error) {
+	res, err := d.documentClient.Get(ctx, &v1.DocumentGetRequest{
 		Key: d.toWireKey(),
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}

@@ -18,9 +18,10 @@ import (
 	"os"
 
 	"github.com/golang/mock/gomock"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("Documents", func() {
@@ -46,7 +47,7 @@ var _ = Describe("Documents", func() {
 			mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 
 			dc := &documentsImpl{
-				dc: mdc,
+				documentClient: mdc,
 			}
 
 			collection := dc.Collection("test")
@@ -62,7 +63,7 @@ var _ = Describe("Documents", func() {
 			})
 
 			It("should share a documents client with the documents client", func() {
-				Expect(ci.dc).To(Equal(dc.dc))
+				Expect(ci.documentClient).To(Equal(dc.documentClient))
 			})
 
 			It("should have a nil parentDocument", func() {

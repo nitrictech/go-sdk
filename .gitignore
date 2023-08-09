@@ -20,7 +20,9 @@ bin/
 
 *.coverprofile
 
-# Ignore auto-generated mock files
-/mocks/*.go
-
 .vscode/
+
+contracts/
+*-contracts.tgz
+tools/include/
+tools/protoc-*.zip

@@ -18,9 +18,10 @@ import (
 	"os"
 
 	"github.com/golang/mock/gomock"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("Queues", func() {
@@ -50,7 +51,7 @@ var _ = Describe("Queues", func() {
 			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
 
 			queues := &queuesImpl{
-				c: mockQ,
+				queueClient: mockQ,
 			}
 
 			q := queues.Queue("test-queue")
@@ -66,7 +67,7 @@ var _ = Describe("Queues", func() {
 			})
 
 			It("Should share a client with the Queues client", func() {
-				Expect(qImpl.c).To(Equal(mockQ))
+				Expect(qImpl.queueClient).To(Equal(mockQ))
 			})
 		})
 	})

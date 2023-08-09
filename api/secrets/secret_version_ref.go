@@ -17,22 +17,22 @@ package secrets
 import (
 	"context"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // SecretVersionRef - A reference to a secret version
 type SecretVersionRef interface {
 	// Access - Retrieve the value of the secret
-	Access() (SecretValue, error)
+	Access(ctx context.Context) (SecretValue, error)
 	Secret() SecretRef
 	Version() string
 }
 
 type secretVersionRefImpl struct {
-	sc      v1.SecretServiceClient
-	secret  SecretRef
-	version string
+	secretClient v1.SecretServiceClient
+	secret       SecretRef
+	version      string
 }
 
 func (s *secretVersionRefImpl) Secret() SecretRef {
@@ -43,8 +43,8 @@ func (s *secretVersionRefImpl) Version() string {
 	return s.version
 }
 
-func (s *secretVersionRefImpl) Access() (SecretValue, error) {
-	r, err := s.sc.Access(context.TODO(), &v1.SecretAccessRequest{
+func (s *secretVersionRefImpl) Access(ctx context.Context) (SecretValue, error) {
+	r, err := s.secretClient.Access(ctx, &v1.SecretAccessRequest{
 		SecretVersion: &v1.SecretVersion{
 			Secret: &v1.Secret{
 				Name: s.secret.Name(),
@@ -52,16 +52,15 @@ func (s *secretVersionRefImpl) Access() (SecretValue, error) {
 			Version: s.version,
 		},
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
 
 	return &secretValueImpl{
 		version: &secretVersionRefImpl{
-			sc:      s.sc,
-			secret:  s.secret,
-			version: r.GetSecretVersion().GetVersion(),
+			secretClient: s.secretClient,
+			secret:       s.secret,
+			version:      r.GetSecretVersion().GetVersion(),
 		},
 		val: r.GetValue(),
 	}, nil

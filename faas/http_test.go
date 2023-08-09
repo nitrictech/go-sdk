@@ -21,9 +21,8 @@ import (
 
 var _ = Describe("Http", func() {
 	Context("ComposeHttpMiddleware", func() {
-
 		When("Creating a function with a single handler", func() {
-			hndlr := ComposeHttpMiddlware(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+			hndlr := ComposeHttpMiddleware(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 				ctx.Response.Body = []byte("hello!")
 
 				return next(ctx)
@@ -42,7 +41,7 @@ var _ = Describe("Http", func() {
 		When("Creating a function from multiple handlers", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := ComposeHttpMiddlware(
+			hndlr := ComposeHttpMiddleware(
 				func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -54,9 +53,10 @@ var _ = Describe("Http", func() {
 			)
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&HttpContext{
+				_, err := hndlr(&HttpContext{
 					Response: &HttpResponse{},
 				}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2"}))
 			})
@@ -65,7 +65,7 @@ var _ = Describe("Http", func() {
 		When("Creating a function from multiple nested middlewares", func() {
 			callOrder := make([]string, 0)
 
-			hndlr := ComposeHttpMiddlware(ComposeHttpMiddlware(
+			hndlr := ComposeHttpMiddleware(ComposeHttpMiddleware(
 				func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					callOrder = append(callOrder, "1")
 					return next(ctx)
@@ -74,7 +74,7 @@ var _ = Describe("Http", func() {
 					callOrder = append(callOrder, "2")
 					return next(ctx)
 				},
-			), ComposeHttpMiddlware(
+			), ComposeHttpMiddleware(
 				func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					callOrder = append(callOrder, "3")
 					return ctx, nil
@@ -82,9 +82,10 @@ var _ = Describe("Http", func() {
 			))
 
 			It("Should call the functions in the provided order", func() {
-				hndlr(&HttpContext{
+				_, err := hndlr(&HttpContext{
 					Response: &HttpResponse{},
 				}, nil)
+				Expect(err).To(BeNil())
 
 				Expect(callOrder).To(BeEquivalentTo([]string{"1", "2", "3"}))
 			})

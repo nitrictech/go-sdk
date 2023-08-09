@@ -18,11 +18,13 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/golang/mock/gomock"
-	pb "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/golang/mock/gomock"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	pb "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("Faas", func() {
@@ -45,18 +47,18 @@ var _ = Describe("Faas", func() {
 					return ctx, nil
 				}
 
-				impl := &faasClientImpl{}
-				impl.Http(mware)
+				impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
+				impl.Http("GET", mware)
 
 				It("should set the private http field", func() {
-					Expect(impl.Http()).ToNot(BeNil())
+					Expect(impl.Http("GET")).ToNot(BeNil())
 				})
 
 				When("Getting the Http Middleware", func() {
-					mw := impl.GetHttp()
+					mw := impl.GetHttp("GET")
 
 					It("should return the internal http field", func() {
-						Expect(reflect.ValueOf(impl.http).Pointer()).To(Equal(reflect.ValueOf(mw).Pointer()))
+						Expect(reflect.ValueOf(impl.http["GET"]).Pointer()).To(Equal(reflect.ValueOf(mw).Pointer()))
 					})
 				})
 			})
@@ -68,7 +70,7 @@ var _ = Describe("Faas", func() {
 					return ctx, nil
 				}
 
-				impl := &faasClientImpl{}
+				impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
 				impl.Event(mware)
 
 				It("should set the private event field", func() {
@@ -91,7 +93,7 @@ var _ = Describe("Faas", func() {
 					return ctx, nil
 				}
 
-				impl := &faasClientImpl{}
+				impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
 				impl.Default(mware)
 
 				It("should set the private trig field", func() {
@@ -110,7 +112,7 @@ var _ = Describe("Faas", func() {
 	})
 
 	Context("Start", func() {
-		impl := &faasClientImpl{}
+		impl := &faasClientImpl{http: map[string]HttpMiddleware{}}
 		When("No FaasServiceServer is available", func() {
 			err := impl.Start()
 
@@ -132,8 +134,19 @@ var _ = Describe("Faas", func() {
 			})
 
 			When("a valid handler is provided", func() {
-				impl.Http(func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+				impl.Http("GET", func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
 					return ctx, nil
+				})
+				impl.Http("POST", func(ctx *HttpContext, next HttpHandler) (*HttpContext, error) {
+					return ctx, nil
+				})
+				impl.WithApiWorkerOpts(ApiWorkerOptions{
+					ApiName: "test",
+					Path:    "apples",
+					Security: map[string][]string{
+						"x": {"y"},
+					},
+					SecurityDisabled: false,
 				})
 
 				It("should start the faas loop", func() {
@@ -143,7 +156,23 @@ var _ = Describe("Faas", func() {
 					By("Sending an InitRequest")
 					mockStream.EXPECT().Send(&pb.ClientMessage{
 						Content: &pb.ClientMessage_InitRequest{
-							InitRequest: &pb.InitRequest{},
+							InitRequest: &pb.InitRequest{
+								Worker: &pb.InitRequest_Api{
+									Api: &pb.ApiWorker{
+										Api:     "test",
+										Path:    "apples",
+										Methods: []string{"GET", "POST"},
+										Options: &pb.ApiWorkerOptions{
+											SecurityDisabled: false,
+											Security: map[string]*pb.ApiWorkerScopes{
+												"x": {
+													Scopes: []string{"y"},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					}).Return(nil)
 

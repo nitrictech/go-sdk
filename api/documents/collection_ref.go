@@ -15,30 +15,30 @@
 package documents
 
 import (
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
-// Collection
+// CollectionRef is a document collection resources, such as a collection/table in a document database.
 type CollectionRef interface {
 	Name() string
 	Doc(string) DocumentRef
 	Query() Query
 	Parent() DocumentRef
 	Collection(string) CollectionGroupRef
-	toWire() *v1.Collection
+	ToWire() *v1.Collection
 }
 
 type collectionRefImpl struct {
 	name           string
-	dc             v1.DocumentServiceClient
+	documentClient v1.DocumentServiceClient
 	parentDocument DocumentRef
 }
 
 // Query - Returns a Query builder to construct queries against this collection
 func (c *collectionRefImpl) Query() Query {
-	return newQuery(c, c.dc)
+	return newQuery(c, c.documentClient)
 }
 
 // Name - Returns the name of the collection
@@ -49,9 +49,9 @@ func (c *collectionRefImpl) Name() string {
 // Doc - Return a document reference for this collection
 func (c *collectionRefImpl) Doc(key string) DocumentRef {
 	return &documentRefImpl{
-		id:  key,
-		dc:  c.dc,
-		col: c,
+		id:             key,
+		documentClient: c.documentClient,
+		col:            c,
 	}
 }
 
@@ -63,14 +63,14 @@ func (c *collectionRefImpl) Parent() DocumentRef {
 // Collection - Creates a collection group reference from a collection
 func (c *collectionRefImpl) Collection(name string) CollectionGroupRef {
 	return &collectionGroupRefImpl{
-		parent: fromColRef(c, c.dc),
-		dc:     c.dc,
-		name:   name,
+		parent:         fromColRef(c, c.documentClient),
+		documentClient: c.documentClient,
+		name:           name,
 	}
 }
 
-// toWire - tranlates a Collection for on-wire transport
-func (c *collectionRefImpl) toWire() *v1.Collection {
+// ToWire - tranlates a Collection for on-wire transport
+func (c *collectionRefImpl) ToWire() *v1.Collection {
 	if c.parentDocument != nil {
 		return &v1.Collection{
 			Name:   c.name,
@@ -91,8 +91,8 @@ func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (Colle
 
 	if c.GetParent() == nil {
 		return &collectionRefImpl{
-			name: c.GetName(),
-			dc:   dc,
+			name:           c.GetName(),
+			documentClient: dc,
 		}, nil
 	} else {
 		pd, err := documentRefFromWireKey(dc, c.GetParent())
@@ -102,7 +102,7 @@ func collectionRefFromWire(dc v1.DocumentServiceClient, c *v1.Collection) (Colle
 
 		return &collectionRefImpl{
 			name:           c.GetName(),
-			dc:             dc,
+			documentClient: dc,
 			parentDocument: pd,
 		}, nil
 	}

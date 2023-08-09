@@ -16,6 +16,7 @@ package documents
 
 import (
 	"github.com/mitchellh/mapstructure"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 )
@@ -48,14 +49,14 @@ func (d *documentImpl) Content() map[string]interface{} {
 // Decode - Decodes the content of the document into the provided struct
 func (d *documentImpl) Decode(val interface{}, opts ...DecodeOption) error {
 	decoderConfig := mapstructure.DecoderConfig{
-		//DecodeHook:       nil,
+		// DecodeHook:       nil,
 		ErrorUnused: true, // Default behavior is to error when keys are missing from the output interface{}
-		//ZeroFields:       false,
-		//WeaklyTypedInput: false,
-		//Squash:           false,
-		//Metadata:         nil,
+		// ZeroFields:       false,
+		// WeaklyTypedInput: false,
+		// Squash:           false,
+		// Metadata:         nil,
 		Result: val,
-		//TagName:          "",
+		// TagName:          "",
 	}
 
 	// Apply additional options

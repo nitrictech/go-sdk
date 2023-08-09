@@ -17,51 +17,50 @@ package secrets
 import (
 	"context"
 
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
 	"github.com/nitrictech/go-sdk/api/errors"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
-// SecretRef - A reference to a secret
+// SecretRef is a reference to a cloud secret for secret storage.
 type SecretRef interface {
 	Name() string
-	Put([]byte) (SecretVersionRef, error)
+	Put(context.Context, []byte) (SecretVersionRef, error)
 	Version(string) SecretVersionRef
 	Latest() SecretVersionRef
 }
 
 type secretRefImpl struct {
-	name string
-	sc   v1.SecretServiceClient
+	name         string
+	secretClient v1.SecretServiceClient
 }
 
 func (s *secretRefImpl) Name() string {
 	return s.name
 }
 
-func (s *secretRefImpl) Put(sec []byte) (SecretVersionRef, error) {
-	r, err := s.sc.Put(context.TODO(), &v1.SecretPutRequest{
+func (s *secretRefImpl) Put(ctx context.Context, sec []byte) (SecretVersionRef, error) {
+	resp, err := s.secretClient.Put(ctx, &v1.SecretPutRequest{
 		Secret: &v1.Secret{
 			Name: s.name,
 		},
 		Value: sec,
 	})
-
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
 
 	return &secretVersionRefImpl{
-		sc:      s.sc,
-		version: r.GetSecretVersion().Version,
-		secret:  s,
+		secretClient: s.secretClient,
+		version:      resp.GetSecretVersion().Version,
+		secret:       s,
 	}, nil
 }
 
 func (s *secretRefImpl) Version(name string) SecretVersionRef {
 	return &secretVersionRefImpl{
-		secret:  s,
-		sc:      s.sc,
-		version: name,
+		secret:       s,
+		secretClient: s.secretClient,
+		version:      name,
 	}
 }
 

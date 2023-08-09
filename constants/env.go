@@ -51,7 +51,6 @@ func NitricDialTimeout() time.Duration {
 	tStr := GetEnvWithFallback(nitricServiceDialTimeoutEnvVarName, nitricServiceDialTimeoutDefault)
 
 	tInt, err := strconv.ParseInt(tStr, 10, 64)
-
 	if err != nil {
 		// fallback to the predefined default
 		tInt, _ = strconv.ParseInt(nitricServiceDialTimeoutDefault, 10, 64)

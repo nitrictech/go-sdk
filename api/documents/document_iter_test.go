@@ -16,20 +16,21 @@ package documents
 
 import (
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/structpb"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/protoutils"
 )
 
 var _ = Describe("DocumentIter", func() {
 	ctrl := gomock.NewController(GinkgoT())
 	mdc := mock_v1.NewMockDocumentServiceClient(ctrl)
 	Context("Next", func() {
-		pbstr, _ := structpb.NewStruct(map[string]interface{}{
+		pbstr, _ := protoutils.NewStruct(map[string]interface{}{
 			"test": "test",
 		})
 
@@ -48,8 +49,8 @@ var _ = Describe("DocumentIter", func() {
 			}, nil)
 
 			di := &documentIterImpl{
-				dc:  mdc,
-				str: strc,
+				documentClient:       mdc,
+				documentStreamClient: strc,
 			}
 
 			doc, err := di.Next()
@@ -70,17 +71,16 @@ var _ = Describe("DocumentIter", func() {
 			strc.EXPECT().Recv().Return(nil, status.Error(codes.Aborted, "mock-error"))
 
 			di := &documentIterImpl{
-				dc:  mdc,
-				str: strc,
+				documentClient:       mdc,
+				documentStreamClient: strc,
 			}
 
 			_, err := di.Next()
 
 			It("should pass through the error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Aborted: mock-error"))
+				Expect(err.Error()).To(Equal("Aborted: mock-error: \n rpc error: code = Aborted desc = mock-error"))
 			})
 		})
-
 	})
 })

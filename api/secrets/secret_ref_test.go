@@ -15,13 +15,15 @@
 package secrets
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("secretRefImpl", func() {
@@ -42,8 +44,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			sv := s.Version("test")
@@ -54,8 +56,8 @@ var _ = Describe("secretRefImpl", func() {
 				Expect(ok).To(BeTrue())
 			})
 
-			It("should share a secret client refernce with its parent secret", func() {
-				Expect(svi.sc).To(Equal(s.sc))
+			It("should share a secret client references with its parent secret", func() {
+				Expect(svi.secretClient).To(Equal(s.secretClient))
 			})
 
 			It("should have a back reference to it's parent secret", func() {
@@ -73,8 +75,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			sv := s.Latest()
@@ -85,8 +87,8 @@ var _ = Describe("secretRefImpl", func() {
 				Expect(ok).To(BeTrue())
 			})
 
-			It("should share a secret client refernce with its parent secret", func() {
-				Expect(svi.sc).To(Equal(s.sc))
+			It("should share a secret client references with its parent secret", func() {
+				Expect(svi.secretClient).To(Equal(s.secretClient))
 			})
 
 			It("should have a back reference to it's parent secret", func() {
@@ -104,8 +106,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			// NOTE: Using a single It here to correctly assert the number
@@ -128,7 +130,7 @@ var _ = Describe("secretRefImpl", func() {
 				}, nil).Times(1)
 
 				// Call the service
-				sv, err := s.Put([]byte("ssssshhhh... it's a secret"))
+				sv, err := s.Put(context.TODO(), []byte("ssssshhhh... it's a secret"))
 
 				By("not returning an error")
 				Expect(err).ToNot(HaveOccurred())
@@ -150,8 +152,8 @@ var _ = Describe("secretRefImpl", func() {
 			ctrl := gomock.NewController(GinkgoT())
 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
 			s := &secretRefImpl{
-				name: "test",
-				sc:   mc,
+				name:         "test",
+				secretClient: mc,
 			}
 
 			It("should pass through the error", func() {
@@ -163,7 +165,7 @@ var _ = Describe("secretRefImpl", func() {
 				).Return(nil, fmt.Errorf("mock-error")).Times(1)
 
 				// Call the service
-				sv, err := s.Put([]byte("ssssshhhh... it's a secret"))
+				sv, err := s.Put(context.TODO(), []byte("ssssshhhh... it's a secret"))
 
 				By("returning the error")
 				Expect(err).To(HaveOccurred())

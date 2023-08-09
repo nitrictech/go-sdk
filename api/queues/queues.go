@@ -15,11 +15,12 @@
 package queues
 
 import (
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
+	"google.golang.org/grpc"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	"google.golang.org/grpc"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 // Queues - Idiomatic interface for the nitric queue service
@@ -28,13 +29,13 @@ type Queues interface {
 }
 
 type queuesImpl struct {
-	c v1.QueueServiceClient
+	queueClient v1.QueueServiceClient
 }
 
 func (q *queuesImpl) Queue(name string) Queue {
 	return &queueImpl{
-		name: name,
-		c:    q.c,
+		name:        name,
+		queueClient: q.queueClient,
 	}
 }
 
@@ -44,7 +45,6 @@ func New() (Queues, error) {
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
-
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,
@@ -56,6 +56,6 @@ func New() (Queues, error) {
 	qClient := v1.NewQueueServiceClient(conn)
 
 	return &queuesImpl{
-		c: qClient,
+		queueClient: qClient,
 	}, nil
 }

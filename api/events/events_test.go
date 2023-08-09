@@ -15,14 +15,16 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/golang/mock/gomock"
-	v1 "github.com/nitrictech/apis/go/nitric/v1"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
 )
 
 var _ = Describe("Events", func() {
@@ -51,8 +53,8 @@ var _ = Describe("Events", func() {
 			mockTopic.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
 			evt := &eventsImpl{
-				ec: mockEvt,
-				tc: mockTopic,
+				eventClient: mockEvt,
+				topicClient: mockTopic,
 			}
 
 			It("Should pass through the error", func() {
@@ -75,8 +77,8 @@ var _ = Describe("Events", func() {
 			}, nil)
 
 			evt := &eventsImpl{
-				ec: mockEvt,
-				tc: mockTopic,
+				eventClient: mockEvt,
+				topicClient: mockTopic,
 			}
 
 			topics, _ := evt.Topics()
@@ -96,7 +98,7 @@ var _ = Describe("Events", func() {
 			})
 
 			It("should have the same EventServiceClient as the base client", func() {
-				Expect(topic.ec).To(Equal(mockEvt))
+				Expect(topic.eventClient).To(Equal(mockEvt))
 			})
 		})
 	})
@@ -107,8 +109,8 @@ var _ = Describe("Events", func() {
 			mockTopic := mock_v1.NewMockTopicServiceClient(ctrl)
 
 			evt := &eventsImpl{
-				ec: mockEvt,
-				tc: mockTopic,
+				eventClient: mockEvt,
+				topicClient: mockTopic,
 			}
 
 			topic := evt.Topic("test-topic")
@@ -124,7 +126,7 @@ var _ = Describe("Events", func() {
 			})
 
 			It("should share the same event client as the root eventing client", func() {
-				Expect(topicI.ec).To(Equal(mockEvt))
+				Expect(topicI.eventClient).To(Equal(mockEvt))
 			})
 		})
 	})
@@ -139,11 +141,11 @@ var _ = Describe("Events", func() {
 			}, nil)
 
 			evt := &eventsImpl{
-				ec: mockEvt,
-				tc: mockTopic,
+				eventClient: mockEvt,
+				topicClient: mockTopic,
 			}
 
-			returnEvt, err := evt.Topic("test-topic").Publish(&Event{
+			returnEvt, err := evt.Topic("test-topic").Publish(context.TODO(), &Event{
 				Payload: map[string]interface{}{
 					"test": "test",
 				},
@@ -166,11 +168,11 @@ var _ = Describe("Events", func() {
 			mockEvt.EXPECT().Publish(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
 
 			evt := &eventsImpl{
-				ec: mockEvt,
-				tc: mockTopic,
+				eventClient: mockEvt,
+				topicClient: mockTopic,
 			}
 
-			_, err := evt.Topic("test-topic").Publish(&Event{
+			_, err := evt.Topic("test-topic").Publish(context.TODO(), &Event{
 				Payload: map[string]interface{}{
 					"test": "test",
 				},
