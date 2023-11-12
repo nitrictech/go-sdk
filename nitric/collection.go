@@ -28,7 +28,7 @@ type collection struct {
 }
 
 type Collection interface {
-	With(permissions ...CollectionPermission) (documents.CollectionRef, error)
+	With(CollectionPermission, ...CollectionPermission) (documents.CollectionRef, error)
 }
 
 type CollectionPermission string
@@ -49,8 +49,10 @@ func NewCollection(name string) Collection {
 	}
 }
 
-func (c *collection) With(permissions ...CollectionPermission) (documents.CollectionRef, error) {
-	return defaultManager.newCollection(c.name, permissions...)
+func (c *collection) With(permission CollectionPermission, permissions ...CollectionPermission) (documents.CollectionRef, error) {
+	allPerms := append([]CollectionPermission{permission}, permissions...)
+
+	return defaultManager.newCollection(c.name, allPerms...)
 }
 
 func (m *manager) newCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error) {

@@ -36,7 +36,7 @@ type Topic interface {
 }
 
 type SubscribableTopic interface {
-	With(permissions ...TopicPermission) (Topic, error)
+	With(TopicPermission, ...TopicPermission) (Topic, error)
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
 	Subscribe(...faas.EventMiddleware)
@@ -61,8 +61,10 @@ func NewTopic(name string) SubscribableTopic {
 	}
 }
 
-func (t *subscribableTopic) With(permissions ...TopicPermission) (Topic, error) {
-	return defaultManager.newTopic(t.name, permissions...)
+func (t *subscribableTopic) With(permission TopicPermission, permissions ...TopicPermission) (Topic, error) {
+	allPerms := append([]TopicPermission{permission}, permissions...)
+
+	return defaultManager.newTopic(t.name, allPerms...)
 }
 
 func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, error) {

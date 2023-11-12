@@ -32,7 +32,7 @@ const (
 var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceiving}
 
 type Queue interface {
-	With(...QueuePermission) (queues.Queue, error)
+	With(QueuePermission, ...QueuePermission) (queues.Queue, error)
 }
 
 type queue struct {
@@ -48,8 +48,10 @@ func NewQueue(name string) *queue {
 }
 
 // NewQueue registers this queue as a required resource for the calling function/container.
-func (q *queue) With(permissions ...QueuePermission) (queues.Queue, error) {
-	return defaultManager.newQueue(q.name, permissions...)
+func (q *queue) With(permission QueuePermission, permissions ...QueuePermission) (queues.Queue, error) {
+	allPerms := append([]QueuePermission{permission}, permissions...)
+
+	return defaultManager.newQueue(q.name, allPerms...)
 }
 
 func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {

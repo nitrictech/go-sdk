@@ -31,7 +31,7 @@ type bucket struct {
 }
 
 type Bucket interface {
-	With(permissions ...BucketPermission) (storage.Bucket, error)
+	With(BucketPermission, ...BucketPermission) (storage.Bucket, error)
 	On(faas.NotificationType, string, ...faas.BucketNotificationMiddleware)
 }
 
@@ -52,8 +52,10 @@ func NewBucket(name string) Bucket {
 	}
 }
 
-func (b *bucket) With(permissions ...BucketPermission) (storage.Bucket, error) {
-	return defaultManager.newBucket(b.name, permissions...)
+func (b *bucket) With(permission BucketPermission, permissions ...BucketPermission) (storage.Bucket, error) {
+	allPerms := append([]BucketPermission{permission}, permissions...)
+
+	return defaultManager.newBucket(b.name, allPerms...)
 }
 
 func (m *manager) newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
