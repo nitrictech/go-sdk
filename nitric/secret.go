@@ -45,8 +45,10 @@ func NewSecret(name string) *secret {
 	}
 }
 
-func (s *secret) With(permissions ...SecretPermission) (secrets.SecretRef, error) {
-	return defaultManager.newSecret(s.name, permissions...)
+func (s *secret) With(permission SecretPermission, permissions ...SecretPermission) (secrets.SecretRef, error) {
+	allPerms := append([]SecretPermission{permission}, permissions...)
+
+	return defaultManager.newSecret(s.name, allPerms...)
 }
 
 func (m *manager) newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
