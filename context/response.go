@@ -12,10 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package events
+package context
 
-type Event struct {
-	Payload     map[string]interface{} `json:"payload"`
-	PayloadType string                 `json:"payloadType"`
-	ID          string                 `json:"id"`
+type HttpResponse struct {
+	Status  int
+	Headers map[string][]string
+	Body    []byte
+}
+
+type MessageResponse struct {
+	Success bool
+}
+
+type IntervalResponse struct {
+	Success bool
+}
+
+type BlobEventResponse struct {
+	Success bool
+}
+
+type FileEventResponse struct {
+	Success bool
+}
+
+type WebsocketResponse struct {
+	Success bool
 }

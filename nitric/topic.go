@@ -20,7 +20,8 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/events"
 	"github.com/nitrictech/go-sdk/faas"
-	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 // TopicPermission defines the available permissions on a topic
@@ -73,15 +74,15 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 		return nil, err
 	}
 
-	res := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Topic,
+	res := &v1.Resource{
+		Type: v1.ResourceType_Topic,
 		Name: name,
 	}
 
-	dr := &nitricv1.ResourceDeclareRequest{
+	dr := &v1.ResourceDeclareRequest{
 		Resource: res,
-		Config: &nitricv1.ResourceDeclareRequest_Topic{
-			Topic: &nitricv1.TopicResource{},
+		Config: &v1.ResourceDeclareRequest_Topic{
+			Topic: &v1.TopicResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -89,11 +90,11 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 		return nil, err
 	}
 
-	actions := []nitricv1.Action{}
+	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
 		case TopicPublishing:
-			actions = append(actions, nitricv1.Action_TopicDetail, nitricv1.Action_TopicEventPublish, nitricv1.Action_TopicList)
+			actions = append(actions, v1.Action_TopicDetail, v1.Action_TopicEventPublish, v1.Action_TopicList)
 		default:
 			return nil, fmt.Errorf("TopicPermission %s unknown", perm)
 		}

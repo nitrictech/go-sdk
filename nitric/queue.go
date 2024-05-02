@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/queues"
-	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 type QueuePermission string
@@ -60,15 +60,15 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	colRes := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Queue,
+	colRes := &v1.Resource{
+		Type: v1.ResourceType_Queue,
 		Name: name,
 	}
 
-	dr := &nitricv1.ResourceDeclareRequest{
+	dr := &v1.ResourceDeclareRequest{
 		Resource: colRes,
-		Config: &nitricv1.ResourceDeclareRequest_Queue{
-			Queue: &nitricv1.QueueResource{},
+		Config: &v1.ResourceDeclareRequest_Queue{
+			Queue: &v1.QueueResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -76,19 +76,19 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	actions := []nitricv1.Action{}
+	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
 		case QueueReceiving:
-			actions = append(actions, nitricv1.Action_QueueReceive)
+			actions = append(actions, v1.Action_QueueReceive)
 		case QueueSending:
-			actions = append(actions, nitricv1.Action_QueueSend)
+			actions = append(actions, v1.Action_QueueSend)
 		default:
 			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
 		}
 	}
 	if len(actions) > 0 {
-		actions = append(actions, nitricv1.Action_QueueDetail, nitricv1.Action_QueueList)
+		actions = append(actions, v1.Action_QueueDetail, v1.Action_QueueList)
 	}
 
 	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))

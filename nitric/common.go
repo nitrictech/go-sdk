@@ -15,7 +15,7 @@
 package nitric
 
 import (
-	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	nitricv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 func functionResourceDeclareRequest(subject *nitricv1.Resource, actions []nitricv1.Action) *nitricv1.ResourceDeclareRequest {

@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/secrets"
-	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 type SecretPermission string
@@ -57,15 +57,15 @@ func (m *manager) newSecret(name string, permissions ...SecretPermission) (secre
 		return nil, err
 	}
 
-	colRes := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Secret,
+	colRes := &v1.Resource{
+		Type: v1.ResourceType_Secret,
 		Name: name,
 	}
 
-	dr := &nitricv1.ResourceDeclareRequest{
+	dr := &v1.ResourceDeclareRequest{
 		Resource: colRes,
-		Config: &nitricv1.ResourceDeclareRequest_Secret{
-			Secret: &nitricv1.SecretResource{},
+		Config: &v1.ResourceDeclareRequest_Secret{
+			Secret: &v1.SecretResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -73,13 +73,13 @@ func (m *manager) newSecret(name string, permissions ...SecretPermission) (secre
 		return nil, err
 	}
 
-	actions := []nitricv1.Action{}
+	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
 		case SecretAccessing:
-			actions = append(actions, nitricv1.Action_SecretAccess)
+			actions = append(actions, v1.Action_SecretAccess)
 		case SecretPutting:
-			actions = append(actions, nitricv1.Action_SecretPut)
+			actions = append(actions, v1.Action_SecretPut)
 		default:
 			return nil, fmt.Errorf("secretPermission %s unknown", perm)
 		}

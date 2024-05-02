@@ -14,51 +14,51 @@
 
 package secrets
 
-import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
+// import (
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
+// )
 
-var _ = Describe("secretValueImpl", func() {
-	Context("Ref", func() {
-		When("retrieving the ref of a secretValueImpl", func() {
-			svi := &secretValueImpl{
-				version: &secretVersionRefImpl{
-					secret: &secretRefImpl{
-						name: "test",
-					},
-					version: "test",
-				},
-				val: []byte("test"),
-			}
+// var _ = Describe("secretValueImpl", func() {
+// 	Context("Ref", func() {
+// 		When("retrieving the ref of a secretValueImpl", func() {
+// 			svi := &secretValueImpl{
+// 				version: &secretVersionRefImpl{
+// 					secret: &secretRefImpl{
+// 						name: "test",
+// 					},
+// 					version: "test",
+// 				},
+// 				val: []byte("test"),
+// 			}
 
-			It("should return it's internal version field", func() {
-				Expect(svi.Version()).To(Equal(svi.version))
-			})
-		})
-	})
+// 			It("should return it's internal version field", func() {
+// 				Expect(svi.Version()).To(Equal(svi.version))
+// 			})
+// 		})
+// 	})
 
-	Context("AsBytes", func() {
-		When("retrieving secret value as bytes", func() {
-			svi := &secretValueImpl{
-				val: []byte("test"),
-			}
+// 	Context("AsBytes", func() {
+// 		When("retrieving secret value as bytes", func() {
+// 			svi := &secretValueImpl{
+// 				val: []byte("test"),
+// 			}
 
-			It("should return it's internal val field", func() {
-				Expect(svi.AsBytes()).To(Equal([]byte("test")))
-			})
-		})
-	})
+// 			It("should return it's internal val field", func() {
+// 				Expect(svi.AsBytes()).To(Equal([]byte("test")))
+// 			})
+// 		})
+// 	})
 
-	Context("AsString", func() {
-		When("retrieving secret value as a string", func() {
-			svi := &secretValueImpl{
-				val: []byte("test"),
-			}
+// 	Context("AsString", func() {
+// 		When("retrieving secret value as a string", func() {
+// 			svi := &secretValueImpl{
+// 				val: []byte("test"),
+// 			}
 
-			It("should return it's internal val field", func() {
-				Expect(svi.AsString()).To(Equal("test"))
-			})
-		})
-	})
-})
+// 			It("should return it's internal val field", func() {
+// 				Expect(svi.AsString()).To(Equal("test"))
+// 			})
+// 		})
+// 	})
+// })

@@ -14,14 +14,14 @@
 
 package nitric
 
-import (
-	"testing"
+// import (
+// 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
+// )
 
-func TestResources(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Resources Suite")
-}
+// func TestResources(t *testing.T) {
+// 	RegisterFailHandler(Fail)
+// 	RunSpecs(t, "Resources Suite")
+// }

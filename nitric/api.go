@@ -20,8 +20,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/faas"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 )
 
 // Route providers convenience functions to register a handler in a single method.

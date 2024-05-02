@@ -12,50 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package faas
+package context
 
 import (
-	"context"
-
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/go-sdk/api/storage"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 )
 
-type DataRequest interface {
-	Data() []byte
-	MimeType() string
-	Context() context.Context
-}
-
-type dataRequestImpl struct {
-	data         []byte
-	mimeType     string
-	traceContext map[string]string
-}
-
-func (d *dataRequestImpl) Data() []byte {
-	return d.data
-}
-
-func (d *dataRequestImpl) MimeType() string {
-	return d.mimeType
-}
-
-func (d *dataRequestImpl) Context() context.Context {
-	phc := propagation.HeaderCarrier{}
-
-	for k, v := range d.traceContext {
-		phc.Set(k, v)
-	}
-
-	return otel.GetTextMapPropagator().Extract(context.Background(), phc)
-}
+// Http
 
 type HttpRequest interface {
-	DataRequest
-	Context() context.Context
 	Method() string
 	Path() string
 	Query() map[string][]string
@@ -64,7 +30,6 @@ type HttpRequest interface {
 }
 
 type httpRequestImpl struct {
-	dataRequestImpl
 	method     string
 	path       string
 	query      map[string][]string
@@ -92,58 +57,111 @@ func (h *httpRequestImpl) PathParams() map[string]string {
 	return h.pathParams
 }
 
-type EventRequest interface {
-	DataRequest
-	Topic() string
+// Message
+
+type MessageRequest interface {
+	TopicName() string
 }
 
-type eventRequestImpl struct {
-	dataRequestImpl
-	topic string
+type messageRequestImpl struct {
+	topicName string
 }
 
-func (e *eventRequestImpl) Topic() string {
-	return e.topic
+func (m *messageRequestImpl) TopicName() string {
+	return m.topicName
 }
 
-type BucketNotificationRequest interface {
+// Interval
+
+type IntervalRequest interface {
+	ScheduleName() string
+}
+
+type intervalRequestImpl struct {
+	scheduleName string
+}
+
+func (i *intervalRequestImpl) ScheduleName() string {
+	return i.scheduleName
+}
+
+// Blob Event
+
+type BlobEventType string
+
+var BlobEventTypes = []BlobEventType{WriteNotification, DeleteNotification}
+
+const (
+	WriteNotification  BlobEventType = "write"
+	DeleteNotification BlobEventType = "delete"
+)
+
+type BlobEventRequest interface {
 	Key() string
-	NotificationType() NotificationType
+	NotificationType() BlobEventType
 }
 
-type bucketNotificationRequestImpl struct {
+type blobEventRequestImpl struct {
 	key              string
-	notificationType NotificationType
+	notificationType BlobEventType
 }
 
-func (b *bucketNotificationRequestImpl) Key() string {
+func (b *blobEventRequestImpl) Key() string {
 	return b.key
 }
 
-func (b *bucketNotificationRequestImpl) NotificationType() NotificationType {
+func (b *blobEventRequestImpl) NotificationType() BlobEventType {
 	return b.notificationType
 }
 
-type WebsocketRequest interface {
-	DataRequest
+// File Event
 
-	Socket() string
+type FileEventRequest interface {
+	Bucket() *storage.Bucket
+	NotificationType() BlobEventType
+}
+
+type fileEventRequestImpl struct {
+	bucket           Bucket
+	notificationType BlobEventType
+}
+
+func (b *blobEventRequestImpl) Bucket() string {
+	return b.bucket
+}
+
+func (b *blobEventRequestImpl) NotificationType() BlobEventType {
+	return b.notificationType
+}
+
+// Websocket
+
+type WebsocketEventType string
+
+var WebsocketEventTypes = []WebsocketEventType{WebsocketConnect, WebsocketDisconnect, WebsocketMessage}
+
+const (
+	WebsocketConnect    WebsocketEventType = "connect"
+	WebsocketDisconnect WebsocketEventType = "disconnect"
+	WebsocketMessage    WebsocketEventType = "message"
+)
+
+type WebsocketRequest interface {
+	SocketName() string
 	EventType() WebsocketEventType
 	ConnectionID() string
 	QueryParams() map[string][]string
 }
 
 type websocketRequestImpl struct {
-	dataRequestImpl
-
-	socket       string
+	socketName   string
 	eventType    WebsocketEventType
 	connectionId string
 	queryParams  map[string]*v1.QueryValue
 }
 
-func (w *websocketRequestImpl) Socket() string {
-	return w.socket
+func (w *websocketRequestImpl) SocketName() string {
+	return w.socketName
 }
 
 func (w *websocketRequestImpl) EventType() WebsocketEventType {

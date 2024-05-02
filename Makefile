@@ -47,7 +47,6 @@ generate:
 	go run github.com/golang/mock/mockgen github.com/nitrictech/nitric/core/pkg/api/nitric/v1 DocumentServiceServer,EventServiceServer,TopicServiceServer,QueueServiceServer,StorageServiceServer,FaasServiceServer,FaasService_TriggerStreamServer,DocumentService_QueryStreamServer,SecretServiceServer > mocks/servers.go
 	go run github.com/golang/mock/mockgen -package mock_v1 google.golang.org/grpc ClientConnInterface > mocks/grpc_clientconn.go
 	go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/storage Storage,Bucket > mocks/mockapi/storage.go
-	go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/documents Documents,CollectionRef > mocks/mockapi/documents.go
 	go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/queues Queues,Queue > mocks/mockapi/queues.go
 	go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/events Events,Topic > mocks/mockapi/events.go
 	go run github.com/golang/mock/mockgen -package mockapi github.com/nitrictech/go-sdk/api/secrets Secrets,SecretRef > mocks/mockapi/secrets.go

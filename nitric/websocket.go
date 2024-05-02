@@ -24,8 +24,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
-	websocketv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/websocket/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
 type Websocket interface {
@@ -40,7 +39,7 @@ type websocket struct {
 
 	name    string
 	manager Manager
-	client  websocketv1.WebsocketServiceClient
+	client  v1.WebsocketHandlerClient
 }
 
 // NewCollection register this collection as a required resource for the calling function/container.
@@ -49,7 +48,10 @@ func NewWebsocket(name string) (Websocket, error) {
 }
 
 func (m *manager) newWebsocket(name string) (Websocket, error) {
-	conn, err := grpc.Dial(
+	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
+
+	conn, err := grpc.DialContext(
+		ctx,
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
@@ -61,7 +63,7 @@ func (m *manager) newWebsocket(name string) (Websocket, error) {
 		)
 	}
 
-	wClient := websocketv1.NewWebsocketServiceClient(conn)
+	wClient := v1.NewWebsocketServiceClient(conn)
 
 	rsc, err := m.resourceServiceClient()
 	if err != nil {

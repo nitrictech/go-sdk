@@ -20,11 +20,12 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 	"github.com/nitrictech/protoutils"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-type PublishOption = func(*v1.EventPublishRequest)
+type PublishOption = func(*v1.TopicPublishRequest)
 
 // Topic for pub/sub async messaging.
 type Topic interface {
@@ -32,12 +33,12 @@ type Topic interface {
 	Name() string
 
 	// Publish will publish the provided events on the topic.
-	Publish(context.Context, *Event, ...PublishOption) (*Event, error)
+	Publish(context.Context, map[string]interface{}, ...PublishOption) error
 }
 
 type topicImpl struct {
 	name        string
-	eventClient v1.EventServiceClient
+	topicClient v1.TopicsClient
 }
 
 func (s *topicImpl) Name() string {
@@ -45,25 +46,25 @@ func (s *topicImpl) Name() string {
 }
 
 // WithDelay - Delay event publishing by the given duration
-func WithDelay(duration time.Duration) func(*v1.EventPublishRequest) {
-	return func(epr *v1.EventPublishRequest) {
-		epr.Delay = uint32(duration.Seconds())
+func WithDelay(duration time.Duration) func(*v1.TopicPublishRequest) {
+	return func(epr *v1.TopicPublishRequest) {
+		epr.Delay = durationpb.New(duration)
 	}
 }
 
-func (s *topicImpl) Publish(ctx context.Context, evt *Event, opts ...PublishOption) (*Event, error) {
+func (s *topicImpl) Publish(ctx context.Context, message map[string]interface{}, opts ...PublishOption) error {
 	// Convert payload to Protobuf Struct
-	payloadStruct, err := protoutils.NewStruct(evt.Payload)
+	payloadStruct, err := protoutils.NewStruct(message)
 	if err != nil {
-		return nil, errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
+		return errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
 	}
 
-	event := &v1.EventPublishRequest{
-		Topic: s.name,
-		Event: &v1.NitricEvent{
-			Id:          evt.ID,
-			Payload:     payloadStruct,
-			PayloadType: evt.PayloadType,
+	event := &v1.TopicPublishRequest{
+		TopicName: s.name,
+		Message: &v1.TopicMessage{
+			Content: &v1.TopicMessage_StructPayload{
+				StructPayload: payloadStruct,
+			},
 		},
 	}
 
@@ -72,15 +73,10 @@ func (s *topicImpl) Publish(ctx context.Context, evt *Event, opts ...PublishOpti
 		opt(event)
 	}
 
-	r, err := s.eventClient.Publish(ctx, event)
+	_, err = s.topicClient.Publish(ctx, event)
 	if err != nil {
-		return nil, errors.FromGrpcError(err)
+		return errors.FromGrpcError(err)
 	}
 
-	// Return a reference to a new event with a populated ID
-	return &Event{
-		ID:          r.GetId(),
-		Payload:     evt.Payload,
-		PayloadType: evt.PayloadType,
-	}, nil
+	return nil
 }

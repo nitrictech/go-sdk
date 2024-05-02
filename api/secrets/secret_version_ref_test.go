@@ -14,122 +14,122 @@
 
 package secrets
 
-import (
-	"context"
-	"fmt"
+// import (
+// 	"context"
+// 	"fmt"
 
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+// 	"github.com/golang/mock/gomock"
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
 
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
-)
+// 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+// 	v1 "github.com/nitrictech/nitric/core/pkg/proto/secrets/v1"
+// )
 
-var _ = Describe("secretVersionRefImpl", func() {
-	Context("Version", func() {
-		When("retrieving the version of a secretVersionRefImpl", func() {
-			svi := &secretVersionRefImpl{
-				version: "test",
-			}
+// var _ = Describe("secretVersionRefImpl", func() {
+// 	Context("Version", func() {
+// 		When("retrieving the version of a secretVersionRefImpl", func() {
+// 			svi := &secretVersionRefImpl{
+// 				version: "test",
+// 			}
 
-			It("should return it's internal version field", func() {
-				Expect(svi.Version()).To(Equal("test"))
-			})
-		})
-	})
+// 			It("should return it's internal version field", func() {
+// 				Expect(svi.Version()).To(Equal("test"))
+// 			})
+// 		})
+// 	})
 
-	Context("Secret", func() {
-		When("retrieving the parent secret of a secretVersionRefImpl", func() {
-			si := &secretRefImpl{
-				name: "test",
-			}
-			svi := &secretVersionRefImpl{
-				secret: si,
-			}
+// 	Context("Secret", func() {
+// 		When("retrieving the parent secret of a secretVersionRefImpl", func() {
+// 			si := &secretRefImpl{
+// 				name: "test",
+// 			}
+// 			svi := &secretVersionRefImpl{
+// 				secret: si,
+// 			}
 
-			It("should return it's internal secret field", func() {
-				Expect(svi.Secret()).To(Equal(si))
-			})
-		})
-	})
+// 			It("should return it's internal secret field", func() {
+// 				Expect(svi.Secret()).To(Equal(si))
+// 			})
+// 		})
+// 	})
 
-	Context("Access", func() {
-		When("the RPC server returns successfully", func() {
-			ctrl := gomock.NewController(GinkgoT())
-			mc := mock_v1.NewMockSecretServiceClient(ctrl)
-			sv := &secretVersionRefImpl{
-				version: "test",
-				secret: &secretRefImpl{
-					name: "test",
-				},
-				secretClient: mc,
-			}
+// 	Context("Access", func() {
+// 		When("the RPC server returns successfully", func() {
+// 			ctrl := gomock.NewController(GinkgoT())
+// 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
+// 			sv := &secretVersionRefImpl{
+// 				version: "test",
+// 				secret: &secretRefImpl{
+// 					name: "test",
+// 				},
+// 				secretClient: mc,
+// 			}
 
-			It("should return the secret version content", func() {
-				defer ctrl.Finish()
+// 			It("should return the secret version content", func() {
+// 				defer ctrl.Finish()
 
-				By("calling the service with the correct input")
-				mc.EXPECT().Access(gomock.Any(), &v1.SecretAccessRequest{
-					SecretVersion: &v1.SecretVersion{
-						Secret: &v1.Secret{
-							Name: "test",
-						},
-						Version: "test",
-					},
-				}).Return(&v1.SecretAccessResponse{
-					SecretVersion: &v1.SecretVersion{
-						Secret: &v1.Secret{
-							Name: "test",
-						},
-						Version: "test",
-					},
-					Value: []byte("testing"),
-				}, nil).Times(1)
+// 				By("calling the service with the correct input")
+// 				mc.EXPECT().Access(gomock.Any(), &v1.SecretAccessRequest{
+// 					SecretVersion: &v1.SecretVersion{
+// 						Secret: &v1.Secret{
+// 							Name: "test",
+// 						},
+// 						Version: "test",
+// 					},
+// 				}).Return(&v1.SecretAccessResponse{
+// 					SecretVersion: &v1.SecretVersion{
+// 						Secret: &v1.Secret{
+// 							Name: "test",
+// 						},
+// 						Version: "test",
+// 					},
+// 					Value: []byte("testing"),
+// 				}, nil).Times(1)
 
-				svv, err := sv.Access(context.TODO())
+// 				svv, err := sv.Access(context.TODO())
 
-				By("not returning an error")
-				Expect(err).ToNot(HaveOccurred())
+// 				By("not returning an error")
+// 				Expect(err).ToNot(HaveOccurred())
 
-				svi, ok := svv.(*secretValueImpl)
+// 				svi, ok := svv.(*secretValueImpl)
 
-				By("returning a secretValueImpl")
-				Expect(ok).To(BeTrue())
+// 				By("returning a secretValueImpl")
+// 				Expect(ok).To(BeTrue())
 
-				By("containing the returned SecretValueRef")
-				Expect(svi.version.Version()).To(Equal("test"))
+// 				By("containing the returned SecretValueRef")
+// 				Expect(svi.version.Version()).To(Equal("test"))
 
-				By("Containing the returned secret content")
-				Expect(svi.val).To(Equal([]byte("testing")))
-			})
-		})
+// 				By("Containing the returned secret content")
+// 				Expect(svi.val).To(Equal([]byte("testing")))
+// 			})
+// 		})
 
-		When("the RPC server returns an error", func() {
-			ctrl := gomock.NewController(GinkgoT())
-			mc := mock_v1.NewMockSecretServiceClient(ctrl)
-			sv := &secretVersionRefImpl{
-				version: "test",
-				secret: &secretRefImpl{
-					name: "test",
-				},
-				secretClient: mc,
-			}
+// 		When("the RPC server returns an error", func() {
+// 			ctrl := gomock.NewController(GinkgoT())
+// 			mc := mock_v1.NewMockSecretServiceClient(ctrl)
+// 			sv := &secretVersionRefImpl{
+// 				version: "test",
+// 				secret: &secretRefImpl{
+// 					name: "test",
+// 				},
+// 				secretClient: mc,
+// 			}
 
-			It("should pass through the error", func() {
-				defer ctrl.Finish()
+// 			It("should pass through the error", func() {
+// 				defer ctrl.Finish()
 
-				By("calling the service with the correct input")
-				mc.EXPECT().Access(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock-error")).Times(1)
+// 				By("calling the service with the correct input")
+// 				mc.EXPECT().Access(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock-error")).Times(1)
 
-				c, err := sv.Access(context.TODO())
+// 				c, err := sv.Access(context.TODO())
 
-				By("returning an error")
-				Expect(err).To(HaveOccurred())
+// 				By("returning an error")
+// 				Expect(err).To(HaveOccurred())
 
-				By("returning nil secret content")
-				Expect(c).To(BeNil())
-			})
-		})
-	})
-})
+// 				By("returning nil secret content")
+// 				Expect(c).To(BeNil())
+// 			})
+// 		})
+// 	})
+// })

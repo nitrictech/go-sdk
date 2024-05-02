@@ -17,18 +17,14 @@ package nitric
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strings"
 	"sync"
 
 	multierror "github.com/missionMeteora/toolkit/errors"
-	"go.opentelemetry.io/otel"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
 
-	"github.com/nitrictech/go-sdk/api/documents"
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/events"
 	"github.com/nitrictech/go-sdk/api/queues"
@@ -36,7 +32,7 @@ import (
 	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/faas"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 type Starter interface {
@@ -53,7 +49,6 @@ type Manager interface {
 
 	newApi(name string, opts ...ApiOption) (Api, error)
 	newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
-	newCollection(name string, permissions ...CollectionPermission) (documents.CollectionRef, error)
 	newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error)
 	newQueue(name string, permissions ...QueuePermission) (queues.Queue, error)
 	newSchedule(name string) Schedule
@@ -69,7 +64,6 @@ type manager struct {
 	rsc      v1.ResourceServiceClient
 	evts     events.Events
 	storage  storage.Storage
-	docs     documents.Documents
 	secrets  secrets.Secrets
 	queues   queues.Queues
 	builders map[string]faas.HandlerBuilder
@@ -84,17 +78,6 @@ var (
 // Note: this is not required if you are using
 // resources.NewApi() and the like. These use a default manager instance.
 func New() Manager {
-	traceInit.Do(func() {
-		if os.Getenv("OTELCOL_BIN") != "" {
-			tp, err := newTracerProvider(context.TODO())
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				otel.SetTracerProvider(tp)
-			}
-		}
-	})
-
 	return &manager{
 		workers:  map[string]Starter{},
 		builders: map[string]faas.HandlerBuilder{},
@@ -119,7 +102,13 @@ func (m *manager) resourceServiceClient() (v1.ResourceServiceClient, error) {
 	defer m.connMutex.Unlock()
 
 	if m.conn == nil {
-		conn, err := grpc.Dial(constants.NitricAddress(), constants.DefaultOptions()...)
+		ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
+
+		conn, err := grpc.DialContext(
+			ctx,
+			constants.NitricAddress(),
+			constants.DefaultOptions()...,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -157,12 +146,6 @@ func (m *manager) Run() error {
 	}
 
 	wg.Wait()
-
-	tp, ok := otel.GetTracerProvider().(*sdktrace.TracerProvider)
-	if ok {
-		_ = tp.ForceFlush(context.TODO())
-		_ = tp.Shutdown(context.TODO())
-	}
 
 	return errList.Err()
 }

@@ -12,36 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package faas
+package context
 
 type (
-	WebsocketHandler    = func(*WebsocketContext) (*WebsocketContext, error)
-	WebsocketMiddleware = func(*WebsocketContext, WebsocketHandler) (*WebsocketContext, error)
+	FileEventHandler    = func(*FileEventContext) (*FileEventContext, error)
+	FileEventMiddleware = func(*FileEventContext, FileEventHandler) (*FileEventContext, error)
 )
 
-func websocketDummy(ctx *WebsocketContext) (*WebsocketContext, error) {
+func fileEventDummy(ctx *FileEventContext) (*FileEventContext, error) {
 	return ctx, nil
 }
 
-type chainedWebsocketMiddleware struct {
-	fun      WebsocketMiddleware
-	nextFunc WebsocketHandler
+type chainedFileEventMiddleware struct {
+	fun      FileEventMiddleware
+	nextFunc FileEventHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedWebsocketMiddleware) invoke(ctx *WebsocketContext) (*WebsocketContext, error) {
+func (c *chainedFileEventMiddleware) invoke(ctx *FileEventContext) (*FileEventContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = websocketDummy
+		c.nextFunc = fileEventDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type websocketMiddlewareChain struct {
-	chain []*chainedWebsocketMiddleware
+type fileEventMiddlewareChain struct {
+	chain []*chainedFileEventMiddleware
 }
 
-func (h *websocketMiddlewareChain) invoke(ctx *WebsocketContext, next WebsocketHandler) (*WebsocketContext, error) {
+func (h *fileEventMiddlewareChain) invoke(ctx *FileEventContext, next FileEventHandler) (*FileEventContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
@@ -49,14 +49,14 @@ func (h *websocketMiddlewareChain) invoke(ctx *WebsocketContext, next WebsocketH
 }
 
 // ComposeEventMiddleware - Composes an array of middleware into a single middleware
-func ComposeWebsocketMiddleware(funcs ...WebsocketMiddleware) WebsocketMiddleware {
-	mwareChain := &websocketMiddlewareChain{
-		chain: make([]*chainedWebsocketMiddleware, len(funcs)),
+func ComposeFileEventMiddleware(funcs ...FileEventMiddleware) FileEventMiddleware {
+	mwareChain := &fileEventMiddlewareChain{
+		chain: make([]*chainedFileEventMiddleware, len(funcs)),
 	}
 
-	var nextFunc WebsocketHandler = nil
+	var nextFunc FileEventHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedWebsocketMiddleware{
+		cm := &chainedFileEventMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}

@@ -17,7 +17,7 @@ package storage
 import (
 	"context"
 
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 // Cloud storage bucket resource for large file storage.
@@ -31,7 +31,7 @@ type Bucket interface {
 }
 
 type bucketImpl struct {
-	storageClient v1.StorageServiceClient
+	storageClient v1.StorageClient
 	name          string
 }
 
@@ -44,7 +44,7 @@ func (b *bucketImpl) File(key string) File {
 }
 
 func (b *bucketImpl) Files(ctx context.Context) ([]File, error) {
-	resp, err := b.storageClient.ListFiles(ctx, &v1.StorageListFilesRequest{
+	resp, err := b.storageClient.ListBlobs(ctx, &v1.StorageListBlobsRequest{
 		BucketName: b.name,
 	})
 	if err != nil {
@@ -53,7 +53,7 @@ func (b *bucketImpl) Files(ctx context.Context) ([]File, error) {
 
 	fileRefs := make([]File, 0)
 
-	for _, f := range resp.Files {
+	for _, f := range resp.Blobs {
 		fileRefs = append(fileRefs, &fileImpl{
 			storageClient: b.storageClient,
 			bucket:        b.name,

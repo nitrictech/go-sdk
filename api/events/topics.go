@@ -22,48 +22,34 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
-// Events
-type Events interface {
+// Topics
+type Topics interface {
 	// Topic - Retrieve a Topic reference
 	Topic(name string) Topic
-	// Topics - Retrievs a list of available Topic references
-	Topics() ([]Topic, error)
 }
 
-type eventsImpl struct {
-	eventClient v1.EventServiceClient
-	topicClient v1.TopicServiceClient
+type topicsImpl struct {
+	topicClient v1.TopicsClient
 }
 
-func (s *eventsImpl) Topic(name string) Topic {
+func (s *topicsImpl) Topic(name string) Topic {
 	// Just return the straight topic reference
 	// we can fail if the topic does not exist
 	return &topicImpl{
 		name:        name,
-		eventClient: s.eventClient,
+		topicClient: s.topicClient,
 	}
-}
-
-func (s *eventsImpl) Topics() ([]Topic, error) {
-	r, err := s.topicClient.List(context.TODO(), &v1.TopicListRequest{})
-	if err != nil {
-		return nil, err
-	}
-
-	ts := make([]Topic, 0)
-	for _, topic := range r.GetTopics() {
-		ts = append(ts, s.Topic(topic.GetName()))
-	}
-
-	return ts, nil
 }
 
 // New - Construct a new Eventing Client with default options
-func New() (Events, error) {
-	conn, err := grpc.Dial(
+func New() (Topics, error) {
+	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
+
+	conn, err := grpc.DialContext(
+		ctx,
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
@@ -71,11 +57,9 @@ func New() (Events, error) {
 		return nil, errors.NewWithCause(codes.Unavailable, "Unable to dial Events service", err)
 	}
 
-	ec := v1.NewEventServiceClient(conn)
-	tc := v1.NewTopicServiceClient(conn)
+	tc := v1.NewTopicsClient(conn)
 
-	return &eventsImpl{
-		eventClient: ec,
+	return &topicsImpl{
 		topicClient: tc,
 	}, nil
 }

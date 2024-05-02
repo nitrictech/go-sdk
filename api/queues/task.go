@@ -19,81 +19,69 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/queues/v1"
 	"github.com/nitrictech/protoutils"
 )
 
-type Task struct {
-	// ID - Unique ID for the task
-	ID string
-	// PayloadType - Deserialization hint for interprocess communication
-	PayloadType string
-	// Payload - The payload to include in this task
-	Payload map[string]interface{}
-}
-
-type ReceivedTask interface {
-	// Queue - Returns the name of the queue this task was retrieved from
+type ReceivedMessage interface {
+	// Queue - Returns the name of the queue this message was retrieved from
 	Queue() string
-	// Task - Returns the Task data contained in this Received Task instance
-	Task() *Task
-	// Complete - Completes the task removing it from the queue
+	// Message - Returns the Message data contained in this Received Message instance
+	Message() map[string]interface{}
+	// Complete - Completes the message removing it from the queue
 	Complete(context.Context) error
 }
 
-type receivedTaskImpl struct {
-	queue       string
-	queueClient v1.QueueServiceClient
+type receivedMessageImpl struct {
+	queueName   string
+	queueClient v1.QueuesClient
 	leaseId     string
-	task        *Task
+	message     map[string]interface{}
 }
 
-func (r *receivedTaskImpl) Task() *Task {
-	return r.task
+func (r *receivedMessageImpl) Message() map[string]interface{} {
+	return r.message
 }
 
-func (r *receivedTaskImpl) Queue() string {
-	return r.queue
+func (r *receivedMessageImpl) Queue() string {
+	return r.queueName
 }
 
-func (r *receivedTaskImpl) Complete(ctx context.Context) error {
+func (r *receivedMessageImpl) Complete(ctx context.Context) error {
 	_, err := r.queueClient.Complete(ctx, &v1.QueueCompleteRequest{
-		Queue:   r.queue,
-		LeaseId: r.leaseId,
+		QueueName: r.queueName,
+		LeaseId:   r.leaseId,
 	})
 
 	return err
 }
 
-type FailedTask struct {
-	// Task - The task that failed to queue
-	Task *Task
+type FailedMessage struct {
+	// Message - The message that failed to queue
+	Message map[string]interface{}
 	// Reason - Reason for the failure
 	Reason string
 }
 
-func taskToWire(task *Task) (*v1.NitricTask, error) {
+func messageToWire(message map[string]interface{}) (*v1.QueueMessage, error) {
 	// Convert payload to Protobuf Struct
-	payloadStruct, err := protoutils.NewStruct(task.Payload)
+	payloadStruct, err := protoutils.NewStruct(message)
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Internal,
-			"taskToWire: failed to serialize payload: %s",
+			"messageToWire: failed to serialize payload: %s",
 			err,
 		)
 	}
 
-	return &v1.NitricTask{
-		Id:          task.ID,
-		PayloadType: task.PayloadType,
-		Payload:     payloadStruct,
+	return &v1.QueueMessage{
+		Content: &v1.QueueMessage_StructPayload{
+			StructPayload: payloadStruct,
+		},
 	}, nil
 }
 
-func wireToTask(task *v1.NitricTask) *Task {
-	return &Task{
-		ID:          task.GetId(),
-		PayloadType: task.GetPayloadType(),
-		Payload:     task.GetPayload().AsMap(),
-	}
+func wireToMessage(message *v1.QueueMessage) map[string]interface{} {
+	// TODO: verify that AsMap() ignores the proto field values
+	return message.GetStructPayload().AsMap()
 }

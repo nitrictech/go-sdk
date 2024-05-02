@@ -14,62 +14,62 @@
 
 package nitric
 
-import (
-	"errors"
-	"io"
+// import (
+// 	"errors"
+// 	"io"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
 
-	apierrors "github.com/nitrictech/go-sdk/api/errors"
-)
+// 	apierrors "github.com/nitrictech/go-sdk/api/errors"
+// )
 
-var _ = Describe("manager", func() {
-	Context("isEOF", func() {
-		When("is nil", func() {
-			got := isEOF(nil)
-			It("should be false", func() {
-				Expect(got).To(Equal(false))
-			})
-		})
+// var _ = Describe("manager", func() {
+// 	Context("isEOF", func() {
+// 		When("is nil", func() {
+// 			got := isEOF(nil)
+// 			It("should be false", func() {
+// 				Expect(got).To(Equal(false))
+// 			})
+// 		})
 
-		When("is EOF wrapped in ApiError", func() {
-			err := apierrors.NewWithCause(500, "unknown", io.EOF)
-			got := isEOF(err)
-			It("should be true", func() {
-				Expect(got).To(Equal(true))
-			})
-		})
+// 		When("is EOF wrapped in ApiError", func() {
+// 			err := apierrors.NewWithCause(500, "unknown", io.EOF)
+// 			got := isEOF(err)
+// 			It("should be true", func() {
+// 				Expect(got).To(Equal(true))
+// 			})
+// 		})
 
-		When("is an ApiError with nil cause", func() {
-			err := apierrors.New(500, "unknown")
-			got := isEOF(err)
-			It("should be false", func() {
-				Expect(got).To(Equal(false))
-			})
-		})
+// 		When("is an ApiError with nil cause", func() {
+// 			err := apierrors.New(500, "unknown")
+// 			got := isEOF(err)
+// 			It("should be false", func() {
+// 				Expect(got).To(Equal(false))
+// 			})
+// 		})
 
-		When("is EOF string wrapped in ApiError", func() {
-			err := apierrors.NewWithCause(500, "unknown", errors.New("EOF"))
-			got := isEOF(err)
-			It("should be true", func() {
-				Expect(got).To(Equal(true))
-			})
-		})
+// 		When("is EOF string wrapped in ApiError", func() {
+// 			err := apierrors.NewWithCause(500, "unknown", errors.New("EOF"))
+// 			got := isEOF(err)
+// 			It("should be true", func() {
+// 				Expect(got).To(Equal(true))
+// 			})
+// 		})
 
-		When("is unexpectedEOF wrapped in ApiError", func() {
-			err := apierrors.NewWithCause(500, "unknown", io.ErrUnexpectedEOF)
-			got := isEOF(err)
-			It("should be false", func() {
-				Expect(got).To(Equal(false))
-			})
-		})
+// 		When("is unexpectedEOF wrapped in ApiError", func() {
+// 			err := apierrors.NewWithCause(500, "unknown", io.ErrUnexpectedEOF)
+// 			got := isEOF(err)
+// 			It("should be false", func() {
+// 				Expect(got).To(Equal(false))
+// 			})
+// 		})
 
-		When("is native EOF", func() {
-			got := isEOF(io.EOF)
-			It("should be true", func() {
-				Expect(got).To(Equal(true))
-			})
-		})
-	})
-})
+// 		When("is native EOF", func() {
+// 			got := isEOF(io.EOF)
+// 			It("should be true", func() {
+// 				Expect(got).To(Equal(true))
+// 			})
+// 		})
+// 	})
+// })

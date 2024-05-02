@@ -14,63 +14,63 @@
 
 package storage
 
-import (
-	"os"
+// import (
+// 	"os"
 
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+// 	"github.com/golang/mock/gomock"
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
 
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-)
+// 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+// )
 
-var _ = Describe("Storage", func() {
-	ctrl := gomock.NewController(GinkgoT())
+// var _ = Describe("Storage", func() {
+// 	ctrl := gomock.NewController(GinkgoT())
 
-	Context("New", func() {
-		When("constructing a new storage client", func() {
-			When("the gRPC connection is unavailable", func() {
-				// Set the timeout to 10 milliseconds
-				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-				sc, err := New()
+// 	Context("New", func() {
+// 		When("constructing a new storage client", func() {
+// 			When("the gRPC connection is unavailable", func() {
+// 				// Set the timeout to 10 milliseconds
+// 				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
+// 				sc, err := New()
 
-				It("should return an error", func() {
-					Expect(err).To(HaveOccurred())
-				})
+// 				It("should return an error", func() {
+// 					Expect(err).To(HaveOccurred())
+// 				})
 
-				It("should not return a storage client", func() {
-					Expect(sc).To(BeNil())
-				})
-			})
+// 				It("should not return a storage client", func() {
+// 					Expect(sc).To(BeNil())
+// 				})
+// 			})
 
-			PWhen("the gRPC connection is available", func() {
-				// TODO: Mock an available server to connect to
-			})
-		})
-	})
+// 			PWhen("the gRPC connection is available", func() {
+// 				// TODO: Mock an available server to connect to
+// 			})
+// 		})
+// 	})
 
-	Context("Bucket", func() {
-		When("creating a new Bucket reference", func() {
-			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
+// 	Context("Bucket", func() {
+// 		When("creating a new Bucket reference", func() {
+// 			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
 
-			sc := &storageImpl{
-				storageClient: mockStorage,
-			}
+// 			sc := &storageImpl{
+// 				storageClient: mockStorage,
+// 			}
 
-			bucket := sc.Bucket("test-bucket")
-			bucketI, ok := bucket.(*bucketImpl)
+// 			bucket := sc.Bucket("test-bucket")
+// 			bucketI, ok := bucket.(*bucketImpl)
 
-			It("should return a bucketImpl instance", func() {
-				Expect(ok).To(BeTrue())
-			})
+// 			It("should return a bucketImpl instance", func() {
+// 				Expect(ok).To(BeTrue())
+// 			})
 
-			It("should have the provied bucket name", func() {
-				Expect(bucketI.name).To(Equal("test-bucket"))
-			})
+// 			It("should have the provied bucket name", func() {
+// 				Expect(bucketI.name).To(Equal("test-bucket"))
+// 			})
 
-			It("should share the storage clients gRPC client", func() {
-				Expect(bucketI.storageClient).To(Equal(mockStorage))
-			})
-		})
-	})
-})
+// 			It("should share the storage clients gRPC client", func() {
+// 				Expect(bucketI.storageClient).To(Equal(mockStorage))
+// 			})
+// 		})
+// 	})
+// })

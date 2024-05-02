@@ -17,10 +17,12 @@ package storage
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type Mode int
@@ -49,7 +51,7 @@ type File interface {
 type fileImpl struct {
 	bucket        string
 	key           string
-	storageClient v1.StorageServiceClient
+	storageClient v1.StorageClient
 }
 
 func (o *fileImpl) Name() string {
@@ -101,6 +103,10 @@ func (p PresignUrlOptions) isValid() error {
 		return fmt.Errorf("invalid mode: %d", p.Mode)
 	}
 
+	if p.Expiry > 604800 {
+		return fmt.Errorf("invalid expiry, cannot exceed 7 days: %d", p.Expiry)
+	}
+
 	return nil
 }
 
@@ -127,7 +133,7 @@ func (o *fileImpl) signUrl(ctx context.Context, opts PresignUrlOptions) (string,
 		BucketName: o.bucket,
 		Key:        o.key,
 		Operation:  op,
-		Expiry:     uint32(opts.Expiry),
+		Expiry:     durationpb.New(time.Duration(opts.Expiry) * time.Second),
 	})
 	if err != nil {
 		return "", errors.FromGrpcError(err)

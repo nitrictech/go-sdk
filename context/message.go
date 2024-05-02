@@ -12,51 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package faas
+package context
 
 type (
-	TriggerHandler    = func(TriggerContext) (TriggerContext, error)
-	TriggerMiddleware = func(TriggerContext, TriggerHandler) (TriggerContext, error)
+	MessageHandler    = func(*MessageContext) (*MessageContext, error)
+	MessageMiddleware = func(*MessageContext, MessageHandler) (*MessageContext, error)
 )
 
-func triggerDummy(ctx TriggerContext) (TriggerContext, error) {
+func messageDummy(ctx *MessageContext) (*MessageContext, error) {
 	return ctx, nil
 }
 
-type chainedTriggerMiddleware struct {
-	fun      TriggerMiddleware
-	nextFunc TriggerHandler
+type chainedMessageMiddleware struct {
+	fun      MessageMiddleware
+	nextFunc MessageHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedTriggerMiddleware) invoke(ctx TriggerContext) (TriggerContext, error) {
+func (c *chainedMessageMiddleware) invoke(ctx *MessageContext) (*MessageContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = triggerDummy
+		c.nextFunc = messageDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type triggerMiddlewareChain struct {
-	chain []*chainedTriggerMiddleware
+type messageMiddlewareChain struct {
+	chain []*chainedMessageMiddleware
 }
 
-func (h *triggerMiddlewareChain) invoke(ctx TriggerContext, next TriggerHandler) (TriggerContext, error) {
+func (h *messageMiddlewareChain) invoke(ctx *MessageContext, next MessageHandler) (*MessageContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// CreateTriggerMiddleware - Chains Trigger middleware functions together to single handler
-func ComposeTriggerMiddleware(funcs ...TriggerMiddleware) TriggerMiddleware {
-	mwareChain := &triggerMiddlewareChain{
-		chain: make([]*chainedTriggerMiddleware, len(funcs)),
+// ComposeMessageMiddleware - Composes an array of middleware into a single middleware
+func ComposeMessageMiddleware(funcs ...MessageMiddleware) MessageMiddleware {
+	mwareChain := &messageMiddlewareChain{
+		chain: make([]*chainedMessageMiddleware, len(funcs)),
 	}
 
-	var nextFunc TriggerHandler = nil
+	var nextFunc MessageHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedTriggerMiddleware{
+		cm := &chainedMessageMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}

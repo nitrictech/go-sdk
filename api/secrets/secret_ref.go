@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/nitrictech/go-sdk/api/errors"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/secrets/v1"
 )
 
 // SecretRef is a reference to a cloud secret for secret storage.
@@ -31,7 +31,7 @@ type SecretRef interface {
 
 type secretRefImpl struct {
 	name         string
-	secretClient v1.SecretServiceClient
+	secretClient v1.SecretManagerClient
 }
 
 func (s *secretRefImpl) Name() string {

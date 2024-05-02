@@ -12,36 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package faas
+package context
 
 type (
-	EventHandler    = func(*EventContext) (*EventContext, error)
-	EventMiddleware = func(*EventContext, EventHandler) (*EventContext, error)
+	BlobEventHandler    = func(*BlobEventContext) (*BlobEventContext, error)
+	BlobEventMiddleware = func(*BlobEventContext, BlobEventHandler) (*BlobEventContext, error)
 )
 
-func eventDummy(ctx *EventContext) (*EventContext, error) {
+func blobEventDummy(ctx *BlobEventContext) (*BlobEventContext, error) {
 	return ctx, nil
 }
 
-type chainedEventMiddleware struct {
-	fun      EventMiddleware
-	nextFunc EventHandler
+type chainedBlobEventMiddleware struct {
+	fun      BlobEventMiddleware
+	nextFunc BlobEventHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedEventMiddleware) invoke(ctx *EventContext) (*EventContext, error) {
+func (c *chainedBlobEventMiddleware) invoke(ctx *BlobEventContext) (*BlobEventContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = eventDummy
+		c.nextFunc = blobEventDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type eventMiddlewareChain struct {
-	chain []*chainedEventMiddleware
+type blobEventMiddlewareChain struct {
+	chain []*chainedBlobEventMiddleware
 }
 
-func (h *eventMiddlewareChain) invoke(ctx *EventContext, next EventHandler) (*EventContext, error) {
+func (h *blobEventMiddlewareChain) invoke(ctx *BlobEventContext, next BlobEventHandler) (*BlobEventContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
@@ -49,14 +49,14 @@ func (h *eventMiddlewareChain) invoke(ctx *EventContext, next EventHandler) (*Ev
 }
 
 // ComposeEventMiddleware - Composes an array of middleware into a single middleware
-func ComposeEventMiddleware(funcs ...EventMiddleware) EventMiddleware {
-	mwareChain := &eventMiddlewareChain{
-		chain: make([]*chainedEventMiddleware, len(funcs)),
+func ComposeBlobEventMiddleware(funcs ...BlobEventMiddleware) BlobEventMiddleware {
+	mwareChain := &blobEventMiddlewareChain{
+		chain: make([]*chainedBlobEventMiddleware, len(funcs)),
 	}
 
-	var nextFunc EventHandler = nil
+	var nextFunc BlobEventHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedEventMiddleware{
+		cm := &chainedBlobEventMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}
