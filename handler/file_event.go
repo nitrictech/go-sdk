@@ -12,36 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 type (
-	BlobEventHandler    = func(*BlobEventContext) (*BlobEventContext, error)
-	BlobEventMiddleware = func(*BlobEventContext, BlobEventHandler) (*BlobEventContext, error)
+	FileEventHandler    = func(*FileEventContext) (*FileEventContext, error)
+	FileEventMiddleware = func(*FileEventContext, FileEventHandler) (*FileEventContext, error)
 )
 
-func blobEventDummy(ctx *BlobEventContext) (*BlobEventContext, error) {
+func fileEventDummy(ctx *FileEventContext) (*FileEventContext, error) {
 	return ctx, nil
 }
 
-type chainedBlobEventMiddleware struct {
-	fun      BlobEventMiddleware
-	nextFunc BlobEventHandler
+type chainedFileEventMiddleware struct {
+	fun      FileEventMiddleware
+	nextFunc FileEventHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedBlobEventMiddleware) invoke(ctx *BlobEventContext) (*BlobEventContext, error) {
+func (c *chainedFileEventMiddleware) invoke(ctx *FileEventContext) (*FileEventContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = blobEventDummy
+		c.nextFunc = fileEventDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type blobEventMiddlewareChain struct {
-	chain []*chainedBlobEventMiddleware
+type fileEventMiddlewareChain struct {
+	chain []*chainedFileEventMiddleware
 }
 
-func (h *blobEventMiddlewareChain) invoke(ctx *BlobEventContext, next BlobEventHandler) (*BlobEventContext, error) {
+func (h *fileEventMiddlewareChain) invoke(ctx *FileEventContext, next FileEventHandler) (*FileEventContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
@@ -49,14 +49,14 @@ func (h *blobEventMiddlewareChain) invoke(ctx *BlobEventContext, next BlobEventH
 }
 
 // ComposeEventMiddleware - Composes an array of middleware into a single middleware
-func ComposeBlobEventMiddleware(funcs ...BlobEventMiddleware) BlobEventMiddleware {
-	mwareChain := &blobEventMiddlewareChain{
-		chain: make([]*chainedBlobEventMiddleware, len(funcs)),
+func ComposeFileEventMiddleware(funcs ...FileEventMiddleware) FileEventMiddleware {
+	mwareChain := &fileEventMiddlewareChain{
+		chain: make([]*chainedFileEventMiddleware, len(funcs)),
 	}
 
-	var nextFunc BlobEventHandler = nil
+	var nextFunc FileEventHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedBlobEventMiddleware{
+		cm := &chainedFileEventMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}

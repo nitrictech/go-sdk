@@ -12,51 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 type (
-	IntervalHandler    = func(*IntervalContext) (*IntervalContext, error)
-	IntervalMiddleware = func(*IntervalContext, IntervalHandler) (*IntervalContext, error)
+	BlobEventHandler    = func(*BlobEventContext) (*BlobEventContext, error)
+	BlobEventMiddleware = func(*BlobEventContext, BlobEventHandler) (*BlobEventContext, error)
 )
 
-func intervalDummy(ctx *IntervalContext) (*IntervalContext, error) {
+func blobEventDummy(ctx *BlobEventContext) (*BlobEventContext, error) {
 	return ctx, nil
 }
 
-type chainedIntervalMiddleware struct {
-	fun      IntervalMiddleware
-	nextFunc IntervalHandler
+type chainedBlobEventMiddleware struct {
+	fun      BlobEventMiddleware
+	nextFunc BlobEventHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedIntervalMiddleware) invoke(ctx *IntervalContext) (*IntervalContext, error) {
+func (c *chainedBlobEventMiddleware) invoke(ctx *BlobEventContext) (*BlobEventContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = intervalDummy
+		c.nextFunc = blobEventDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type intervalMiddlewareChain struct {
-	chain []*chainedIntervalMiddleware
+type blobEventMiddlewareChain struct {
+	chain []*chainedBlobEventMiddleware
 }
 
-func (h *intervalMiddlewareChain) invoke(ctx *IntervalContext, next IntervalHandler) (*IntervalContext, error) {
+func (h *blobEventMiddlewareChain) invoke(ctx *BlobEventContext, next BlobEventHandler) (*BlobEventContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// ComposeIntervalMiddleware - Composes an array of middleware into a single middleware
-func ComposeIntervalMiddleware(funcs ...IntervalMiddleware) IntervalMiddleware {
-	mwareChain := &intervalMiddlewareChain{
-		chain: make([]*chainedIntervalMiddleware, len(funcs)),
+// ComposeEventMiddleware - Composes an array of middleware into a single middleware
+func ComposeBlobEventMiddleware(funcs ...BlobEventMiddleware) BlobEventMiddleware {
+	mwareChain := &blobEventMiddlewareChain{
+		chain: make([]*chainedBlobEventMiddleware, len(funcs)),
 	}
 
-	var nextFunc IntervalHandler = nil
+	var nextFunc BlobEventHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedIntervalMiddleware{
+		cm := &chainedBlobEventMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}

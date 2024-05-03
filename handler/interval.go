@@ -12,51 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 type (
-	MessageHandler    = func(*MessageContext) (*MessageContext, error)
-	MessageMiddleware = func(*MessageContext, MessageHandler) (*MessageContext, error)
+	IntervalHandler    = func(*IntervalContext) (*IntervalContext, error)
+	IntervalMiddleware = func(*IntervalContext, IntervalHandler) (*IntervalContext, error)
 )
 
-func messageDummy(ctx *MessageContext) (*MessageContext, error) {
+func intervalDummy(ctx *IntervalContext) (*IntervalContext, error) {
 	return ctx, nil
 }
 
-type chainedMessageMiddleware struct {
-	fun      MessageMiddleware
-	nextFunc MessageHandler
+type chainedIntervalMiddleware struct {
+	fun      IntervalMiddleware
+	nextFunc IntervalHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedMessageMiddleware) invoke(ctx *MessageContext) (*MessageContext, error) {
+func (c *chainedIntervalMiddleware) invoke(ctx *IntervalContext) (*IntervalContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = messageDummy
+		c.nextFunc = intervalDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type messageMiddlewareChain struct {
-	chain []*chainedMessageMiddleware
+type intervalMiddlewareChain struct {
+	chain []*chainedIntervalMiddleware
 }
 
-func (h *messageMiddlewareChain) invoke(ctx *MessageContext, next MessageHandler) (*MessageContext, error) {
+func (h *intervalMiddlewareChain) invoke(ctx *IntervalContext, next IntervalHandler) (*IntervalContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// ComposeMessageMiddleware - Composes an array of middleware into a single middleware
-func ComposeMessageMiddleware(funcs ...MessageMiddleware) MessageMiddleware {
-	mwareChain := &messageMiddlewareChain{
-		chain: make([]*chainedMessageMiddleware, len(funcs)),
+// ComposeIntervalMiddleware - Composes an array of middleware into a single middleware
+func ComposeIntervalMiddleware(funcs ...IntervalMiddleware) IntervalMiddleware {
+	mwareChain := &intervalMiddlewareChain{
+		chain: make([]*chainedIntervalMiddleware, len(funcs)),
 	}
 
-	var nextFunc MessageHandler = nil
+	var nextFunc IntervalHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedMessageMiddleware{
+		cm := &chainedIntervalMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}
