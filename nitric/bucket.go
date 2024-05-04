@@ -36,12 +36,12 @@ type Bucket interface {
 }
 
 const (
-	BucketReading  BucketPermission = "read"
-	BucketWriting  BucketPermission = "write"
-	BucketDeleting BucketPermission = "delete"
+	BucketRead   BucketPermission = "read"
+	BucketWrite  BucketPermission = "write"
+	BucketDelete BucketPermission = "delete"
 )
 
-var BucketEverything []BucketPermission = []BucketPermission{BucketReading, BucketWriting, BucketDeleting}
+var BucketEverything []BucketPermission = []BucketPermission{BucketRead, BucketWrite, BucketDelete}
 
 // NewBucket register this bucket as a required resource for the calling function/container and
 // register the permissions required by the currently scoped function for this resource.
@@ -83,11 +83,11 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case BucketReading:
+		case BucketRead:
 			actions = append(actions, v1.Action_BucketFileGet, v1.Action_BucketFileList)
-		case BucketWriting:
+		case BucketWrite:
 			actions = append(actions, v1.Action_BucketFilePut)
-		case BucketDeleting:
+		case BucketDelete:
 			actions = append(actions, v1.Action_BucketFileDelete)
 		default:
 			return nil, fmt.Errorf("bucketPermission %s unknown", perm)

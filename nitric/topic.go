@@ -29,7 +29,7 @@ type TopicPermission string
 
 const (
 	// TopicPublishing is required to call Publish on a topic.
-	TopicPublishing TopicPermission = "publishing"
+	TopicPublish TopicPermission = "publish"
 )
 
 type Topic interface {
@@ -93,7 +93,7 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case TopicPublishing:
+		case TopicPublish:
 			actions = append(actions, v1.Action_TopicPublish)
 		default:
 			return nil, fmt.Errorf("TopicPermission %s unknown", perm)

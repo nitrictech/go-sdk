@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc"
 
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
+	"github.com/nitrictech/go-sdk/api/keyvalue"
 	"github.com/nitrictech/go-sdk/api/queues"
 	"github.com/nitrictech/go-sdk/api/secrets"
 	"github.com/nitrictech/go-sdk/api/storage"
@@ -52,6 +53,7 @@ type Manager interface {
 	newSchedule(name string) Schedule
 	newTopic(name string, permissions ...TopicPermission) (Topic, error)
 	newWebsocket(socket string) (Websocket, error)
+	newKv(name string, permissions ...KvStorePermission) (keyvalue.Store, error)
 }
 
 type manager struct {
@@ -59,11 +61,12 @@ type manager struct {
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
-	rsc     v1.ResourcesClient
-	topics  topics.Topics
-	storage storage.Storage
-	secrets secrets.Secrets
-	queues  queues.Queues
+	rsc      v1.ResourcesClient
+	topics   topics.Topics
+	storage  storage.Storage
+	secrets  secrets.Secrets
+	queues   queues.Queues
+	kvstores keyvalue.KeyValue
 }
 
 var (
