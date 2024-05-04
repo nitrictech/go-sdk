@@ -12,16 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package events
+package handler
 
-import (
-	"testing"
+type HttpResponse struct {
+	Status  int
+	Headers map[string][]string
+	Body    []byte
+}
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
+type MessageResponse struct {
+	Success bool
+}
 
-func TestEvents(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Events Suite")
+type IntervalResponse struct {
+	Success bool
+}
+
+type BlobEventResponse struct {
+	Success bool
+}
+
+type FileEventResponse struct {
+	Success bool
+}
+
+type WebsocketResponse struct {
+	Success bool
 }

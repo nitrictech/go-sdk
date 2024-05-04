@@ -18,57 +18,58 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/queues"
+	"github.com/nitrictech/go-sdk/api/keyvalue"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
-type QueuePermission string
+type KvStorePermission string
 
 const (
-	QueueEnqueue QueuePermission = "enqueue"
-	QueueDequeue QueuePermission = "dequeue"
+	KvStoreWrite  KvStorePermission = "write"
+	KvStoreRead   KvStorePermission = "read"
+	KvStoreDelete KvStorePermission = "delete"
 )
 
-var QueueEverything []QueuePermission = []QueuePermission{QueueEnqueue, QueueDequeue}
+var KvStoreEverything []KvStorePermission = []KvStorePermission{KvStoreWrite, KvStoreRead, KvStoreDelete}
 
-type Queue interface {
-	Allow(QueuePermission, ...QueuePermission) (queues.Queue, error)
+type KvStore interface {
+	Allow(KvStorePermission, ...KvStorePermission) (keyvalue.Store, error)
 }
 
-type queue struct {
+type kvstore struct {
 	name    string
 	manager Manager
 }
 
-func NewQueue(name string) *queue {
-	return &queue{
+func NewKv(name string) *kvstore {
+	return &kvstore{
 		name:    name,
 		manager: defaultManager,
 	}
 }
 
 // NewQueue registers this queue as a required resource for the calling function/container.
-func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (queues.Queue, error) {
-	allPerms := append([]QueuePermission{permission}, permissions...)
+func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) (keyvalue.Store, error) {
+	allPerms := append([]KvStorePermission{permission}, permissions...)
 
-	return defaultManager.newQueue(q.name, allPerms...)
+	return defaultManager.newKv(k.name, allPerms...)
 }
 
-func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
+func (m *manager) newKv(name string, permissions ...KvStorePermission) (keyvalue.Store, error) {
 	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
 
 	colRes := &v1.ResourceIdentifier{
-		Type: v1.ResourceType_Queue,
+		Type: v1.ResourceType_KeyValueStore,
 		Name: name,
 	}
 
 	dr := &v1.ResourceDeclareRequest{
 		Id: colRes,
-		Config: &v1.ResourceDeclareRequest_Queue{
-			Queue: &v1.QueueResource{},
+		Config: &v1.ResourceDeclareRequest_KeyValueStore{
+			KeyValueStore: &v1.KeyValueStoreResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -79,12 +80,14 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case QueueDequeue:
-			actions = append(actions, v1.Action_QueueDequeue)
-		case QueueEnqueue:
-			actions = append(actions, v1.Action_QueueEnqueue)
+		case KvStoreRead:
+			actions = append(actions, v1.Action_KeyValueStoreRead)
+		case KvStoreWrite:
+			actions = append(actions, v1.Action_KeyValueStoreWrite)
+		case KvStoreDelete:
+			actions = append(actions, v1.Action_KeyValueStoreDelete)
 		default:
-			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
+			return nil, fmt.Errorf("KvStorePermission %s unknown", perm)
 		}
 	}
 
@@ -93,12 +96,12 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	if m.queues == nil {
-		m.queues, err = queues.New()
+	if m.kvstores == nil {
+		m.kvstores, err = keyvalue.New()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return m.queues.Queue(name), nil
+	return m.kvstores.Store(name), nil
 }

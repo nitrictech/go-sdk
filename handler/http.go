@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 import "fmt"
 
@@ -21,7 +21,7 @@ type (
 	HttpMiddleware = func(*HttpContext, HttpHandler) (*HttpContext, error)
 )
 
-func httpDummy(ctx *HttpContext) (*HttpContext, error) {
+func HttpDummy(ctx *HttpContext) (*HttpContext, error) {
 	return ctx, nil
 }
 
@@ -35,7 +35,7 @@ func (c *chainedHttpMiddleware) invoke(ctx *HttpContext) (*HttpContext, error) {
 	// Chains are left open-ended so middleware can continue to be linked
 	// If the chain is incomplete, set a chained dummy handler for safety
 	if c.nextFunc == nil {
-		c.nextFunc = httpDummy
+		c.nextFunc = HttpDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)

@@ -44,7 +44,7 @@ func (s *storageImpl) Bucket(name string) Bucket {
 
 // New - Create a new Storage client with default options
 func New() (Storage, error) {
-	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
+	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
 
 	conn, err := grpc.DialContext(
 		ctx,

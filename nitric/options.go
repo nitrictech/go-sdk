@@ -14,7 +14,9 @@
 
 package nitric
 
-import "github.com/nitrictech/go-sdk/faas"
+import (
+	"github.com/nitrictech/go-sdk/handler"
+)
 
 type (
 	ApiOption    = func(api *api)
@@ -31,12 +33,12 @@ type methodOptions struct {
 	securityDisabled bool
 }
 
-func WithMiddleware(middleware ...faas.HttpMiddleware) ApiOption {
+func WithMiddleware(middleware ...handler.HttpMiddleware) ApiOption {
 	return func(api *api) {
 		if api.middleware != nil {
-			api.middleware = faas.ComposeHttpMiddleware(api.middleware, faas.ComposeHttpMiddleware(middleware...))
+			api.middleware = handler.ComposeHttpMiddleware(api.middleware, handler.ComposeHttpMiddleware(middleware...))
 		} else {
-			api.middleware = faas.ComposeHttpMiddleware(middleware...)
+			api.middleware = handler.ComposeHttpMiddleware(middleware...)
 		}
 	}
 }

@@ -12,51 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 type (
-	FileEventHandler    = func(*FileEventContext) (*FileEventContext, error)
-	FileEventMiddleware = func(*FileEventContext, FileEventHandler) (*FileEventContext, error)
+	MessageHandler    = func(*MessageContext) (*MessageContext, error)
+	MessageMiddleware = func(*MessageContext, MessageHandler) (*MessageContext, error)
 )
 
-func fileEventDummy(ctx *FileEventContext) (*FileEventContext, error) {
+func messageDummy(ctx *MessageContext) (*MessageContext, error) {
 	return ctx, nil
 }
 
-type chainedFileEventMiddleware struct {
-	fun      FileEventMiddleware
-	nextFunc FileEventHandler
+type chainedMessageMiddleware struct {
+	fun      MessageMiddleware
+	nextFunc MessageHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedFileEventMiddleware) invoke(ctx *FileEventContext) (*FileEventContext, error) {
+func (c *chainedMessageMiddleware) invoke(ctx *MessageContext) (*MessageContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = fileEventDummy
+		c.nextFunc = messageDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type fileEventMiddlewareChain struct {
-	chain []*chainedFileEventMiddleware
+type messageMiddlewareChain struct {
+	chain []*chainedMessageMiddleware
 }
 
-func (h *fileEventMiddlewareChain) invoke(ctx *FileEventContext, next FileEventHandler) (*FileEventContext, error) {
+func (h *messageMiddlewareChain) invoke(ctx *MessageContext, next MessageHandler) (*MessageContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// ComposeEventMiddleware - Composes an array of middleware into a single middleware
-func ComposeFileEventMiddleware(funcs ...FileEventMiddleware) FileEventMiddleware {
-	mwareChain := &fileEventMiddlewareChain{
-		chain: make([]*chainedFileEventMiddleware, len(funcs)),
+// ComposeMessageMiddleware - Composes an array of middleware into a single middleware
+func ComposeMessageMiddleware(funcs ...MessageMiddleware) MessageMiddleware {
+	mwareChain := &messageMiddlewareChain{
+		chain: make([]*chainedMessageMiddleware, len(funcs)),
 	}
 
-	var nextFunc FileEventHandler = nil
+	var nextFunc MessageHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedFileEventMiddleware{
+		cm := &chainedMessageMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}

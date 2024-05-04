@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 import (
 	"github.com/nitrictech/go-sdk/api/storage"
@@ -122,16 +122,16 @@ type FileEventRequest interface {
 }
 
 type fileEventRequestImpl struct {
-	bucket           Bucket
+	bucket           storage.Bucket
 	notificationType BlobEventType
 }
 
-func (b *blobEventRequestImpl) Bucket() string {
-	return b.bucket
+func (f *fileEventRequestImpl) Bucket() storage.Bucket {
+	return f.bucket
 }
 
-func (b *blobEventRequestImpl) NotificationType() BlobEventType {
-	return b.notificationType
+func (f *fileEventRequestImpl) NotificationType() BlobEventType {
+	return f.notificationType
 }
 
 // Websocket

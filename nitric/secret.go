@@ -25,11 +25,11 @@ import (
 type SecretPermission string
 
 const (
-	SecretAccessing SecretPermission = "accessing"
-	SecretPutting   SecretPermission = "putting"
+	SecretAccess SecretPermission = "access"
+	SecretPut    SecretPermission = "put"
 )
 
-var SecretEverything []SecretPermission = []SecretPermission{SecretAccessing, SecretPutting}
+var SecretEverything []SecretPermission = []SecretPermission{SecretAccess, SecretPut}
 
 type Secret interface{}
 
@@ -45,7 +45,7 @@ func NewSecret(name string) *secret {
 	}
 }
 
-func (s *secret) With(permission SecretPermission, permissions ...SecretPermission) (secrets.SecretRef, error) {
+func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) (secrets.SecretRef, error) {
 	allPerms := append([]SecretPermission{permission}, permissions...)
 
 	return defaultManager.newSecret(s.name, allPerms...)
@@ -57,13 +57,13 @@ func (m *manager) newSecret(name string, permissions ...SecretPermission) (secre
 		return nil, err
 	}
 
-	colRes := &v1.Resource{
+	colRes := &v1.ResourceIdentifier{
 		Type: v1.ResourceType_Secret,
 		Name: name,
 	}
 
 	dr := &v1.ResourceDeclareRequest{
-		Resource: colRes,
+		Id: colRes,
 		Config: &v1.ResourceDeclareRequest_Secret{
 			Secret: &v1.SecretResource{},
 		},
@@ -76,9 +76,9 @@ func (m *manager) newSecret(name string, permissions ...SecretPermission) (secre
 	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case SecretAccessing:
+		case SecretAccess:
 			actions = append(actions, v1.Action_SecretAccess)
-		case SecretPutting:
+		case SecretPut:
 			actions = append(actions, v1.Action_SecretPut)
 		default:
 			return nil, fmt.Errorf("secretPermission %s unknown", perm)

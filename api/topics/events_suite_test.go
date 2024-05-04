@@ -12,30 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package topics
 
-type HttpResponse struct {
-	Status  int
-	Headers map[string][]string
-	Body    []byte
-}
+import (
+	"testing"
 
-type MessageResponse struct {
-	Success bool
-}
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
-type IntervalResponse struct {
-	Success bool
-}
-
-type BlobEventResponse struct {
-	Success bool
-}
-
-type FileEventResponse struct {
-	Success bool
-}
-
-type WebsocketResponse struct {
-	Success bool
+func TestEvents(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Events Suite")
 }

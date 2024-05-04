@@ -37,14 +37,14 @@ type keyValueImpl struct {
 
 func (k *keyValueImpl) Store(name string) Store {
 	return &storeImpl{
-		name: name,
+		name:     name,
 		kvClient: k.kvClient,
 	}
 }
 
 // New - Construct a new Key Value Store Client with default options
 func New() (KeyValue, error) {
-	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
+	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
 
 	conn, err := grpc.DialContext(
 		ctx,

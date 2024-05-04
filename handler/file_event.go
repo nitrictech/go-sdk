@@ -12,51 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 type (
-	IntervalHandler    = func(*IntervalContext) (*IntervalContext, error)
-	IntervalMiddleware = func(*IntervalContext, IntervalHandler) (*IntervalContext, error)
+	FileEventHandler    = func(*FileEventContext) (*FileEventContext, error)
+	FileEventMiddleware = func(*FileEventContext, FileEventHandler) (*FileEventContext, error)
 )
 
-func intervalDummy(ctx *IntervalContext) (*IntervalContext, error) {
+func fileEventDummy(ctx *FileEventContext) (*FileEventContext, error) {
 	return ctx, nil
 }
 
-type chainedIntervalMiddleware struct {
-	fun      IntervalMiddleware
-	nextFunc IntervalHandler
+type chainedFileEventMiddleware struct {
+	fun      FileEventMiddleware
+	nextFunc FileEventHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedIntervalMiddleware) invoke(ctx *IntervalContext) (*IntervalContext, error) {
+func (c *chainedFileEventMiddleware) invoke(ctx *FileEventContext) (*FileEventContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = intervalDummy
+		c.nextFunc = fileEventDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type intervalMiddlewareChain struct {
-	chain []*chainedIntervalMiddleware
+type fileEventMiddlewareChain struct {
+	chain []*chainedFileEventMiddleware
 }
 
-func (h *intervalMiddlewareChain) invoke(ctx *IntervalContext, next IntervalHandler) (*IntervalContext, error) {
+func (h *fileEventMiddlewareChain) invoke(ctx *FileEventContext, next FileEventHandler) (*FileEventContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// ComposeIntervalMiddleware - Composes an array of middleware into a single middleware
-func ComposeIntervalMiddleware(funcs ...IntervalMiddleware) IntervalMiddleware {
-	mwareChain := &intervalMiddlewareChain{
-		chain: make([]*chainedIntervalMiddleware, len(funcs)),
+// ComposeEventMiddleware - Composes an array of middleware into a single middleware
+func ComposeFileEventMiddleware(funcs ...FileEventMiddleware) FileEventMiddleware {
+	mwareChain := &fileEventMiddlewareChain{
+		chain: make([]*chainedFileEventMiddleware, len(funcs)),
 	}
 
-	var nextFunc IntervalHandler = nil
+	var nextFunc FileEventHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedIntervalMiddleware{
+		cm := &chainedFileEventMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}

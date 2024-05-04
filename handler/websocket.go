@@ -12,51 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package handler
 
 type (
-	MessageHandler    = func(*MessageContext) (*MessageContext, error)
-	MessageMiddleware = func(*MessageContext, MessageHandler) (*MessageContext, error)
+	WebsocketHandler    = func(*WebsocketContext) (*WebsocketContext, error)
+	WebsocketMiddleware = func(*WebsocketContext, WebsocketHandler) (*WebsocketContext, error)
 )
 
-func messageDummy(ctx *MessageContext) (*MessageContext, error) {
+func websocketDummy(ctx *WebsocketContext) (*WebsocketContext, error) {
 	return ctx, nil
 }
 
-type chainedMessageMiddleware struct {
-	fun      MessageMiddleware
-	nextFunc MessageHandler
+type chainedWebsocketMiddleware struct {
+	fun      WebsocketMiddleware
+	nextFunc WebsocketHandler
 }
 
 // automatically finalize chain with dummy function
-func (c *chainedMessageMiddleware) invoke(ctx *MessageContext) (*MessageContext, error) {
+func (c *chainedWebsocketMiddleware) invoke(ctx *WebsocketContext) (*WebsocketContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = messageDummy
+		c.nextFunc = websocketDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
 }
 
-type messageMiddlewareChain struct {
-	chain []*chainedMessageMiddleware
+type websocketMiddlewareChain struct {
+	chain []*chainedWebsocketMiddleware
 }
 
-func (h *messageMiddlewareChain) invoke(ctx *MessageContext, next MessageHandler) (*MessageContext, error) {
+func (h *websocketMiddlewareChain) invoke(ctx *WebsocketContext, next WebsocketHandler) (*WebsocketContext, error) {
 	// Complete the chain
 	h.chain[len(h.chain)-1].nextFunc = next
 
 	return h.chain[0].invoke(ctx)
 }
 
-// ComposeMessageMiddleware - Composes an array of middleware into a single middleware
-func ComposeMessageMiddleware(funcs ...MessageMiddleware) MessageMiddleware {
-	mwareChain := &messageMiddlewareChain{
-		chain: make([]*chainedMessageMiddleware, len(funcs)),
+// ComposeWebsocketMiddleware - Composes an array of middleware into a single middleware
+func ComposeWebsocketMiddleware(funcs ...WebsocketMiddleware) WebsocketMiddleware {
+	mwareChain := &websocketMiddlewareChain{
+		chain: make([]*chainedWebsocketMiddleware, len(funcs)),
 	}
 
-	var nextFunc MessageHandler = nil
+	var nextFunc WebsocketHandler = nil
 	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		cm := &chainedMessageMiddleware{
+		cm := &chainedWebsocketMiddleware{
 			fun:      funcs[i],
 			nextFunc: nextFunc,
 		}
