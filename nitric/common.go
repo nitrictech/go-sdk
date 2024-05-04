@@ -18,20 +18,20 @@ import (
 	nitricv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
-func functionResourceDeclareRequest(subject *nitricv1.Resource, actions []nitricv1.Action) *nitricv1.ResourceDeclareRequest {
+func functionResourceDeclareRequest(subject *nitricv1.ResourceIdentifier, actions []nitricv1.Action) *nitricv1.ResourceDeclareRequest {
 	return &nitricv1.ResourceDeclareRequest{
-		Resource: &nitricv1.Resource{
+		Id: &nitricv1.ResourceIdentifier{
 			Type: nitricv1.ResourceType_Policy,
 		},
 		Config: &nitricv1.ResourceDeclareRequest_Policy{
 			Policy: &nitricv1.PolicyResource{
-				Principals: []*nitricv1.Resource{
+				Principals: []*nitricv1.ResourceIdentifier{
 					{
-						Type: nitricv1.ResourceType_Function,
+						Type: nitricv1.ResourceType_Service,
 					},
 				},
 				Actions:   actions,
-				Resources: []*nitricv1.Resource{subject},
+				Resources: []*nitricv1.ResourceIdentifier{subject},
 			},
 		},
 	}

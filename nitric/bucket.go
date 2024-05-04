@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/storage"
-	"github.com/nitrictech/go-sdk/faas"
+	"github.com/nitrictech/go-sdk/handler"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -31,14 +31,14 @@ type bucket struct {
 }
 
 type Bucket interface {
-	With(BucketPermission, ...BucketPermission) (storage.Bucket, error)
-	On(faas.NotificationType, string, ...faas.BucketNotificationMiddleware)
+	Allow(BucketPermission, ...BucketPermission) (storage.Bucket, error)
+	On(handler.BlobEventType, string, ...handler.BlobEventMiddleware)
 }
 
 const (
-	BucketReading  BucketPermission = "reading"
-	BucketWriting  BucketPermission = "writing"
-	BucketDeleting BucketPermission = "deleting"
+	BucketReading  BucketPermission = "read"
+	BucketWriting  BucketPermission = "write"
+	BucketDeleting BucketPermission = "delete"
 )
 
 var BucketEverything []BucketPermission = []BucketPermission{BucketReading, BucketWriting, BucketDeleting}
@@ -52,7 +52,7 @@ func NewBucket(name string) Bucket {
 	}
 }
 
-func (b *bucket) With(permission BucketPermission, permissions ...BucketPermission) (storage.Bucket, error) {
+func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (storage.Bucket, error) {
 	allPerms := append([]BucketPermission{permission}, permissions...)
 
 	return defaultManager.newBucket(b.name, allPerms...)
@@ -64,13 +64,13 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 		return nil, err
 	}
 
-	res := &v1.Resource{
+	res := &v1.ResourceIdentifier{
 		Type: v1.ResourceType_Bucket,
 		Name: name,
 	}
 
 	dr := &v1.ResourceDeclareRequest{
-		Resource: res,
+		Id: res,
 		Config: &v1.ResourceDeclareRequest_Bucket{
 			Bucket: &v1.BucketResource{},
 		},
@@ -109,11 +109,6 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 	return m.storage.Bucket(name), nil
 }
 
-func (b *bucket) On(notificationType faas.NotificationType, notificationPrefixFilter string, middleware ...faas.BucketNotificationMiddleware) {
-	f := faas.New()
-
-	f.BucketNotification(middleware...)
-	f.WithBucketNotificationWorkerOptions(faas.BucketNotificationWorkerOptions{Bucket: b.name, NotificationType: notificationType, NotificationPrefixFilter: notificationPrefixFilter})
-
-	b.manager.addWorker(fmt.Sprintf("bucket:notification %s %s/%s", b.name, notificationType, notificationPrefixFilter), f)
+func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFilter string, middleware ...handler.BlobEventMiddleware) {
+	// TODO: create blob event worker
 }

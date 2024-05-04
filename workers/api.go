@@ -16,15 +16,15 @@ type ApiWorker struct {
 	client      v1.ApiClient
 	apiName     string
 	path        string
-	httpHandler handler.HttpHandler
+	httpHandler handler.HttpMiddleware
 	methods     []string
 }
 
 type ApiWorkerOpts struct {
-	apiName     string
-	path        string
-	httpHandler handler.HttpHandler
-	methods     []string
+	ApiName     string
+	Path        string
+	HttpHandler handler.HttpMiddleware
+	Methods     []string
 }
 
 var _ Worker = (*ApiWorker)(nil)
@@ -73,7 +73,7 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 			if resp.GetHttpRequest() != nil {
 				ctx = handler.NewHttpContext(resp)
 
-				ctx, err = a.httpHandler(ctx)
+				ctx, err = a.httpHandler(ctx, handler.HttpDummy)
 				if err != nil {
 					ctx.WithError(err)
 				}
@@ -89,7 +89,7 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 	}
 }
 
-func NewApiWorker(opts *ApiWorkerOpts) (*ApiWorker, error) {
+func NewApiWorker(opts *ApiWorkerOpts) *ApiWorker {
 	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
 
 	conn, err := grpc.DialContext(
@@ -98,20 +98,20 @@ func NewApiWorker(opts *ApiWorkerOpts) (*ApiWorker, error) {
 		constants.DefaultOptions()...,
 	)
 	if err != nil {
-		return nil, errors.NewWithCause(
+		panic(errors.NewWithCause(
 			codes.Unavailable,
 			"NewApiWorker: Unable to reach ApiClient",
 			err,
-		)
+		))
 	}
 
 	client := v1.NewApiClient(conn)
 
 	return &ApiWorker{
 		client:      client,
-		apiName:     opts.apiName,
-		path:        opts.path,
-		methods:     opts.methods,
-		httpHandler: opts.httpHandler,
-	}, nil
+		apiName:     opts.ApiName,
+		path:        opts.Path,
+		methods:     opts.Methods,
+		httpHandler: opts.HttpHandler,
+	}
 }

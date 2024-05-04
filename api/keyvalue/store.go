@@ -10,14 +10,14 @@ import (
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/kvstore/v1"
 )
 
-type ScanKeysOption = func (*v1.KvStoreScanKeysRequest)
+type ScanKeysOption = func(*v1.KvStoreScanKeysRequest)
 
-// TODO: maybe move keystream to seperate file 
-type KeyStream struct{
+// TODO: maybe move keystream to seperate file
+type KeyStream struct {
 	stream v1.KvStore_ScanKeysClient
 }
 
-func (k *KeyStream) Recv() (string, error){
+func (k *KeyStream) Recv() (string, error) {
 	resp, err := k.stream.Recv()
 	if err != nil {
 		return "", err
@@ -40,7 +40,7 @@ type Store interface {
 }
 
 type storeImpl struct {
-	name        string
+	name     string
 	kvClient v1.KvStoreClient
 }
 
@@ -51,7 +51,7 @@ func (s *storeImpl) Name() string {
 func (s *storeImpl) Get(ctx context.Context, key string) (map[string]interface{}, error) {
 	ref := &v1.ValueRef{
 		Store: s.name,
-		Key: key,
+		Key:   key,
 	}
 
 	r, err := s.kvClient.GetValue(ctx, &v1.KvStoreGetValueRequest{
@@ -60,7 +60,7 @@ func (s *storeImpl) Get(ctx context.Context, key string) (map[string]interface{}
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
-	
+
 	val := r.GetValue()
 	if val == nil {
 		return nil, errors.New(codes.NotFound, "Key not found")
@@ -73,17 +73,17 @@ func (s *storeImpl) Get(ctx context.Context, key string) (map[string]interface{}
 func (s *storeImpl) Set(ctx context.Context, key string, value map[string]interface{}) error {
 	ref := &v1.ValueRef{
 		Store: s.name,
-		Key: key,
+		Key:   key,
 	}
 
 	// Convert payload to Protobuf Struct
 	contentStruct, err := protoutils.NewStruct(value)
-	if err!=nil{
+	if err != nil {
 		return errors.NewWithCause(codes.InvalidArgument, "Store.Set", err)
 	}
 
 	_, err = s.kvClient.SetValue(ctx, &v1.KvStoreSetValueRequest{
-		Ref: ref,
+		Ref:     ref,
 		Content: contentStruct,
 	})
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *storeImpl) Set(ctx context.Context, key string, value map[string]interf
 func (s *storeImpl) Delete(ctx context.Context, key string) error {
 	ref := &v1.ValueRef{
 		Store: s.name,
-		Key: key,
+		Key:   key,
 	}
 
 	_, err := s.kvClient.DeleteKey(ctx, &v1.KvStoreDeleteKeyRequest{
@@ -109,13 +109,13 @@ func (s *storeImpl) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
-func (s *storeImpl) Keys(ctx context.Context, opts ...ScanKeysOption) (*KeyStream,error) {
+func (s *storeImpl) Keys(ctx context.Context, opts ...ScanKeysOption) (*KeyStream, error) {
 	store := &v1.Store{
 		Name: s.name,
 	}
 
 	request := &v1.KvStoreScanKeysRequest{
-		Store: store,
+		Store:  store,
 		Prefix: "",
 	}
 

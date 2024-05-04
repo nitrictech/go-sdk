@@ -15,8 +15,6 @@
 package secrets
 
 import (
-	"context"
-
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -44,10 +42,7 @@ func (s *secretsImpl) Secret(name string) SecretRef {
 
 // New - Create a new Secrets client
 func New() (Secrets, error) {
-	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
-
-	conn, err := grpc.DialContext(
-		ctx,
+	conn, err := grpc.Dial(
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)

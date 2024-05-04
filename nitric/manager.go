@@ -26,12 +26,12 @@ import (
 	"google.golang.org/grpc"
 
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
-	"github.com/nitrictech/go-sdk/api/events"
 	"github.com/nitrictech/go-sdk/api/queues"
 	"github.com/nitrictech/go-sdk/api/secrets"
 	"github.com/nitrictech/go-sdk/api/storage"
+	"github.com/nitrictech/go-sdk/api/topics"
 	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/faas"
+	"github.com/nitrictech/go-sdk/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -42,10 +42,8 @@ type Starter interface {
 // Manager is the top level object that resources are created on.
 type Manager interface {
 	Run() error
-	addWorker(name string, s Starter)
-	addBuilder(name string, builder faas.HandlerBuilder)
-	getBuilder(name string) faas.HandlerBuilder
-	resourceServiceClient() (v1.ResourceServiceClient, error)
+	addWorker(name string, s workers.Worker)
+	resourceServiceClient() (v1.ResourcesClient, error)
 
 	newApi(name string, opts ...ApiOption) (Api, error)
 	newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
@@ -57,16 +55,15 @@ type Manager interface {
 }
 
 type manager struct {
-	workers   map[string]Starter
+	workers   map[string]workers.Worker
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
-	rsc      v1.ResourceServiceClient
-	evts     events.Events
-	storage  storage.Storage
-	secrets  secrets.Secrets
-	queues   queues.Queues
-	builders map[string]faas.HandlerBuilder
+	rsc     v1.ResourcesClient
+	topics  topics.Topics
+	storage storage.Storage
+	secrets secrets.Secrets
+	queues  queues.Queues
 }
 
 var (
@@ -79,33 +76,20 @@ var (
 // resources.NewApi() and the like. These use a default manager instance.
 func New() Manager {
 	return &manager{
-		workers:  map[string]Starter{},
-		builders: map[string]faas.HandlerBuilder{},
+		workers: map[string]workers.Worker{},
 	}
 }
 
-// Gets an existing builder or returns a new handler builder
-func (m *manager) getBuilder(name string) faas.HandlerBuilder {
-	return m.builders[name]
-}
-
-func (m *manager) addBuilder(name string, builder faas.HandlerBuilder) {
-	m.builders[name] = builder
-}
-
-func (m *manager) addWorker(name string, s Starter) {
+func (m *manager) addWorker(name string, s workers.Worker) {
 	m.workers[name] = s
 }
 
-func (m *manager) resourceServiceClient() (v1.ResourceServiceClient, error) {
+func (m *manager) resourceServiceClient() (v1.ResourcesClient, error) {
 	m.connMutex.Lock()
 	defer m.connMutex.Unlock()
 
 	if m.conn == nil {
-		ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
-
-		conn, err := grpc.DialContext(
-			ctx,
+		conn, err := grpc.Dial(
 			constants.NitricAddress(),
 			constants.DefaultOptions()...,
 		)
@@ -115,7 +99,7 @@ func (m *manager) resourceServiceClient() (v1.ResourceServiceClient, error) {
 		m.conn = conn
 	}
 	if m.rsc == nil {
-		m.rsc = v1.NewResourceServiceClient(m.conn)
+		m.rsc = v1.NewResourcesClient(m.conn)
 	}
 	return m.rsc, nil
 }
@@ -131,10 +115,10 @@ func (m *manager) Run() error {
 
 	for _, worker := range m.workers {
 		wg.Add(1)
-		go func(s Starter) {
+		go func(s workers.Worker) {
 			defer wg.Done()
 
-			if err := s.Start(); err != nil {
+			if err := s.Start(context.TODO()); err != nil {
 				if isBuildEnvirnonment() && isEOF(err) {
 					// ignore the EOF error when running code-as-config.
 					return

@@ -57,13 +57,13 @@ func (m *manager) newSecret(name string, permissions ...SecretPermission) (secre
 		return nil, err
 	}
 
-	colRes := &v1.Resource{
+	colRes := &v1.ResourceIdentifier{
 		Type: v1.ResourceType_Secret,
 		Name: name,
 	}
 
 	dr := &v1.ResourceDeclareRequest{
-		Resource: colRes,
+		Id: colRes,
 		Config: &v1.ResourceDeclareRequest_Secret{
 			Secret: &v1.SecretResource{},
 		},

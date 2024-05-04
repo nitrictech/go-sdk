@@ -15,8 +15,6 @@
 package queues
 
 import (
-	"context"
-
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -43,10 +41,7 @@ func (q *queuesImpl) Queue(name string) Queue {
 
 // New - Construct a new Queueing Client with default options
 func New() (Queues, error) {
-	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
-
-	conn, err := grpc.DialContext(
-		ctx,
+	conn, err := grpc.Dial(
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)

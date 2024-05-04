@@ -79,9 +79,9 @@ func (c *HttpContext) WithError(err error) {
 	c.Response = &HttpResponse{
 		Status: 500,
 		Headers: map[string][]string{
-			"Content-Type": []string{"text/plain"},
+			"Content-Type": {"text/plain"},
 		},
-		Body: []byte(err.Error()),
+		Body: []byte("Internal Server Error"),
 	}
 }
 

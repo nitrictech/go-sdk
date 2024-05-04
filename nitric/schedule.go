@@ -15,16 +15,12 @@
 package nitric
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/nitrictech/go-sdk/faas"
+	"github.com/nitrictech/go-sdk/handler"
 )
 
 type Schedule interface {
-	Cron(cron string, middleware ...faas.EventMiddleware)
-	Every(rate string, middleware ...faas.EventMiddleware) error
+	Cron(cron string, middleware ...handler.IntervalMiddleware)
+	Every(rate string, middleware ...handler.IntervalMiddleware)
 }
 
 type schedule struct {
@@ -46,77 +42,10 @@ func (m *manager) newSchedule(name string) Schedule {
 	}
 }
 
-func (s *schedule) Cron(cron string, middleware ...faas.EventMiddleware) {
-	f := s.manager.getBuilder(s.name)
-	if f == nil {
-		f = faas.New()
-	}
-
-	f.Event(middleware...).
-		WithCronWorkerOpts(faas.CronWorkerOptions{
-			Description: s.name,
-			Cron:        cron,
-		})
-
-	s.manager.addWorker(fmt.Sprintf("schedule:%s/%s", s.name, cron), f)
-	s.manager.addBuilder(s.name, f)
-}
-
-func rateSplit(rate string) (int, faas.Frequency, error) {
-	rateParts := strings.Split(rate, " ")
-
-	if len(rateParts) < 1 || len(rateParts) > 2 {
-		return -1, "", fmt.Errorf("invalid rate expression %s; rate should be in the form '[rate] [frequency]' e.g. '7 days'", rate)
-	}
-
-	// Handle a single rate e.g. 'day'
-	if len(rateParts) == 1 {
-		for _, r := range []string{"minute", "hour", "day"} {
-			if r == rateParts[0] {
-				return 1, faas.Frequency(r + "s"), nil
-			}
-		}
-	}
-
-	// Handle a full rate expression e.g. '7 days'
-	rateNum := rateParts[0]
-	rateType := rateParts[1]
-
-	num, err := strconv.Atoi(rateNum)
-	if err != nil {
-		return -1, "", fmt.Errorf("invalid rate expression %s; %w", rate, err)
-	}
-
-	for _, r := range faas.Frequencies {
-		if string(r) == rateType {
-			return num, faas.Frequency(rateType), nil
-		}
-	}
-
-	return -1, "", fmt.Errorf("invalid rate expression %s; %s must be one of [minutes, hours, days]", rate, rateType)
+func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
 }
 
 // The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
-func (s *schedule) Every(rate string, middleware ...faas.EventMiddleware) error {
-	f := s.manager.getBuilder(s.name)
-	if f == nil {
-		f = faas.New()
-	}
-
-	rateNum, frequency, err := rateSplit(rate)
-	if err != nil {
-		return err
-	}
-
-	f.Event(middleware...).
-		WithRateWorkerOpts(faas.RateWorkerOptions{
-			Description: s.name,
-			Frequency:   frequency,
-			Rate:        rateNum,
-		})
-
-	s.manager.addBuilder(s.name, f)
-	s.manager.addWorker(fmt.Sprintf("schedule:%s/%s", s.name, rate), f)
-
-	return nil
+func (s *schedule) Every(rate string, middleware ...handler.IntervalMiddleware) {
+	// TODO: create schedule worker
 }

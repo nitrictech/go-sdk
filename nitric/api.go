@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
 	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -73,7 +74,7 @@ func (r *route) ApiName() string {
 	return r.apiName
 }
 
-func (r *route) AddMethodHandler(methods []string, handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddleware, opts ...MethodOption) error {
 	bName := path.Join(r.apiName, r.path, strings.Join(methods, "-"))
 
 	mo := &methodOptions{}
@@ -81,27 +82,21 @@ func (r *route) AddMethodHandler(methods []string, handler handler.HttpMiddlewar
 		o(mo)
 	}
 
-	b := r.manager.getBuilder(bName)
-	if b == nil {
-		b = handler.New().WithApiWorkerOpts(ApiWorkerOptions{
-			ApiName:          r.apiName,
-			Path:             r.path,
-			Security:         mo.security,
-			SecurityDisabled: mo.securityDisabled,
-		})
-	}
-
-	composedHandler := handler
+	composedHandler := middleware
 	if r.middleware != nil {
-		composedHandler = handler.ComposeHttpMiddleware(r.middleware, handler)
+		composedHandler = handler.ComposeHttpMiddleware(r.middleware, middleware)
 	}
 
-	for _, m := range methods {
-		b.Http(m, composedHandler)
-	}
+	wkr := workers.NewApiWorker(&workers.ApiWorkerOpts{
+		Path:        r.path,
+		ApiName:     r.apiName,
+		HttpHandler: composedHandler,
+		Methods:     methods,
+	})
 
-	r.manager.addBuilder(bName, b)
-	r.manager.addWorker("route:"+bName, b)
+	r.manager.addWorker("route:"+bName, wkr)
+
+	return nil
 }
 
 func (r *route) All(handler handler.HttpMiddleware, opts ...MethodOption) {
@@ -145,7 +140,6 @@ type Api interface {
 	Delete(path string, handler handler.HttpMiddleware, opts ...MethodOption)
 	Options(path string, handler handler.HttpMiddleware, opts ...MethodOption)
 	NewRoute(path string, middleware ...handler.HttpMiddleware) Route
-	Details(ctx context.Context) (*ApiDetails, error)
 }
 
 type ApiDetails struct {
@@ -233,36 +227,6 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 // The returned API object can be used to register Routes and Methods, with Handlers.
 func NewApi(name string, opts ...ApiOption) (Api, error) {
 	return defaultManager.newApi(name, opts...)
-}
-
-func (a *api) Details(ctx context.Context) (*ApiDetails, error) {
-	rsc, err := a.manager.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := rsc.Details(ctx, &resourcev1.ResourceDeclareRequest{
-		Id: &resourcev1.ResourceIdentifier{
-			Type: resourcev1.ResourceType_Api,
-			Name: a.name,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	d := &ApiDetails{
-		Details: Details{
-			ID:       resp.Id,
-			Provider: resp.Provider,
-			Service:  resp.Service,
-		},
-	}
-	if resp.GetApi() != nil {
-		d.URL = resp.GetApi().GetUrl()
-	}
-
-	return d, nil
 }
 
 // Get adds a Get method handler to the path with any specified opts.

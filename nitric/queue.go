@@ -25,14 +25,14 @@ import (
 type QueuePermission string
 
 const (
-	QueueSending   QueuePermission = "sending"
-	QueueReceiving QueuePermission = "receiving"
+	QueueEnqueue QueuePermission = "enqueue"
+	QueueDequeue QueuePermission = "dequeue"
 )
 
-var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceiving}
+var QueueEverything []QueuePermission = []QueuePermission{QueueEnqueue, QueueDequeue}
 
 type Queue interface {
-	With(QueuePermission, ...QueuePermission) (queues.Queue, error)
+	Allow(QueuePermission, ...QueuePermission) (queues.Queue, error)
 }
 
 type queue struct {
@@ -48,7 +48,7 @@ func NewQueue(name string) *queue {
 }
 
 // NewQueue registers this queue as a required resource for the calling function/container.
-func (q *queue) With(permission QueuePermission, permissions ...QueuePermission) (queues.Queue, error) {
+func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (queues.Queue, error) {
 	allPerms := append([]QueuePermission{permission}, permissions...)
 
 	return defaultManager.newQueue(q.name, allPerms...)
@@ -60,13 +60,13 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	colRes := &v1.Resource{
+	colRes := &v1.ResourceIdentifier{
 		Type: v1.ResourceType_Queue,
 		Name: name,
 	}
 
 	dr := &v1.ResourceDeclareRequest{
-		Resource: colRes,
+		Id: colRes,
 		Config: &v1.ResourceDeclareRequest_Queue{
 			Queue: &v1.QueueResource{},
 		},
@@ -79,16 +79,13 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case QueueReceiving:
-			actions = append(actions, v1.Action_QueueReceive)
-		case QueueSending:
-			actions = append(actions, v1.Action_QueueSend)
+		case QueueDequeue:
+			actions = append(actions, v1.Action_QueueDequeue)
+		case QueueEnqueue:
+			actions = append(actions, v1.Action_QueueEnqueue)
 		default:
 			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
 		}
-	}
-	if len(actions) > 0 {
-		actions = append(actions, v1.Action_QueueDetail, v1.Action_QueueList)
 	}
 
 	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))
