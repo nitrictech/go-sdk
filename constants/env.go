@@ -15,19 +15,16 @@
 package constants
 
 import (
-	"net"
 	"os"
 	"strconv"
 	"time"
 )
 
 const (
-	nitricServiceHostDefault           = "127.0.0.1"
-	nitricServicePortDefault           = "50051"
-	nitricServiceDialTimeoutDefault    = "5000"
-	nitricServiceDialTimeoutEnvVarName = "NITRIC_SERVICE_DIAL_TIMEOUT"
-	nitricServiceHostEnvVarName        = "NITRIC_SERVICE_HOST"
-	nitricServicePortEnvVarName        = "NITRIC_SERVICE_PORT"
+	nitricServiceHostDefault        = "127.0.0.1"
+	nitricServicePortDefault        = "50051"
+	nitricServiceDialTimeoutDefault = "5000"
+	nitricServiceAddress            = "SERVICE_ADDRESS"
 )
 
 // getEnvWithFallback - Returns an envirable variable's value from its name or a default value if the variable isn't set
@@ -39,34 +36,15 @@ func GetEnvWithFallback(varName string, fallback string) string {
 	}
 }
 
-// nitricPort - retrieves the environment variable which specifies the port (e.g. 50051) of the nitric service
-//
-// if the env var isn't set, returns the default port
-func NitricPort() string {
-	return GetEnvWithFallback(nitricServicePortEnvVarName, nitricServicePortDefault)
-}
-
 // NitricDialTimeout - Retrieves default service dial timeout in milliseconds
 func NitricDialTimeout() time.Duration {
-	tStr := GetEnvWithFallback(nitricServiceDialTimeoutEnvVarName, nitricServiceDialTimeoutDefault)
 
-	tInt, err := strconv.ParseInt(tStr, 10, 64)
-	if err != nil {
-		// fallback to the predefined default
-		tInt, _ = strconv.ParseInt(nitricServiceDialTimeoutDefault, 10, 64)
-	}
+	tInt, _ := strconv.ParseInt(nitricServiceDialTimeoutDefault, 10, 64)
 
 	return time.Duration(tInt) * time.Millisecond
 }
 
-// nitricPort - retrieves the environment variable which specifies the host (e.g. 127.0.0.1) of the nitric service
-//
-// if the env var isn't set, returns the default host
-func NitricHost() string {
-	return GetEnvWithFallback(nitricServiceHostEnvVarName, nitricServiceHostDefault)
-}
-
 // nitricAddress - constructs the full address i.e. host:port, of the nitric service based on config or defaults
 func NitricAddress() string {
-	return net.JoinHostPort(NitricHost(), NitricPort())
+	return GetEnvWithFallback(nitricServiceAddress, nitricServiceHostDefault)
 }

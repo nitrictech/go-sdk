@@ -15,6 +15,8 @@
 package storage
 
 import (
+	"context"
+
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -42,7 +44,10 @@ func (s *storageImpl) Bucket(name string) Bucket {
 
 // New - Create a new Storage client with default options
 func New() (Storage, error) {
-	conn, err := grpc.Dial(
+	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+
+	conn, err := grpc.DialContext(
+		ctx,
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)

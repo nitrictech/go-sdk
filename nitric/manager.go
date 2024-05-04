@@ -36,10 +36,6 @@ import (
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
-type Starter interface {
-	Start() error
-}
-
 // Manager is the top level object that resources are created on.
 type Manager interface {
 	Run() error
@@ -71,7 +67,6 @@ type manager struct {
 
 var (
 	defaultManager = New()
-	traceInit      = sync.Once{}
 )
 
 // New is used to create the top level resource manager.
@@ -92,7 +87,10 @@ func (m *manager) resourceServiceClient() (v1.ResourcesClient, error) {
 	defer m.connMutex.Unlock()
 
 	if m.conn == nil {
-		conn, err := grpc.Dial(
+		ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+
+		conn, err := grpc.DialContext(
+			ctx,
 			constants.NitricAddress(),
 			constants.DefaultOptions()...,
 		)

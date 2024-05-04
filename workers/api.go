@@ -2,6 +2,7 @@ package workers
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -36,11 +37,15 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 		SecurityDisabled: true,
 	}
 
-	regReq := v1.RegistrationRequest{
-		Api:     a.apiName,
-		Path:    a.path,
-		Methods: a.methods,
-		Options: opts,
+	initReq := &v1.ClientMessage{
+		Content: &v1.ClientMessage_RegistrationRequest{
+			RegistrationRequest: &v1.RegistrationRequest{
+				Api:     a.apiName,
+				Path:    a.path,
+				Methods: a.methods,
+				Options: opts,
+			},
+		},
 	}
 
 	stream, err := a.client.Serve(ctx)
@@ -48,11 +53,7 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 		return err
 	}
 
-	err = stream.Send(&v1.ClientMessage{
-		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: &regReq,
-		},
-	})
+	err = stream.Send(initReq)
 	if err != nil {
 		return err
 	}
@@ -69,21 +70,22 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 			}
 
 			return nil
-		} else if err == nil {
-			if resp.GetHttpRequest() != nil {
-				ctx = handler.NewHttpContext(resp)
+		} else if err == nil && resp.GetRegistrationResponse() != nil {
+			// Function connected with Nitric server
+			fmt.Println("Function connected with Nitric server")
+		} else if err == nil && resp.GetHttpRequest() != nil {
+			ctx = handler.NewHttpContext(resp)
 
-				ctx, err = a.httpHandler(ctx, handler.HttpDummy)
-				if err != nil {
-					ctx.WithError(err)
-				}
+			ctx, err = a.httpHandler(ctx, handler.HttpDummy)
+			if err != nil {
+				ctx.WithError(err)
+			}
+
+			err = stream.Send(ctx.ToClientMessage())
+			if err != nil {
+				return err
 			}
 		} else {
-			return err
-		}
-
-		err = stream.Send(ctx.ToClientMessage())
-		if err != nil {
 			return err
 		}
 	}
