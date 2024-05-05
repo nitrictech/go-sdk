@@ -16,6 +16,7 @@ package handler
 
 import (
 	http "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
+	storage "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 type HttpContext struct {
@@ -98,9 +99,41 @@ type IntervalContext struct {
 }
 
 type BlobEventContext struct {
+	id 		string
 	Request  BlobEventRequest
 	Response *BlobEventResponse
 	Extras   map[string]interface{}
+}
+
+func (c *BlobEventContext) ToClientMessage() *storage.ClientMessage {
+	return &storage.ClientMessage{
+		Id: c.id,
+		Content: &storage.ClientMessage_BlobEventResponse{
+			BlobEventResponse: &storage.BlobEventResponse{
+				Success: c.Response.Success,
+			},
+		},
+	}
+}
+
+func NewBlobEventContext(msg *storage.ServerMessage) *BlobEventContext {
+	req := msg.GetBlobEventRequest()
+	
+	return &BlobEventContext{
+		id: msg.Id,
+		Request: &blobEventRequestImpl{
+			key: req.GetBlobEvent().Key,
+		},
+		Response: &BlobEventResponse{
+			Success: true,
+		},
+	}
+}
+
+func (c *BlobEventContext) WithError(err error){
+	c.Response = &BlobEventResponse{
+		Success: false,
+	}
 }
 
 type FileEventContext struct {

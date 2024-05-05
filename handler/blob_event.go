@@ -19,7 +19,7 @@ type (
 	BlobEventMiddleware = func(*BlobEventContext, BlobEventHandler) (*BlobEventContext, error)
 )
 
-func blobEventDummy(ctx *BlobEventContext) (*BlobEventContext, error) {
+func BlobEventDummy(ctx *BlobEventContext) (*BlobEventContext, error) {
 	return ctx, nil
 }
 
@@ -31,7 +31,7 @@ type chainedBlobEventMiddleware struct {
 // automatically finalize chain with dummy function
 func (c *chainedBlobEventMiddleware) invoke(ctx *BlobEventContext) (*BlobEventContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = blobEventDummy
+		c.nextFunc = BlobEventDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
