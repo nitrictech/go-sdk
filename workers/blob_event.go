@@ -61,7 +61,7 @@ func (b *BlobEventWorker) Start(ctx context.Context) error {
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
 			// Blob Notification has connected with Nitric server
-			fmt.Println("Function connected with Nitric server")
+			fmt.Println("BlobEventWorker connected with Nitric server")
 		} else if err == nil && resp.GetBlobEventRequest() != nil {
 			
 			ctx = handler.NewBlobEventContext(resp)
