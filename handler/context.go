@@ -16,6 +16,7 @@ package handler
 
 import (
 	http "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
+	schedules "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 	storage "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
@@ -93,9 +94,37 @@ type MessageContext struct {
 }
 
 type IntervalContext struct {
+	id		string
 	Request  IntervalRequest
 	Response *IntervalResponse
 	Extras   map[string]interface{}
+}
+
+func (c *IntervalContext) ToClientMessage() *schedules.ClientMessage {
+	return &schedules.ClientMessage{
+		Id: c.id,
+		Content: &schedules.ClientMessage_IntervalResponse{
+			IntervalResponse: &schedules.IntervalResponse{},
+		},
+	}
+}
+
+func NewIntervalContext(msg *schedules.ServerMessage) *IntervalContext {
+	return &IntervalContext{
+		id: msg.Id,
+		Request: &intervalRequestImpl{
+			scheduleName: msg.GetIntervalRequest().ScheduleName,
+		},
+		Response: &IntervalResponse{
+			Success: true,
+		},
+	}
+}
+
+func (c *IntervalContext) WithError(err error){
+	c.Response = &IntervalResponse{
+		Success: false,
+	}
 }
 
 type BlobEventContext struct {
