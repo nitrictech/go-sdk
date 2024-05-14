@@ -52,15 +52,17 @@ func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
 		Expression: cron,
 	}
 
+	registrationRequest := &schedulespb.RegistrationRequest{
+		ScheduleName: s.name,
+		Cadence: &schedulespb.RegistrationRequest_Cron{
+			Cron: scheduleCron,
+		},	
+	}
+
 	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
 
 	opts := &workers.IntervalWorkerOpts{
-		RegistrationRequest: &schedulespb.RegistrationRequest{
-			ScheduleName: s.name,
-			Cadence: &schedulespb.RegistrationRequest_Cron{
-				Cron: scheduleCron,
-			},	
-		},
+		RegistrationRequest: registrationRequest,
 		Middleware: composeHandler,	
 	}
 
@@ -77,15 +79,17 @@ func (s *schedule) Every(rate string, middleware ...handler.IntervalMiddleware) 
 		Rate: rate,
 	}
 
+	registrationRequest := &schedulespb.RegistrationRequest{
+		ScheduleName: s.name,
+		Cadence: &schedulespb.RegistrationRequest_Every{
+			Every: scheduleEvery,
+		},
+	}
+
 	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
 
 	opts := &workers.IntervalWorkerOpts{
-		RegistrationRequest: &schedulespb.RegistrationRequest{
-			ScheduleName: s.name,
-			Cadence: &schedulespb.RegistrationRequest_Every{
-				Every: scheduleEvery,
-			},
-		},
+		RegistrationRequest: registrationRequest,
 		Middleware: composeHandler,	
 	}
 
