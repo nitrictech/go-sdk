@@ -19,7 +19,7 @@ type (
 	MessageMiddleware = func(*MessageContext, MessageHandler) (*MessageContext, error)
 )
 
-func messageDummy(ctx *MessageContext) (*MessageContext, error) {
+func MessageDummy(ctx *MessageContext) (*MessageContext, error) {
 	return ctx, nil
 }
 
@@ -31,7 +31,7 @@ type chainedMessageMiddleware struct {
 // automatically finalize chain with dummy function
 func (c *chainedMessageMiddleware) invoke(ctx *MessageContext) (*MessageContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = messageDummy
+		c.nextFunc = MessageDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)

@@ -20,8 +20,10 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/topics"
 	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
 
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
+	topicspb "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
 // TopicPermission defines the available permissions on a topic
@@ -120,5 +122,16 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 }
 
 func (t *subscribableTopic) Subscribe(middleware ...handler.MessageMiddleware) {
-	// TODO: create subscription worker
+	registrationRequest := &topicspb.RegistrationRequest{
+		TopicName: t.name,
+	}
+	composeHandler := handler.ComposeMessageMiddleware(middleware...)
+
+	opts := &workers.SubscriptionWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware: composeHandler,	
+	}
+
+	worker := workers.NewSubscriptionWorker(opts)
+	t.manager.addWorker("SubscriptionWorker:" + t.name, worker)
 }

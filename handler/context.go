@@ -18,6 +18,7 @@ import (
 	http "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 	schedules "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 	storage "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
+	topics "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
 type HttpContext struct {
@@ -88,9 +89,40 @@ func (c *HttpContext) WithError(err error) {
 }
 
 type MessageContext struct {
+	id 		string
 	Request  MessageRequest
 	Response *MessageResponse
 	Extras   map[string]interface{}
+}
+
+func (c *MessageContext) ToClientMessage() *topics.ClientMessage {
+	return &topics.ClientMessage{
+		Id: c.id,
+		Content: &topics.ClientMessage_MessageResponse{
+			MessageResponse: &topics.MessageResponse{
+				Success: true,
+			},
+		},
+	}
+}
+
+func NewMessageContext(msg *topics.ServerMessage) *MessageContext {
+	return &MessageContext{
+		id: msg.Id,
+		Request: &messageRequestImpl{
+			topicName: msg.GetMessageRequest().TopicName,
+			message: msg.GetMessageRequest().Message.GetStructPayload().AsMap(),
+		},
+		Response: &MessageResponse{
+			Success: true,
+		},
+	}
+}
+
+func (c *MessageContext) WithError(err error){
+	c.Response = &MessageResponse{
+		Success: false,
+	}
 }
 
 type IntervalContext struct {

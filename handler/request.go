@@ -61,14 +61,20 @@ func (h *httpRequestImpl) PathParams() map[string]string {
 
 type MessageRequest interface {
 	TopicName() string
+	Message()	map[string]interface{}
 }
 
 type messageRequestImpl struct {
 	topicName string
+	message	map[string]interface{}
 }
 
 func (m *messageRequestImpl) TopicName() string {
 	return m.topicName
+}
+
+func (m *messageRequestImpl) Message() map[string]interface{} {
+	return m.message
 }
 
 // Interval
