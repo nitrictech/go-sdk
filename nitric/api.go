@@ -22,6 +22,7 @@ import (
 
 	"github.com/nitrictech/go-sdk/handler"
 	"github.com/nitrictech/go-sdk/workers"
+	apispb "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -87,11 +88,19 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 		composedHandler = handler.ComposeHttpMiddleware(r.middleware, middleware)
 	}
 
+	apiOpts := &apispb.ApiWorkerOptions{
+		SecurityDisabled: false,
+		Security:         map[string]*apispb.ApiWorkerScopes{},
+	}
+
 	wkr := workers.NewApiWorker(&workers.ApiWorkerOpts{
-		Path:        r.path,
-		ApiName:     r.apiName,
-		HttpHandler: composedHandler,
-		Methods:     methods,
+		RegistrationRequest: &apispb.RegistrationRequest{
+			Path:    r.path,
+			Api:     r.apiName,
+			Methods: methods,
+			Options: apiOpts,
+		},
+		Middleware: composedHandler,
 	})
 
 	r.manager.addWorker("route:"+bName, wkr)
