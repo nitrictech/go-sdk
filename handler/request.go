@@ -157,6 +157,7 @@ type WebsocketRequest interface {
 	EventType() WebsocketEventType
 	ConnectionID() string
 	QueryParams() map[string][]string
+	Message()	string
 }
 
 type websocketRequestImpl struct {
@@ -164,6 +165,7 @@ type websocketRequestImpl struct {
 	eventType    WebsocketEventType
 	connectionId string
 	queryParams  map[string]*v1.QueryValue
+	message 	string
 }
 
 func (w *websocketRequestImpl) SocketName() string {
@@ -186,4 +188,8 @@ func (w *websocketRequestImpl) QueryParams() map[string][]string {
 	}
 
 	return queryParams
+}
+
+func (w *websocketRequestImpl) Message() string {
+	return w.message
 }

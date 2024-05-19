@@ -19,6 +19,7 @@ import (
 	schedules "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 	storage "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 	topics "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
+	websockets "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
 type HttpContext struct {
@@ -204,7 +205,71 @@ type FileEventContext struct {
 }
 
 type WebsocketContext struct {
+	id 		string
 	Request  WebsocketRequest
 	Response *WebsocketResponse
 	Extras   map[string]interface{}
+}
+
+func (c *WebsocketContext) ToClientMessage() *websockets.ClientMessage {
+	return &websockets.ClientMessage{
+		Id: c.id,
+		Content: &websockets.ClientMessage_WebsocketEventResponse{
+			WebsocketEventResponse: &websockets.WebsocketEventResponse{
+				WebsocketResponse: &websockets.WebsocketEventResponse_ConnectionResponse{
+					ConnectionResponse: &websockets.WebsocketConnectionResponse{
+						Reject: c.Response.Reject,
+					},
+				},
+			},
+		},
+	}
+}
+
+func NewWebsocketContext(msg *websockets.ServerMessage) *WebsocketContext {
+	req := msg.GetWebsocketEventRequest()
+
+	var eventType WebsocketEventType;
+	switch req.WebsocketEvent.(type){
+	case *websockets.WebsocketEventRequest_Disconnection:
+		eventType = WebsocketDisconnect
+	case *websockets.WebsocketEventRequest_Message:
+		eventType = WebsocketMessage
+	default:
+		eventType = WebsocketConnect
+	}
+
+	queryParams := make(map[string]*http.QueryValue)
+	if eventType == WebsocketConnect {
+		for key, value := range req.GetConnection().GetQueryParams(){
+			queryParams[key] = &http.QueryValue{
+				Value: value.Value,
+			}
+		}
+	}
+
+	var _message string = ""
+	if req.GetMessage() != nil {
+		_message = string(req.GetMessage().Body)
+	}
+
+	return &WebsocketContext{
+		id: msg.Id,
+		Request: &websocketRequestImpl{
+			socketName: req.SocketName,
+			eventType: eventType,
+			connectionId: req.ConnectionId,
+			queryParams: queryParams,
+			message: _message,
+		},
+		Response: &WebsocketResponse{
+			Reject: false,
+		},
+	}
+}
+
+func (c *WebsocketContext) WithError(err error){
+	c.Response = &WebsocketResponse{
+		Reject: true,
+	}
 }

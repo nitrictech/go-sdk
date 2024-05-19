@@ -37,5 +37,5 @@ type FileEventResponse struct {
 }
 
 type WebsocketResponse struct {
-	Success bool
+	Reject bool
 }
