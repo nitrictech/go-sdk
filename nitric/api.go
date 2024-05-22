@@ -40,7 +40,7 @@ type Route interface {
 
 type route struct {
 	path       string
-	apiName    string
+	api    		*api
 	middleware handler.HttpMiddleware
 	manager    *manager
 }
@@ -63,7 +63,7 @@ func (a *api) NewRoute(match string, middleware ...handler.HttpMiddleware) Route
 		r = &route{
 			manager:    a.manager,
 			path:       path.Join(a.path, match),
-			apiName:    a.name,
+			api:    	a,
 			middleware: composeRouteMiddleware(a.middleware, middleware),
 		}
 	}
@@ -72,13 +72,18 @@ func (a *api) NewRoute(match string, middleware ...handler.HttpMiddleware) Route
 }
 
 func (r *route) ApiName() string {
-	return r.apiName
+	return r.api.name
 }
 
 func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddleware, opts ...MethodOption) error {
-	bName := path.Join(r.apiName, r.path, strings.Join(methods, "-"))
+	bName := path.Join(r.api.name, r.path, strings.Join(methods, "-"))
 
-	mo := &methodOptions{}
+	// default methodOptions will contain OidcOptions passed to API instance and securityDisabled to false
+	mo := &methodOptions{
+		securityDisabled: false,
+		security: r.api.security,
+	}
+	
 	for _, o := range opts {
 		o(mo)
 	}
@@ -89,17 +94,32 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 	}
 
 	apiOpts := &apispb.ApiWorkerOptions{
-		SecurityDisabled: false,
-		Security:         map[string]*apispb.ApiWorkerScopes{},
+		SecurityDisabled: mo.securityDisabled,
+		Security:        map[string]*apispb.ApiWorkerScopes{},
+	}
+
+	if  mo.security != nil && !mo.securityDisabled {
+		for _, oidcOption := range mo.security {
+			err := attachOidc(r.api.name, oidcOption)
+			if err != nil {
+				return err
+			}
+
+			apiOpts.Security[oidcOption.Name] = &apispb.ApiWorkerScopes{
+				Scopes: oidcOption.Scopes,
+			}
+		}
+	}
+
+	registrationRequest := &apispb.RegistrationRequest{
+		Path:    r.path,
+		Api:     r.api.name,
+		Methods: methods,
+		Options: apiOpts,
 	}
 
 	wkr := workers.NewApiWorker(&workers.ApiWorkerOpts{
-		RegistrationRequest: &apispb.RegistrationRequest{
-			Path:    r.path,
-			Api:     r.apiName,
-			Methods: methods,
-			Options: apiOpts,
-		},
+		RegistrationRequest: registrationRequest,
 		Middleware: composedHandler,
 	})
 

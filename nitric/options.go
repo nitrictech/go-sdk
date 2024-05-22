@@ -29,7 +29,7 @@ type JwtSecurityRule struct {
 }
 
 type methodOptions struct {
-	security         map[string][]string
+	security         []OidcOptions
 	securityDisabled bool
 }
 
@@ -87,16 +87,13 @@ func WithNoMethodSecurity() MethodOption {
 	}
 }
 
-func WithMethodSecurity(name string, scopes []string) MethodOption {
+func WithMethodSecurity(oidcOptions OidcOptions) MethodOption {
 	return func(mo *methodOptions) {
-		if name == "" {
-			mo.securityDisabled = true
+		mo.securityDisabled = false
+		if mo.security == nil {
+			mo.security = []OidcOptions{oidcOptions}
 		} else {
-			if mo.security == nil {
-				mo.security = map[string][]string{}
-			}
-
-			mo.security[name] = scopes
+			mo.security = append(mo.security, oidcOptions)
 		}
-	}
+	}	
 }

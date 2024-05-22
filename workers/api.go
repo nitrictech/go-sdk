@@ -30,7 +30,7 @@ var _ Worker = (*ApiWorker)(nil)
 func (a *ApiWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			a.registrationRequest,
+			RegistrationRequest: a.registrationRequest,
 		},
 	}
 
@@ -97,6 +97,7 @@ func NewApiWorker(opts *ApiWorkerOpts) *ApiWorker {
 
 	return &ApiWorker{
 		client:     client,
+		registrationRequest: opts.RegistrationRequest,
 		middleware: opts.Middleware,
 	}
 }
