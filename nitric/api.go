@@ -152,7 +152,7 @@ type api struct {
 	routes        map[string]Route
 	manager       *manager
 	securityRules map[string]interface{}
-	security      map[string][]string
+	security      []OidcOptions
 	path          string
 	middleware    handler.HttpMiddleware
 }
@@ -174,35 +174,21 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 		o(a)
 	}
 
-	// var secDefs map[string]*v1.ApiSec = nil
-	// var security map[string]*v1.ApiScopes = nil
+	apiResource :=  &resourcev1.ApiResource{}
 
-	// // Apply security rules
-	// if a.securityRules != nil {
-	// 	secDefs = make(map[string]*v1.ApiSecurityDefinition)
-	// 	for n, def := range a.securityRules {
-	// 		if jwt, ok := def.(JwtSecurityRule); ok {
-	// 			secDefs[n] = &v1.ApiSecurityDefinition{
-	// 				Definition: &v1.ApiSecurityDefinition_Jwt{
-	// 					Jwt: &v1.ApiSecurityDefinitionJwt{
-	// 						Issuer:    jwt.Issuer,
-	// 						Audiences: jwt.Audiences,
-	// 					},
-	// 				},
-	// 			}
-	// 		}
-	// 	}
-	// }
+	// Attaching OIDC Options to API
+	if a.security != nil {
+		for _, oidcOption := range a.security	{
+			attachOidc(a.name, oidcOption)
 
-	// Apply security and scopes
-	// if a.security != nil {
-	// 	security = make(map[string]*v1.ApiScopes)
-	// 	for n, sec := range a.security {
-	// 		security[n] = &v1.ApiScopes{
-	// 			Scopes: sec,
-	// 		}
-	// 	}
-	// }
+			if apiResource.GetSecurity() == nil {
+				apiResource.Security = make(map[string]*resourcev1.ApiScopes)
+			}
+			apiResource.Security[oidcOption.Name] = &resourcev1.ApiScopes{
+				Scopes: oidcOption.Scopes,
+			}
+		}
+	}
 
 	// declare resource
 	_, err = rsc.Declare(context.TODO(), &resourcev1.ResourceDeclareRequest{
@@ -211,7 +197,7 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 			Type: resourcev1.ResourceType_Api,
 		},
 		Config: &resourcev1.ResourceDeclareRequest_Api{
-			Api: &resourcev1.ApiResource{},
+			Api: apiResource,
 		},
 	})
 

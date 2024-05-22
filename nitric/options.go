@@ -33,6 +33,17 @@ type methodOptions struct {
 	securityDisabled bool
 }
 
+func OidcRule(name string,  issuer string , audiences []string) SecurityOption {
+	return func(scopes []string) OidcOptions {
+		return OidcOptions{
+			Name: name,
+			Issuer: issuer,
+			Audiences: audiences,
+			Scopes: scopes,
+		}
+	}
+}
+
 func WithMiddleware(middleware ...handler.HttpMiddleware) ApiOption {
 	return func(api *api) {
 		if api.middleware != nil {
@@ -53,14 +64,14 @@ func WithSecurityJwtRule(name string, rule JwtSecurityRule) ApiOption {
 	}
 }
 
-func WithSecurity(name string, scopes []string) ApiOption {
+func WithSecurity(oidcOptions OidcOptions) ApiOption {
 	return func(api *api) {
 		if api.security == nil {
-			api.security = make(map[string][]string)
+			api.security = []OidcOptions{oidcOptions}
+		} else {
+			api.security = append(api.security, oidcOptions)
 		}
-
-		api.security[name] = scopes
-	}
+	}	
 }
 
 // WithPath - Prefixes API with the given path

@@ -50,6 +50,7 @@ type Manager interface {
 	newTopic(name string, permissions ...TopicPermission) (Topic, error)
 	newWebsocket(socket string) (Websocket, error)
 	newKv(name string, permissions ...KvStorePermission) (keyvalue.Store, error)
+	newOidcSecurityDefinition(apiName string, options OidcOptions) (OidcSecurityDefinition, error)
 }
 
 type manager struct {
