@@ -16,6 +16,7 @@ package nitric
 
 import (
 	"context"
+	"strings"
 
 	"google.golang.org/grpc"
 
@@ -23,8 +24,9 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
 	resourcesv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
-	websocketv1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
+	websocketsv1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
 type Websocket interface {
@@ -39,7 +41,7 @@ type websocket struct {
 
 	name    string
 	manager Manager
-	client  websocketv1.WebsocketClient
+	client  websocketsv1.WebsocketClient
 }
 
 // NewCollection register this collection as a required resource for the calling function/container.
@@ -89,7 +91,7 @@ func (m *manager) newWebsocket(name string) (Websocket, error) {
 		return nil, err
 	}
 
-	wClient := websocketv1.NewWebsocketClient(conn)
+	wClient := websocketsv1.NewWebsocketClient(conn)
 
 	return &websocket{
 		manager: m,
@@ -103,11 +105,38 @@ func (w *websocket) Name() string {
 }
 
 func (w *websocket) On(eventType handler.WebsocketEventType, middleware ...handler.WebsocketMiddleware) {
-	// TODO: create websocket worker
+
+	// mapping handler.WebsocketEventType to protobuf requirement i.e websocketsv1.WebsocketEventType
+	var _eventType websocketsv1.WebsocketEventType;
+	switch eventType {
+	case  handler.WebsocketDisconnect:
+		_eventType = websocketsv1.WebsocketEventType_Disconnect
+	case handler.WebsocketMessage:
+		_eventType = websocketsv1.WebsocketEventType_Message
+	default:
+		_eventType = websocketsv1.WebsocketEventType_Connect
+	}
+
+	registrationRequest := &websocketsv1.RegistrationRequest{
+		SocketName: w.name,
+		EventType: _eventType,
+	}
+	composeHandler := handler.ComposeWebsocketMiddleware(middleware...)
+
+	opts := &workers.WebsocketWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware: composeHandler,
+	}
+
+	worker := workers.NewWebsocketWorker(opts)
+	w.manager.addWorker("WebsocketWorker:" + strings.Join([]string{
+		w.name,
+		string(eventType),
+	}, "-"), worker)
 }
 
 func (w *websocket) Send(ctx context.Context, connectionId string, message []byte) error {
-	_, err := w.client.SendMessage(ctx, &websocketv1.WebsocketSendRequest{
+	_, err := w.client.SendMessage(ctx, &websocketsv1.WebsocketSendRequest{
 		SocketName:   w.name,
 		ConnectionId: connectionId,
 		Data:         message,
@@ -117,7 +146,7 @@ func (w *websocket) Send(ctx context.Context, connectionId string, message []byt
 }
 
 func (w *websocket) Close(ctx context.Context, connectionId string) error {
-	_, err := w.client.CloseConnection(ctx, &websocketv1.WebsocketCloseConnectionRequest{
+	_, err := w.client.CloseConnection(ctx, &websocketsv1.WebsocketCloseConnectionRequest{
 		SocketName:   w.name,
 		ConnectionId: connectionId,
 	})

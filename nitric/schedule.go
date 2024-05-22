@@ -15,7 +15,11 @@
 package nitric
 
 import (
+	"strings"
+
 	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
+	schedulespb "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
 type Schedule interface {
@@ -42,10 +46,56 @@ func (m *manager) newSchedule(name string) Schedule {
 	}
 }
 
+// Run middleware at a certain interval defined by the cronExpression.
 func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
+	scheduleCron := &schedulespb.ScheduleCron{
+		Expression: cron,
+	}
+
+	registrationRequest := &schedulespb.RegistrationRequest{
+		ScheduleName: s.name,
+		Cadence: &schedulespb.RegistrationRequest_Cron{
+			Cron: scheduleCron,
+		},	
+	}
+
+	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
+
+	opts := &workers.IntervalWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware: composeHandler,	
+	}
+
+	worker := workers.NewIntervalWorker(opts)
+	s.manager.addWorker("IntervalWorkerCron:" + strings.Join([]string{
+		s.name,
+		cron,
+	}, "-"), worker)
 }
 
-// The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
+// Run middleware at a certain interval defined by the rate. The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
 func (s *schedule) Every(rate string, middleware ...handler.IntervalMiddleware) {
-	// TODO: create schedule worker
+	scheduleEvery := &schedulespb.ScheduleEvery{
+		Rate: rate,
+	}
+
+	registrationRequest := &schedulespb.RegistrationRequest{
+		ScheduleName: s.name,
+		Cadence: &schedulespb.RegistrationRequest_Every{
+			Every: scheduleEvery,
+		},
+	}
+
+	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
+
+	opts := &workers.IntervalWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware: composeHandler,	
+	}
+
+	worker := workers.NewIntervalWorker(opts)
+	s.manager.addWorker("IntervalWorkerEvery:" + strings.Join([]string{
+		s.name,
+		rate,
+	}, "-"), worker)
 }

@@ -16,6 +16,10 @@ package handler
 
 import (
 	http "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
+	schedules "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
+	storage "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
+	topics "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
+	websockets "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
 type HttpContext struct {
@@ -86,21 +90,112 @@ func (c *HttpContext) WithError(err error) {
 }
 
 type MessageContext struct {
+	id 		string
 	Request  MessageRequest
 	Response *MessageResponse
 	Extras   map[string]interface{}
 }
 
+func (c *MessageContext) ToClientMessage() *topics.ClientMessage {
+	return &topics.ClientMessage{
+		Id: c.id,
+		Content: &topics.ClientMessage_MessageResponse{
+			MessageResponse: &topics.MessageResponse{
+				Success: true,
+			},
+		},
+	}
+}
+
+func NewMessageContext(msg *topics.ServerMessage) *MessageContext {
+	return &MessageContext{
+		id: msg.Id,
+		Request: &messageRequestImpl{
+			topicName: msg.GetMessageRequest().TopicName,
+			message: msg.GetMessageRequest().Message.GetStructPayload().AsMap(),
+		},
+		Response: &MessageResponse{
+			Success: true,
+		},
+	}
+}
+
+func (c *MessageContext) WithError(err error){
+	c.Response = &MessageResponse{
+		Success: false,
+	}
+}
+
 type IntervalContext struct {
+	id		string
 	Request  IntervalRequest
 	Response *IntervalResponse
 	Extras   map[string]interface{}
 }
 
+func (c *IntervalContext) ToClientMessage() *schedules.ClientMessage {
+	return &schedules.ClientMessage{
+		Id: c.id,
+		Content: &schedules.ClientMessage_IntervalResponse{
+			IntervalResponse: &schedules.IntervalResponse{},
+		},
+	}
+}
+
+func NewIntervalContext(msg *schedules.ServerMessage) *IntervalContext {
+	return &IntervalContext{
+		id: msg.Id,
+		Request: &intervalRequestImpl{
+			scheduleName: msg.GetIntervalRequest().ScheduleName,
+		},
+		Response: &IntervalResponse{
+			Success: true,
+		},
+	}
+}
+
+func (c *IntervalContext) WithError(err error){
+	c.Response = &IntervalResponse{
+		Success: false,
+	}
+}
+
 type BlobEventContext struct {
+	id 		string
 	Request  BlobEventRequest
 	Response *BlobEventResponse
 	Extras   map[string]interface{}
+}
+
+func (c *BlobEventContext) ToClientMessage() *storage.ClientMessage {
+	return &storage.ClientMessage{
+		Id: c.id,
+		Content: &storage.ClientMessage_BlobEventResponse{
+			BlobEventResponse: &storage.BlobEventResponse{
+				Success: c.Response.Success,
+			},
+		},
+	}
+}
+
+func NewBlobEventContext(msg *storage.ServerMessage) *BlobEventContext {
+	req := msg.GetBlobEventRequest()
+	
+	return &BlobEventContext{
+		id: msg.Id,
+		Request: &blobEventRequestImpl{
+			key: req.GetBlobEvent().Key,
+		},
+		Response: &BlobEventResponse{
+			Success: true,
+		},
+	}
+}
+
+func (c *BlobEventContext) WithError(err error){
+	c.Response = &BlobEventResponse{
+		Success: false,
+	}
 }
 
 type FileEventContext struct {
@@ -110,7 +205,71 @@ type FileEventContext struct {
 }
 
 type WebsocketContext struct {
+	id 		string
 	Request  WebsocketRequest
 	Response *WebsocketResponse
 	Extras   map[string]interface{}
+}
+
+func (c *WebsocketContext) ToClientMessage() *websockets.ClientMessage {
+	return &websockets.ClientMessage{
+		Id: c.id,
+		Content: &websockets.ClientMessage_WebsocketEventResponse{
+			WebsocketEventResponse: &websockets.WebsocketEventResponse{
+				WebsocketResponse: &websockets.WebsocketEventResponse_ConnectionResponse{
+					ConnectionResponse: &websockets.WebsocketConnectionResponse{
+						Reject: c.Response.Reject,
+					},
+				},
+			},
+		},
+	}
+}
+
+func NewWebsocketContext(msg *websockets.ServerMessage) *WebsocketContext {
+	req := msg.GetWebsocketEventRequest()
+
+	var eventType WebsocketEventType;
+	switch req.WebsocketEvent.(type){
+	case *websockets.WebsocketEventRequest_Disconnection:
+		eventType = WebsocketDisconnect
+	case *websockets.WebsocketEventRequest_Message:
+		eventType = WebsocketMessage
+	default:
+		eventType = WebsocketConnect
+	}
+
+	queryParams := make(map[string]*http.QueryValue)
+	if eventType == WebsocketConnect {
+		for key, value := range req.GetConnection().GetQueryParams(){
+			queryParams[key] = &http.QueryValue{
+				Value: value.Value,
+			}
+		}
+	}
+
+	var _message string = ""
+	if req.GetMessage() != nil {
+		_message = string(req.GetMessage().Body)
+	}
+
+	return &WebsocketContext{
+		id: msg.Id,
+		Request: &websocketRequestImpl{
+			socketName: req.SocketName,
+			eventType: eventType,
+			connectionId: req.ConnectionId,
+			queryParams: queryParams,
+			message: _message,
+		},
+		Response: &WebsocketResponse{
+			Reject: false,
+		},
+	}
+}
+
+func (c *WebsocketContext) WithError(err error){
+	c.Response = &WebsocketResponse{
+		Reject: true,
+	}
 }

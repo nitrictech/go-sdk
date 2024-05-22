@@ -61,14 +61,20 @@ func (h *httpRequestImpl) PathParams() map[string]string {
 
 type MessageRequest interface {
 	TopicName() string
+	Message()	map[string]interface{}
 }
 
 type messageRequestImpl struct {
 	topicName string
+	message	map[string]interface{}
 }
 
 func (m *messageRequestImpl) TopicName() string {
 	return m.topicName
+}
+
+func (m *messageRequestImpl) Message() map[string]interface{} {
+	return m.message
 }
 
 // Interval
@@ -151,6 +157,7 @@ type WebsocketRequest interface {
 	EventType() WebsocketEventType
 	ConnectionID() string
 	QueryParams() map[string][]string
+	Message()	string
 }
 
 type websocketRequestImpl struct {
@@ -158,6 +165,7 @@ type websocketRequestImpl struct {
 	eventType    WebsocketEventType
 	connectionId string
 	queryParams  map[string]*v1.QueryValue
+	message 	string
 }
 
 func (w *websocketRequestImpl) SocketName() string {
@@ -180,4 +188,8 @@ func (w *websocketRequestImpl) QueryParams() map[string][]string {
 	}
 
 	return queryParams
+}
+
+func (w *websocketRequestImpl) Message() string {
+	return w.message
 }

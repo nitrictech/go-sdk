@@ -19,7 +19,7 @@ type (
 	WebsocketMiddleware = func(*WebsocketContext, WebsocketHandler) (*WebsocketContext, error)
 )
 
-func websocketDummy(ctx *WebsocketContext) (*WebsocketContext, error) {
+func WebsocketDummy(ctx *WebsocketContext) (*WebsocketContext, error) {
 	return ctx, nil
 }
 
@@ -31,7 +31,7 @@ type chainedWebsocketMiddleware struct {
 // automatically finalize chain with dummy function
 func (c *chainedWebsocketMiddleware) invoke(ctx *WebsocketContext) (*WebsocketContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = websocketDummy
+		c.nextFunc = WebsocketDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)

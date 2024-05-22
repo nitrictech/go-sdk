@@ -14,37 +14,23 @@ import (
 )
 
 type ApiWorker struct {
-	client      v1.ApiClient
-	apiName     string
-	path        string
-	httpHandler handler.HttpMiddleware
-	methods     []string
+	client              v1.ApiClient
+	middleware          handler.HttpMiddleware
+	registrationRequest *v1.RegistrationRequest
 }
 
 type ApiWorkerOpts struct {
-	ApiName     string
-	Path        string
-	HttpHandler handler.HttpMiddleware
-	Methods     []string
+	RegistrationRequest *v1.RegistrationRequest
+	Middleware          handler.HttpMiddleware
 }
 
 var _ Worker = (*ApiWorker)(nil)
 
 // Start implements Worker.
 func (a *ApiWorker) Start(ctx context.Context) error {
-	opts := &v1.ApiWorkerOptions{
-		Security:         map[string]*v1.ApiWorkerScopes{},
-		SecurityDisabled: true,
-	}
-
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: &v1.RegistrationRequest{
-				Api:     a.apiName,
-				Path:    a.path,
-				Methods: a.methods,
-				Options: opts,
-			},
+			a.registrationRequest,
 		},
 	}
 
@@ -76,7 +62,7 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 		} else if err == nil && resp.GetHttpRequest() != nil {
 			ctx = handler.NewHttpContext(resp)
 
-			ctx, err = a.httpHandler(ctx, handler.HttpDummy)
+			ctx, err = a.middleware(ctx, handler.HttpDummy)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -110,10 +96,7 @@ func NewApiWorker(opts *ApiWorkerOpts) *ApiWorker {
 	client := v1.NewApiClient(conn)
 
 	return &ApiWorker{
-		client:      client,
-		apiName:     opts.ApiName,
-		path:        opts.Path,
-		methods:     opts.Methods,
-		httpHandler: opts.HttpHandler,
+		client:     client,
+		middleware: opts.Middleware,
 	}
 }

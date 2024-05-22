@@ -17,10 +17,13 @@ package nitric
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
+	storagepb "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 type BucketPermission string
@@ -110,5 +113,30 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 }
 
 func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFilter string, middleware ...handler.BlobEventMiddleware) {
-	// TODO: create blob event worker
+	var blobEventType storagepb.BlobEventType;
+	switch notificationType {
+	case handler.WriteNotification:
+		blobEventType = storagepb.BlobEventType_Created
+	case handler.DeleteNotification:
+		blobEventType = storagepb.BlobEventType_Deleted
+	}
+
+	registrationRequest := &storagepb.RegistrationRequest{
+		BucketName: b.name,
+		BlobEventType: blobEventType,
+		KeyPrefixFilter: notificationPrefixFilter,
+	}
+	
+	composedHandler := handler.ComposeBlobEventMiddleware(middleware...)
+
+	opts := &workers.BlobEventWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware: composedHandler,
+	}
+
+	worker := workers.NewBlobEventWorker(opts)
+	
+	b.manager.addWorker("bucketNotification:"+ strings.Join([]string{
+		b.name, notificationPrefixFilter, string(notificationType),
+	},"-"), worker)
 }

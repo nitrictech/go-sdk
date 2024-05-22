@@ -19,7 +19,7 @@ type (
 	IntervalMiddleware = func(*IntervalContext, IntervalHandler) (*IntervalContext, error)
 )
 
-func intervalDummy(ctx *IntervalContext) (*IntervalContext, error) {
+func IntervalDummy(ctx *IntervalContext) (*IntervalContext, error) {
 	return ctx, nil
 }
 
@@ -31,7 +31,7 @@ type chainedIntervalMiddleware struct {
 // automatically finalize chain with dummy function
 func (c *chainedIntervalMiddleware) invoke(ctx *IntervalContext) (*IntervalContext, error) {
 	if c.nextFunc == nil {
-		c.nextFunc = intervalDummy
+		c.nextFunc = IntervalDummy
 	}
 
 	return c.fun(ctx, c.nextFunc)
