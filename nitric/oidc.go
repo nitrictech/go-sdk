@@ -16,7 +16,6 @@ package nitric
 
 import (
 	"context"
-	"strings"
 
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
@@ -74,10 +73,7 @@ func (m *manager) newOidcSecurityDefinition(apiName string, options OidcOptions)
 	// declare resource
 	_, err = rsc.Declare(context.TODO(), &v1.ResourceDeclareRequest{
 		Id: &v1.ResourceIdentifier{
-			Name: strings.Join([]string{
-				options.Name,
-				apiName,
-			}, "-"),
+			Name: options.Name,
 			Type: v1.ResourceType_ApiSecurityDefinition,
 		},
 		Config: &v1.ResourceDeclareRequest_ApiSecurityDefinition{
