@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package topics
+package keyvalue_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestEvents(t *testing.T) {
+func TestKeyvalue(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Events Suite")
+	RunSpecs(t, "Keyvalue Suite")
 }

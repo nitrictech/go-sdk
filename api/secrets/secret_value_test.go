@@ -19,46 +19,65 @@ package secrets
 // 	. "github.com/onsi/gomega"
 // )
 
-// var _ = Describe("secretValueImpl", func() {
-// 	Context("Ref", func() {
-// 		When("retrieving the ref of a secretValueImpl", func() {
-// 			svi := &secretValueImpl{
-// 				version: &secretVersionRefImpl{
-// 					secret: &secretRefImpl{
-// 						name: "test",
-// 					},
-// 					version: "test",
-// 				},
-// 				val: []byte("test"),
-// 			}
+import (
+	"github.com/golang/mock/gomock"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
-// 			It("should return it's internal version field", func() {
-// 				Expect(svi.Version()).To(Equal(svi.version))
-// 			})
-// 		})
-// 	})
+var _ = Describe("secretValueImpl", func() {
+	var (
+		ctrl        *gomock.Controller
+		mockSC      *mock_v1.MockSecretManagerClient
+		secretName  string
+		versionName string
+		sv          SecretVersionRef
+		secretValue SecretValue
+		value 		[]byte
+	)
 
-// 	Context("AsBytes", func() {
-// 		When("retrieving secret value as bytes", func() {
-// 			svi := &secretValueImpl{
-// 				val: []byte("test"),
-// 			}
+	BeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		mockSC = mock_v1.NewMockSecretManagerClient(ctrl)
+		secretName = "test-secret"
+		versionName = "test-version"
+		
+		sv = &secretVersionRefImpl{
+			secretClient: mockSC,
+			secret: &secretRefImpl{
+				name:         secretName,
+				secretClient: mockSC,
+			},
+			version: versionName,
+		}
 
-// 			It("should return it's internal val field", func() {
-// 				Expect(svi.AsBytes()).To(Equal([]byte("test")))
-// 			})
-// 		})
-// 	})
+		value = []byte("ssssshhhh... it's a secret")
+		secretValue = &secretValueImpl{
+			version: sv,
+			val: value,
+		}
+	})
 
-// 	Context("AsString", func() {
-// 		When("retrieving secret value as a string", func() {
-// 			svi := &secretValueImpl{
-// 				val: []byte("test"),
-// 			}
+	AfterEach(func() {
+		ctrl.Finish()
+	})
 
-// 			It("should return it's internal val field", func() {
-// 				Expect(svi.AsString()).To(Equal("test"))
-// 			})
-// 		})
-// 	})
-// })
+	Describe("Version", func() {
+		It("should return the correct secret version reference", func() {
+			Expect(secretValue.Version()).To(Equal(sv))
+		})
+	})
+
+	Describe("AsBytes", func() {
+		It("should return the correct secret value as bytes", func() {
+			Expect(secretValue.AsBytes()).To(Equal(value))
+		})
+	})
+
+	Describe("AsString", func() {
+		It("should return the correct secret value as string", func() {
+			Expect(secretValue.AsString()).To(Equal(string(value)))
+		})
+	})
+})

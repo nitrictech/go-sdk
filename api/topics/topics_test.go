@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package storage
+package topics
 
 import (
 	"os"
@@ -24,19 +24,19 @@ import (
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
-var _ = Describe("Storage API", func() {
+var _ = Describe("Topics API", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockStorage   *mock_v1.MockStorageClient
-		s		 	 Storage
+		ctrl     	 *gomock.Controller
+		mockTopics   *mock_v1.MockTopicsClient
+		ts		 	 Topics
 	)
 	
 	BeforeEach(func ()  {
 		ctrl = gomock.NewController(GinkgoT())
-		mockStorage = mock_v1.NewMockStorageClient(ctrl)
+		mockTopics = mock_v1.NewMockTopicsClient(ctrl)
 		
-		s = &storageImpl{
-			storageClient: mockStorage,
+		ts = &topicsImpl{
+			topicClient: mockTopics,
 		}
 	})
 	
@@ -44,34 +44,34 @@ var _ = Describe("Storage API", func() {
 		ctrl.Finish()
 	})
 	
-	Describe("Bucket()", func() {
-		var bucketName string
-		var bucketI *bucketImpl
+	Describe("Topic()", func() {
+		var topicName string
+		var topicI *topicImpl
 		var ok bool
 		
-		When("creating a new Bucket reference", func() {
+		When("creating a new Topic reference", func() {
 			BeforeEach(func ()  {
-				bucketName = "test-bucket"
-				bucket := s.Bucket(bucketName)
-				bucketI, ok = bucket.(*bucketImpl)
+				topicName = "test-topic"
+				topic := ts.Topic(topicName)
+				topicI, ok = topic.(*topicImpl)
 			})
 			
-			It("should return a bucketImpl instance", func() {
+			It("should return a topicImpl instance", func() {
 				Expect(ok).To(BeTrue())
 			})
 
-			It("should have the provied bucket name", func() {
-				Expect(bucketI.name).To(Equal(bucketName))
+			It("should have the provied topic name", func() {
+				Expect(topicI.name).To(Equal(topicName))
 			})
 
 			It("should share the storage clients gRPC client", func() {
-				Expect(bucketI.storageClient).To(Equal(mockStorage))
+				Expect(topicI.topicClient).To(Equal(mockTopics))
 			})
 		})
 	})
 
 	Describe("New()", func() {
-		Context("constructing a new storage client", func() {
+		Context("constructing a new topics client", func() {
 			When("the gRPC connection is unavailable", func() {
 				BeforeEach(func() {
 					os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
@@ -80,17 +80,17 @@ var _ = Describe("Storage API", func() {
 					os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
 				})
 				
-				s, err := New()
+				ts, err := New()
 				
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
 					
-					By("not returning a storage client")
-					Expect(s).To(BeNil())
+					By("not returning a topics client")
+					Expect(ts).To(BeNil())
 				})
 			})
 
-			PWhen("constructing a new storage client without dial blocking", func() {
+			PWhen("constructing a new topics client without dial blocking", func() {
 				// TODO: Mock an available server to connect to
 			})
 		})

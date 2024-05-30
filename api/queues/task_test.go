@@ -14,6 +14,117 @@
 
 package queues
 
+import (
+	"context"
+	"fmt"
+
+	"github.com/golang/mock/gomock"
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/queues/v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("ReceivedMessage", func() {
+    var (
+        ctrl          *gomock.Controller
+        mockQ         *mock_v1.MockQueuesClient
+        queueName     string
+        leaseID       string
+        message       map[string]interface{}
+        receivedMsg   ReceivedMessage
+        ctx           context.Context
+    )
+
+    BeforeEach(func() {
+        ctrl = gomock.NewController(GinkgoT())
+        mockQ = mock_v1.NewMockQueuesClient(ctrl)
+        queueName = "test-queue"
+        leaseID = "1"
+        message = map[string]interface{}{
+            "message": "hello",
+        }
+        receivedMsg = &receivedMessageImpl{
+            queueName:   queueName,
+            queueClient: mockQ,
+            leaseId:     leaseID,
+            message:     message,
+        }
+        ctx = context.Background()
+    })
+
+    AfterEach(func() {
+        ctrl.Finish()
+    })
+
+    Describe("Message", func() {
+        It("should return the correct message", func() {
+            Expect(receivedMsg.Message()).To(Equal(message))
+        })
+    })
+
+    Describe("Queue", func() {
+        It("should return the correct queue name", func() {
+            Expect(receivedMsg.Queue()).To(Equal(queueName))
+        })
+    })
+
+    Describe("Complete", func() {
+        It("should complete the message successfully", func() {
+            mockQ.EXPECT().Complete(ctx, &v1.QueueCompleteRequest{
+                QueueName: queueName,
+                LeaseId:   leaseID,
+            }).Return(&v1.QueueCompleteResponse{}, nil)
+
+            err := receivedMsg.Complete(ctx)
+            Expect(err).NotTo(HaveOccurred())
+        })
+
+        It("should handle errors when completing the message", func() {
+            mockQ.EXPECT().Complete(ctx, gomock.Any()).Return(nil, fmt.Errorf("some error"))
+
+            err := receivedMsg.Complete(ctx)
+            Expect(err).To(HaveOccurred())
+        })
+    })
+})
+
+var _ = Describe("Helper functions", func() {
+    Describe("messageToWire", func() {
+        It("should convert a map to a protobuf message", func() {
+            message := map[string]interface{}{
+                "message": "hello",
+            }
+
+            wireMsg, err := messageToWire(message)
+            Expect(err).NotTo(HaveOccurred())
+            Expect(wireMsg.GetStructPayload().AsMap()).To(Equal(message))
+        })
+
+        It("should handle errors when converting a map to a protobuf message", func() {
+            message := map[string]interface{}{
+                "message": make(chan int), // channels cannot be converted to protobuf
+            }
+
+            _, err := messageToWire(message)
+            Expect(err).To(HaveOccurred())
+        })
+    })
+
+    Describe("wireToMessage", func() {
+        It("should convert a protobuf message to a map", func() {
+            message := map[string]interface{}{
+                "message": "hello",
+            }
+            wireMsg, err := messageToWire(message)
+            Expect(err).NotTo(HaveOccurred())
+
+            convertedMessage := wireToMessage(wireMsg)
+            Expect(convertedMessage).To(Equal(message))
+        })
+    })
+})
+
 // import (
 // 	"context"
 // 	"fmt"

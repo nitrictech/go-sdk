@@ -14,14 +14,14 @@
 
 package secrets_test
 
-// import (
-// 	"testing"
+import (
+	"testing"
 
-// 	. "github.com/onsi/ginkgo"
-// 	. "github.com/onsi/gomega"
-// )
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
-// func TestSecrets(t *testing.T) {
-// 	RegisterFailHandler(Fail)
-// 	RunSpecs(t, "Secrets Suite")
-// }
+func TestSecrets(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Secrets Suite")
+}
