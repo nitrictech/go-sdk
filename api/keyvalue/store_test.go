@@ -1,16 +1,16 @@
-// // Copyright 2021 Nitric Technologies Pty Ltd.
-// //
-// // Licensed under the Apache License, Version 2.0 (the "License");
-// // you may not use this file except in compliance with the License.
-// // You may obtain a copy of the License at
-// //
-// //      http://www.apache.org/licenses/LICENSE-2.0
-// //
-// // Unless required by applicable law or agreed to in writing, software
-// // distributed under the License is distributed on an "AS IS" BASIS,
-// // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// // See the License for the specific language governing permissions and
-// // limitations under the License.
+// Copyright 2021 Nitric Technologies Pty Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package keyvalue
 
@@ -30,10 +30,10 @@ import (
 
 var _ = Describe("KeyValue Store API", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockKV   *mock_v1.MockKvStoreClient
-		kv       *keyValueImpl
-		store    Store
+		ctrl      *gomock.Controller
+		mockKV    *mock_v1.MockKvStoreClient
+		kv        *keyValueImpl
+		store     Store
 		storeName string
 	)
 
@@ -65,14 +65,14 @@ var _ = Describe("KeyValue Store API", func() {
 				expectedValue = map[string]interface{}{"data": "value"}
 			})
 
-			When("the key exists", func(){
-				BeforeEach(func(){
+			When("the key exists", func() {
+				BeforeEach(func() {
 					contentStruct, _ := protoutils.NewStruct(expectedValue)
 					mockKV.EXPECT().GetValue(gomock.Any(), gomock.Any()).Return(&v1.KvStoreGetValueResponse{
 						Value: &v1.Value{
 							Ref: &v1.ValueRef{
 								Store: storeName,
-								Key: key,
+								Key:   key,
 							},
 							Content: contentStruct,
 						},
@@ -85,9 +85,9 @@ var _ = Describe("KeyValue Store API", func() {
 					Expect(value).To(Equal(expectedValue))
 				})
 			})
-			
-			When("the key does not exists", func(){
-				BeforeEach(func(){
+
+			When("the key does not exists", func() {
+				BeforeEach(func() {
 					mockKV.EXPECT().GetValue(gomock.Any(), gomock.Any()).Return(&v1.KvStoreGetValueResponse{
 						Value: nil,
 					}, nil).Times(1)
@@ -104,28 +104,28 @@ var _ = Describe("KeyValue Store API", func() {
 			var key string
 			var valueToSet map[string]interface{}
 
-			BeforeEach(func(){
+			BeforeEach(func() {
 				key = "test-key"
-        		valueToSet = map[string]interface{}{"data": "value"}
+				valueToSet = map[string]interface{}{"data": "value"}
 			})
 
 			When("the operation is successful", func() {
-				BeforeEach(func(){
+				BeforeEach(func() {
 					mockKV.EXPECT().SetValue(gomock.Any(), gomock.Any()).Return(
 						&v1.KvStoreSetValueResponse{},
 						nil,
 					).Times(1)
 				})
 
-				It("should successfully set the value", func(){
+				It("should successfully set the value", func() {
 					err := store.Set(context.Background(), key, valueToSet)
 					Expect(err).ToNot(HaveOccurred())
 				})
 			})
-			
-			When("the operation fails", func(){
+
+			When("the operation fails", func() {
 				var errorMsg string
-				BeforeEach(func(){
+				BeforeEach(func() {
 					errorMsg = "Internal Error"
 					mockKV.EXPECT().SetValue(gomock.Any(), gomock.Any()).Return(
 						nil,
@@ -139,34 +139,34 @@ var _ = Describe("KeyValue Store API", func() {
 					Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
 				})
 			})
-			
+
 		})
-		
+
 		Describe("Delete", func() {
 			var key string
 
-			BeforeEach(func(){
+			BeforeEach(func() {
 				key = "test-key"
 			})
 
 			When("the operation is successful", func() {
-				BeforeEach(func(){
+				BeforeEach(func() {
 					mockKV.EXPECT().DeleteKey(gomock.Any(), gomock.Any()).Return(
 						&v1.KvStoreDeleteKeyResponse{},
 						nil,
 					).Times(1)
 				})
 
-				It("should successfully set the value", func(){
+				It("should successfully set the value", func() {
 					err := store.Delete(context.Background(), key)
 					Expect(err).ToNot(HaveOccurred())
 				})
 			})
 
-			When("the GRPC operation fails", func(){
+			When("the GRPC operation fails", func() {
 				var errorMsg string
 
-				BeforeEach(func(){
+				BeforeEach(func() {
 					errorMsg = "Internal Error"
 					mockKV.EXPECT().DeleteKey(gomock.Any(), gomock.Any()).Return(
 						nil,
@@ -181,19 +181,19 @@ var _ = Describe("KeyValue Store API", func() {
 				})
 			})
 		})
-	
-		Describe("Keys", func(){
-			When("the operation is successful", func(){
+
+		Describe("Keys", func() {
+			When("the operation is successful", func() {
 				var expectedKey string
 
-				BeforeEach(func(){
+				BeforeEach(func() {
 					expectedKey = "key1"
 					mockStream := mock_v1.NewMockKvStore_ScanKeysClient(ctrl)
 					mockKV.EXPECT().ScanKeys(gomock.Any(), gomock.Any()).Return(mockStream, nil).Times(1)
 					mockStream.EXPECT().Recv().Return(&v1.KvStoreScanKeysResponse{Key: expectedKey}, nil).AnyTimes()
 				})
 
-				It("should return a stream of keys", func(){
+				It("should return a stream of keys", func() {
 					stream, err := store.Keys(context.Background())
 					Expect(err).ToNot(HaveOccurred())
 					key, err := stream.Recv()
@@ -210,7 +210,7 @@ var _ = Describe("KeyValue Store API", func() {
 					mockKV.EXPECT().ScanKeys(gomock.Any(), gomock.Any()).Return(mockStream, nil).Times(1)
 					mockStream.EXPECT().Recv().Return(nil, errors.New(errorMsg)).Times(1)
 				})
-			
+
 				It("should return an error", func() {
 					stream, err := store.Keys(context.Background())
 					Expect(err).ToNot(HaveOccurred())

@@ -29,15 +29,15 @@ import (
 
 var _ = Describe("Bucket", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockStorage   *mock_v1.MockStorageClient
-		bucket       *bucketImpl
-		bucketName string
-		fileName string
-		ctx 		context.Context
+		ctrl        *gomock.Controller
+		mockStorage *mock_v1.MockStorageClient
+		bucket      *bucketImpl
+		bucketName  string
+		fileName    string
+		ctx         context.Context
 	)
 
-	BeforeEach(func ()  {
+	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockStorage = mock_v1.NewMockStorageClient(ctrl)
 
@@ -58,21 +58,21 @@ var _ = Describe("Bucket", func() {
 
 	Describe("File()", func() {
 		When("creating a new File reference", func() {
-			var(
-				file    File
-				fileI   *fileImpl
-				ok       bool
+			var (
+				file  File
+				fileI *fileImpl
+				ok    bool
 			)
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				file = bucket.File(fileName)
-				fileI, ok = file.(*fileImpl)		
+				fileI, ok = file.(*fileImpl)
 			})
 
-			It("it should succesfully return File Instance", func ()  {
+			It("it should succesfully return File Instance", func() {
 				By("returning an fileImpl instance")
 				Expect(ok).To(BeTrue())
-			
+
 				By("having the provided file name")
 				Expect(fileI.key).To(Equal(fileName))
 
@@ -89,9 +89,9 @@ var _ = Describe("Bucket", func() {
 		When("the gRPC opreation of ListBlobs fails", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
-				
+
 				By("the nitric membrane returning an error")
 				mockStorage.EXPECT().ListBlobs(gomock.Any(), &v1.StorageListBlobsRequest{
 					BucketName: bucketName,
@@ -114,7 +114,7 @@ var _ = Describe("Bucket", func() {
 		When("the gRPC opreation of ListBlobs succeeds", func() {
 			var files []File
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				files = []File{
 					bucket.File("file-1.txt"),
 					bucket.File("file-2.txt"),
@@ -122,7 +122,7 @@ var _ = Describe("Bucket", func() {
 
 				blobs := make([]*v1.Blob, 0, len(files))
 				for _, file := range files {
-					fileI, ok := file.(*fileImpl) 
+					fileI, ok := file.(*fileImpl)
 					Expect(ok).To(BeTrue())
 					blobs = append(blobs, &v1.Blob{
 						Key: fileI.key,
@@ -151,7 +151,7 @@ var _ = Describe("Bucket", func() {
 	})
 
 	Describe("Name()", func() {
-		It("should have the same name as the one provided", func ()  {
+		It("should have the same name as the one provided", func() {
 			_bucketName := bucket.Name()
 			Expect(_bucketName).To(Equal(bucketName))
 		})

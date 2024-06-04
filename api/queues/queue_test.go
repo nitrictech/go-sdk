@@ -30,12 +30,12 @@ import (
 
 var _ = Describe("Queue interface", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockQ  	 *mock_v1.MockQueuesClient
-		queues   *queuesImpl
-		queueName 	 string
-		q 		 Queue
-		ctx			context.Context
+		ctrl      *gomock.Controller
+		mockQ     *mock_v1.MockQueuesClient
+		queues    *queuesImpl
+		queueName string
+		q         Queue
+		ctx       context.Context
 	)
 
 	BeforeEach(func() {
@@ -55,15 +55,15 @@ var _ = Describe("Queue interface", func() {
 
 	Context("Having a valid queue", func() {
 		Describe("Name", func() {
-			It("should return the correct queue name", func(){
+			It("should return the correct queue name", func() {
 				Expect(q.Name()).To(Equal(queueName))
 			})
 		})
 
 		Describe("Enqueue", func() {
 			var messages []map[string]interface{}
-			
-			BeforeEach(func ()  {
+
+			BeforeEach(func() {
 				messages = []map[string]interface{}{
 					{"message": "hello"},
 					{"message": "world"},
@@ -71,7 +71,7 @@ var _ = Describe("Queue interface", func() {
 			})
 
 			When("the operation is successful", func() {
-				BeforeEach(func ()  {
+				BeforeEach(func() {
 					mockQ.EXPECT().Enqueue(gomock.Any(), gomock.Any()).Return(
 						&v1.QueueEnqueueResponse{
 							FailedMessages: nil,
@@ -80,7 +80,7 @@ var _ = Describe("Queue interface", func() {
 					).Times(1)
 				})
 
-				It("should successfully enqueue messages", func ()  {
+				It("should successfully enqueue messages", func() {
 					failedMessages, err := q.Enqueue(ctx, messages)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(failedMessages).To(BeEmpty())
@@ -91,7 +91,7 @@ var _ = Describe("Queue interface", func() {
 				var failedMsg map[string]interface{}
 				var failureReason string
 
-				BeforeEach(func ()  {
+				BeforeEach(func() {
 					failedMsg = messages[0]
 					wiredFailedMsg, err := messageToWire(failedMsg)
 					Expect(err).ToNot(HaveOccurred())
@@ -110,7 +110,7 @@ var _ = Describe("Queue interface", func() {
 					).Times(1)
 				})
 
-				It("should recieve a message from []*FailedMessage", func ()  {
+				It("should recieve a message from []*FailedMessage", func() {
 					failedMessages, err := q.Enqueue(ctx, messages)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(failedMessages).To(HaveLen(1))
@@ -118,11 +118,11 @@ var _ = Describe("Queue interface", func() {
 					Expect(failedMessages[0].Reason).To(Equal(failureReason))
 				})
 			})
-			
+
 			When("the operation fails", func() {
 				var errorMsg string
 
-				BeforeEach(func ()  {
+				BeforeEach(func() {
 					errorMsg = "internal errror"
 					mockQ.EXPECT().Enqueue(gomock.Any(), gomock.Any()).Return(
 						nil,
@@ -130,7 +130,7 @@ var _ = Describe("Queue interface", func() {
 					).AnyTimes()
 				})
 
-				It("should return an error", func ()  {
+				It("should return an error", func() {
 					_, err := q.Enqueue(ctx, messages)
 					Expect(err).To(HaveOccurred())
 					Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
@@ -142,11 +142,11 @@ var _ = Describe("Queue interface", func() {
 			var depth int
 
 			When("the depth is less than 1", func() {
-				BeforeEach(func ()  {
+				BeforeEach(func() {
 					depth = 0
 				})
 
-				It("should return an error", func ()  {
+				It("should return an error", func() {
 					messages, err := q.Dequeue(ctx, depth)
 					Expect(err).To(HaveOccurred())
 					Expect(messages).To(BeNil())
@@ -155,8 +155,8 @@ var _ = Describe("Queue interface", func() {
 
 			When("the operation is successful", func() {
 				var messagesQueue []map[string]interface{}
-			
-				BeforeEach(func ()  {
+
+				BeforeEach(func() {
 					messagesQueue = []map[string]interface{}{
 						{"message": "hello"},
 						{"message": "world"},
@@ -181,37 +181,36 @@ var _ = Describe("Queue interface", func() {
 						Messages: dequeuedMessages,
 					}, nil).AnyTimes()
 				})
-				
-				
-				It("should receive tasks equal to depth", func ()  {
+
+				It("should receive tasks equal to depth", func() {
 					messages, err := q.Dequeue(ctx, depth)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(messages).To(HaveLen(depth))
 				})
-				
-				It("should have message of type receivedMessageImpl", func ()  {
+
+				It("should have message of type receivedMessageImpl", func() {
 					messages, err := q.Dequeue(ctx, depth)
 					Expect(err).ToNot(HaveOccurred())
-					
+
 					_, ok := messages[0].(*receivedMessageImpl)
 					Expect(ok).To(BeTrue())
 				})
-				
-				It("should contain the returned messages", func ()  {
+
+				It("should contain the returned messages", func() {
 					dequeuedMessages, err := q.Dequeue(ctx, depth)
 					Expect(err).ToNot(HaveOccurred())
-					
-					for i := 0; i < depth; i++{
+
+					for i := 0; i < depth; i++ {
 						msg := dequeuedMessages[i]
 						Expect(msg.Message()).To(Equal(messagesQueue[i]))
-					}	
+					}
 				})
 			})
-			
+
 			When("the operation fails", func() {
 				var errorMsg string
 
-				BeforeEach(func ()  {
+				BeforeEach(func() {
 					depth = 1
 					errorMsg = "internal error"
 					mockQ.EXPECT().Dequeue(gomock.Any(), gomock.Any()).Return(
@@ -220,7 +219,7 @@ var _ = Describe("Queue interface", func() {
 					).Times(1)
 				})
 
-				It("should return an error", func ()  {
+				It("should return an error", func() {
 					_, err := q.Dequeue(ctx, depth)
 					Expect(err).To(HaveOccurred())
 					Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
@@ -229,141 +228,3 @@ var _ = Describe("Queue interface", func() {
 		})
 	})
 })
-
-
-// Context("Name", func(){
-// 	When("requesting queue's name", func() {''})
-// })
-
-// Context("Send", func() {
-// 	When("the gRPC server returns an error", func() {
-// 		mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
-
-// 		mockQ.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock error"))
-
-// 		q := &queueImpl{
-// 			name:        "test-queue",
-// 			queueClient: mockQ,
-// 		}
-
-// 		_, err := q.Send(context.TODO(), []*Task{
-// 			{
-// 				ID:          "1234",
-// 				PayloadType: "test-payload",
-// 				Payload: map[string]interface{}{
-// 					"test": "test",
-// 				},
-// 			},
-// 		})
-
-// 		It("should pass through the error", func() {
-// 			Expect(err).To(HaveOccurred())
-// 			Expect(err.Error()).To(Equal("Unknown: error from grpc library: \n mock error"))
-// 		})
-// 	})
-
-// 	When("the task send succeeds", func() {
-// 		mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
-// 		mockStruct, _ := protoutils.NewStruct(map[string]interface{}{
-// 			"test": "test",
-// 		})
-
-// 		mockQ.EXPECT().SendBatch(gomock.Any(), gomock.Any()).Return(&v1.QueueSendBatchResponse{
-// 			FailedTasks: []*v1.FailedTask{
-// 				{
-// 					Message: "Failed to send task",
-// 					Task: &v1.NitricTask{
-// 						Id:          "1234",
-// 						PayloadType: "test-payload",
-// 						Payload:     mockStruct,
-// 					},
-// 				},
-// 			},
-// 		}, nil)
-
-// 		q := &queueImpl{
-// 			name:        "test-queue",
-// 			queueClient: mockQ,
-// 		}
-
-// 		fts, _ := q.Send(context.TODO(), []*Task{
-// 			{
-// 				ID:          "1234",
-// 				PayloadType: "test-payload",
-// 				Payload: map[string]interface{}{
-// 					"test": "test",
-// 				},
-// 			},
-// 		})
-
-// 		It("should receive the failed tasks from the QueueSendBatchResponse", func() {
-// 			Expect(fts).To(HaveLen(1))
-// 			Expect(fts[0].Reason).To(Equal("Failed to send task"))
-// 			Expect(fts[0].Task.ID).To(Equal("1234"))
-// 			Expect(fts[0].Task.PayloadType).To(Equal("test-payload"))
-// 			Expect(fts[0].Task.Payload).To(Equal(map[string]interface{}{
-// 				"test": "test",
-// 			}))
-// 		})
-// 	})
-
-// 	Context("Receive", func() {
-// 		When("Retrieving tasks with depth less than 1", func() {
-// 			q := &queueImpl{
-// 				name: "test-queue",
-// 			}
-
-// 			_, err := q.Receive(context.TODO(), 0)
-
-// 			It("should return an error", func() {
-// 				Expect(err).To(HaveOccurred())
-// 				Expect(err.Error()).To(Equal("Invalid Argument: Queue.Receive: depth cannot be less than 1"))
-// 			})
-// 		})
-
-// 		When("The grpc successfully returns", func() {
-// 			mockStruct, _ := protoutils.NewStruct(map[string]interface{}{
-// 				"test": "test",
-// 			})
-// 			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
-
-// 			mockQ.EXPECT().Receive(gomock.Any(), gomock.Any()).Return(&v1.QueueReceiveResponse{
-// 				Tasks: []*v1.NitricTask{
-// 					{
-// 						Id:          "1234",
-// 						Payload:     mockStruct,
-// 						PayloadType: "mock-payload",
-// 						LeaseId:     "1234",
-// 					},
-// 				},
-// 			}, nil)
-
-// 			q := &queueImpl{
-// 				name:        "test-queue",
-// 				queueClient: mockQ,
-// 			}
-
-// 			t, _ := q.Receive(context.TODO(), 1)
-
-// 			It("should receive a single task", func() {
-// 				Expect(t).To(HaveLen(1))
-// 			})
-
-// 			rt, ok := t[0].(*receivedTaskImpl)
-
-// 			It("the task should be of type recieveTaskImpl", func() {
-// 				Expect(ok).To(BeTrue())
-// 			})
-
-// 			It("Should contain the returned task", func() {
-// 				tsk := rt.Task()
-
-// 				Expect(tsk.ID).To(Equal("1234"))
-// 				Expect(tsk.PayloadType).To(Equal("mock-payload"))
-// 				Expect(tsk.Payload).To(Equal(map[string]interface{}{
-// 					"test": "test",
-// 				}))
-// 			})
-// 		})
-// 	})
-// })

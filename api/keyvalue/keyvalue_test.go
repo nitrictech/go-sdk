@@ -1,16 +1,16 @@
-// // Copyright 2021 Nitric Technologies Pty Ltd.
-// //
-// // Licensed under the Apache License, Version 2.0 (the "License");
-// // you may not use this file except in compliance with the License.
-// // You may obtain a copy of the License at
-// //
-// //      http://www.apache.org/licenses/LICENSE-2.0
-// //
-// // Unless required by applicable law or agreed to in writing, software
-// // distributed under the License is distributed on an "AS IS" BASIS,
-// // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// // See the License for the specific language governing permissions and
-// // limitations under the License.
+// Copyright 2021 Nitric Technologies Pty Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package keyvalue
 
@@ -26,12 +26,12 @@ import (
 
 var _ = Describe("KeyValue API", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockKV   *mock_v1.MockKvStoreClient
-		kv       *keyValueImpl
-		store    Store
-		storeI   *storeImpl
-		ok       bool
+		ctrl      *gomock.Controller
+		mockKV    *mock_v1.MockKvStoreClient
+		kv        *keyValueImpl
+		store     Store
+		storeI    *storeImpl
+		ok        bool
 		storeName string
 	)
 
@@ -47,7 +47,7 @@ var _ = Describe("KeyValue API", func() {
 
 	Describe("Store()", func() {
 		Context("Given a valid KvStoreClient", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				storeName = "test-store"
 				store = kv.Store(storeName)
 				storeI, ok = store.(*storeImpl)
@@ -57,11 +57,11 @@ var _ = Describe("KeyValue API", func() {
 				It("should return an instance of storeImpl", func() {
 					Expect(ok).To(BeTrue())
 				})
-	
+
 				It("should have the provided store name", func() {
 					Expect(storeI.name).To(Equal(storeName))
 				})
-				
+
 				It("should share the KeyValue store's gRPC client", func() {
 					Expect(storeI.kvClient).To(Equal(mockKV))
 				})
@@ -71,7 +71,6 @@ var _ = Describe("KeyValue API", func() {
 
 	Describe("New method", func() {
 		When("constructing a new queue client without the membrane", func() {
-
 			BeforeEach(func() {
 				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
 			})
@@ -91,7 +90,7 @@ var _ = Describe("KeyValue API", func() {
 		})
 
 		PWhen("constructing a new queue client without dial blocking", func() {
-			// TODO: 
+			// TODO:
 		})
 	})
 })

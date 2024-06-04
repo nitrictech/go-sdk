@@ -24,12 +24,11 @@ import (
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
-
 var _ = Describe("Secrets API", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockSC  	 *mock_v1.MockSecretManagerClient
-		secrets   *secretsImpl
+		ctrl    *gomock.Controller
+		mockSC  *mock_v1.MockSecretManagerClient
+		secrets *secretsImpl
 	)
 
 	BeforeEach(func() {
@@ -46,14 +45,14 @@ var _ = Describe("Secrets API", func() {
 
 	Describe("Secret method", func() {
 		When("creating a new Secret reference", func() {
-			var(
-				sr			SecretRef
-				secretsName	string
-				srImpl		*secretRefImpl
-				ok			bool
+			var (
+				sr          SecretRef
+				secretsName string
+				srImpl      *secretRefImpl
+				ok          bool
 			)
 
-			BeforeEach(func(){
+			BeforeEach(func() {
 				secretsName = "test-secret"
 				sr = secrets.Secret(secretsName)
 				srImpl, ok = sr.(*secretRefImpl)
@@ -75,14 +74,14 @@ var _ = Describe("Secrets API", func() {
 
 	Describe("New method", func() {
 		When("Constructing a new Secrets client with no rpc server available", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-				
+
 			})
 			AfterEach(func() {
 				os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
 			})
-			
+
 			c, err := New()
 
 			It("should return a nil client", func() {
@@ -93,48 +92,9 @@ var _ = Describe("Secrets API", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
-		
+
 		PWhen("constructing a new Secrets client without dial blocking", func() {
 			// TODO:
 		})
 	})
 })
-
-
-// var _ = Describe("Secrets", func() {
-// 	Context("New", func() {
-// 		When("Constructing a new Secrets client with no rpc server available", func() {
-// 			os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-// 			c, err := New()
-
-// 			It("should return a nil client", func() {
-// 				Expect(c).To(BeNil())
-// 			})
-
-// 			It("should return an error", func() {
-// 				Expect(err).To(HaveOccurred())
-// 			})
-// 		})
-// 	})
-
-// 	Context("Secret", func() {
-// 		When("Retrieving a new secret reference", func() {
-// 			ctrl := gomock.NewController(GinkgoT())
-// 			mc := mock_v1.NewMockSecretManagerClient(ctrl)
-// 			c := &secretsImpl{
-// 				secretClient: mc,
-// 			}
-
-// 			It("should successfully return a correct secret reference", func() {
-// 				s := c.Secret("test")
-
-// 				By("returning s secretRefImpl")
-// 				_, ok := s.(*secretRefImpl)
-// 				Expect(ok).To(BeTrue())
-
-// 				By("containing the requested name")
-// 				Expect(s.Name()).To(Equal("test"))
-// 			})
-// 		})
-// 	})
-// })

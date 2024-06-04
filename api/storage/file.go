@@ -19,10 +19,11 @@ import (
 	"fmt"
 	"time"
 
+	"google.golang.org/protobuf/types/known/durationpb"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type Mode int

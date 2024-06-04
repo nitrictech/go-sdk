@@ -56,18 +56,18 @@ func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
 		ScheduleName: s.name,
 		Cadence: &schedulespb.RegistrationRequest_Cron{
 			Cron: scheduleCron,
-		},	
+		},
 	}
 
 	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
 
 	opts := &workers.IntervalWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware: composeHandler,	
+		Middleware:          composeHandler,
 	}
 
 	worker := workers.NewIntervalWorker(opts)
-	s.manager.addWorker("IntervalWorkerCron:" + strings.Join([]string{
+	s.manager.addWorker("IntervalWorkerCron:"+strings.Join([]string{
 		s.name,
 		cron,
 	}, "-"), worker)
@@ -90,11 +90,11 @@ func (s *schedule) Every(rate string, middleware ...handler.IntervalMiddleware) 
 
 	opts := &workers.IntervalWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware: composeHandler,	
+		Middleware:          composeHandler,
 	}
 
 	worker := workers.NewIntervalWorker(opts)
-	s.manager.addWorker("IntervalWorkerEvery:" + strings.Join([]string{
+	s.manager.addWorker("IntervalWorkerEvery:"+strings.Join([]string{
 		s.name,
 		rate,
 	}, "-"), worker)

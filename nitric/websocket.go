@@ -105,11 +105,10 @@ func (w *websocket) Name() string {
 }
 
 func (w *websocket) On(eventType handler.WebsocketEventType, middleware ...handler.WebsocketMiddleware) {
-
 	// mapping handler.WebsocketEventType to protobuf requirement i.e websocketsv1.WebsocketEventType
-	var _eventType websocketsv1.WebsocketEventType;
+	var _eventType websocketsv1.WebsocketEventType
 	switch eventType {
-	case  handler.WebsocketDisconnect:
+	case handler.WebsocketDisconnect:
 		_eventType = websocketsv1.WebsocketEventType_Disconnect
 	case handler.WebsocketMessage:
 		_eventType = websocketsv1.WebsocketEventType_Message
@@ -119,17 +118,17 @@ func (w *websocket) On(eventType handler.WebsocketEventType, middleware ...handl
 
 	registrationRequest := &websocketsv1.RegistrationRequest{
 		SocketName: w.name,
-		EventType: _eventType,
+		EventType:  _eventType,
 	}
 	composeHandler := handler.ComposeWebsocketMiddleware(middleware...)
 
 	opts := &workers.WebsocketWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware: composeHandler,
+		Middleware:          composeHandler,
 	}
 
 	worker := workers.NewWebsocketWorker(opts)
-	w.manager.addWorker("WebsocketWorker:" + strings.Join([]string{
+	w.manager.addWorker("WebsocketWorker:"+strings.Join([]string{
 		w.name,
 		string(eventType),
 	}, "-"), worker)

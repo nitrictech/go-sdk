@@ -32,16 +32,16 @@ import (
 
 var _ = Describe("File", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockStorage   *mock_v1.MockStorageClient
-		bucket       *bucketImpl
-		file    File
-		bucketName string
-		fileName string
-		ctx 		context.Context
+		ctrl        *gomock.Controller
+		mockStorage *mock_v1.MockStorageClient
+		bucket      *bucketImpl
+		file        File
+		bucketName  string
+		fileName    string
+		ctx         context.Context
 	)
 
-	BeforeEach(func ()  {
+	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockStorage = mock_v1.NewMockStorageClient(ctrl)
 
@@ -62,7 +62,7 @@ var _ = Describe("File", func() {
 	})
 
 	Describe("Name()", func() {
-		It("should have the same file name as the one provided", func ()  {
+		It("should have the same file name as the one provided", func() {
 			_fileName := file.Name()
 			Expect(_fileName).To(Equal(fileName))
 		})
@@ -72,13 +72,13 @@ var _ = Describe("File", func() {
 		When("the gRPC Read operation is successful", func() {
 			var fileContent []byte
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				fileContent = []byte("this is dummy file content for testing")
 
 				By("the gRPC server returning a successful response")
 				mockStorage.EXPECT().Read(gomock.Any(), &v1.StorageReadRequest{
 					BucketName: bucketName,
-					Key: fileName,
+					Key:        fileName,
 				}).Return(&v1.StorageReadResponse{
 					Body: fileContent,
 				}, nil).Times(1)
@@ -89,7 +89,7 @@ var _ = Describe("File", func() {
 
 				By("not returning any error")
 				Expect(err).ToNot(HaveOccurred())
-				
+
 				By("returning the expected data in file")
 				Expect(fileData).To(Equal(fileContent))
 			})
@@ -98,7 +98,7 @@ var _ = Describe("File", func() {
 		When("the grpc server returns an error", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
 
 				By("the gRPC server returning an error")
@@ -124,19 +124,19 @@ var _ = Describe("File", func() {
 	Describe("Write", func() {
 		var fileData []byte
 
-		BeforeEach(func ()  {
+		BeforeEach(func() {
 			fileData = []byte("this is dummy file content for testing")
 		})
 
 		When("the gRPC write operation is successful", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				By("the gRPC server returning a successful response")
 				mockStorage.EXPECT().Write(gomock.Any(), &v1.StorageWriteRequest{
 					BucketName: bucketName,
 					Key:        fileName,
 					Body:       fileData,
 				}).Return(
-					&v1.StorageWriteResponse{}, 
+					&v1.StorageWriteResponse{},
 					nil,
 				).Times(1)
 			})
@@ -150,12 +150,12 @@ var _ = Describe("File", func() {
 		When("the grpc server returns an error", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
 
 				By("the gRPC server returning an error")
 				mockStorage.EXPECT().Write(gomock.Any(), gomock.Any()).Return(
-					nil, 
+					nil,
 					errors.New(errorMsg),
 				).Times(1)
 			})
@@ -172,12 +172,12 @@ var _ = Describe("File", func() {
 
 	Describe("Delete", func() {
 		When("the delete gRPC operation is successful", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				By("the gRPC server returning a successful response")
 				mockStorage.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(
 					&v1.StorageDeleteResponse{},
 					nil,
-				).Times(1)	
+				).Times(1)
 			})
 
 			It("should not return an error", func() {
@@ -189,19 +189,19 @@ var _ = Describe("File", func() {
 		When("the grpc server returns an error", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
 
 				By("the gRPC server returning an error")
 				mockStorage.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(
-					nil, 
+					nil,
 					errors.New(errorMsg),
 				).Times(1)
 			})
 
 			It("should pass through the returned error", func() {
 				err := file.Delete(ctx)
-				
+
 				By("returning error with expected message")
 				Expect(err).To(HaveOccurred())
 				Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
@@ -209,19 +209,19 @@ var _ = Describe("File", func() {
 		})
 	})
 
-	Describe("UploadUrl()", func ()  {
+	Describe("UploadUrl()", func() {
 		var expiry int
-		
-		BeforeEach(func ()  {
+
+		BeforeEach(func() {
 			expiry = 1 * 24 * 60 * 60 // 1 Day
 		})
-		
+
 		When("the PreSignUrl gRPC operation is successful", func() {
 			var url string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				url = "https://example.com"
-	
+
 				mockStorage.EXPECT().PreSignUrl(ctx, &v1.StoragePreSignUrlRequest{
 					BucketName: bucketName,
 					Key:        fileName,
@@ -231,34 +231,34 @@ var _ = Describe("File", func() {
 					Url: url,
 				}, nil).Times(1)
 			})
-	
-			It("should return a valid url stirng", func ()  {
+
+			It("should return a valid url stirng", func() {
 				_url, err := file.UploadUrl(ctx, expiry)
-	
+
 				By("not returning any errors")
 				Expect(err).ToNot(HaveOccurred())
 				By("returning a valid url")
 				Expect(_url).To(Equal(url))
-			})	
+			})
 		})
-		
+
 		When("the grpc server returns an error", func() {
 			var errorMsg string
-			
-			BeforeEach(func ()  {
+
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
-	
+
 				mockStorage.EXPECT().PreSignUrl(gomock.Any(), gomock.Any()).Return(
 					&v1.StoragePreSignUrlResponse{
 						Url: "",
-					}, 
+					},
 					errors.New(errorMsg),
 				).Times(1)
 			})
 
 			It("should pass through the returned error", func() {
 				_url, err := file.UploadUrl(ctx, expiry)
-				
+
 				By("returning error with expected message")
 				Expect(err).To(HaveOccurred())
 				Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
@@ -268,20 +268,20 @@ var _ = Describe("File", func() {
 			})
 		})
 	})
-	
-	Describe("DownloadUrl()", func ()  {
+
+	Describe("DownloadUrl()", func() {
 		var expiry int
-		
-		BeforeEach(func ()  {
+
+		BeforeEach(func() {
 			expiry = 1 * 24 * 60 * 60 // 1 Day
 		})
-		
+
 		When("the PreSignUrl gRPC operation is successful", func() {
 			var url string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				url = "https://example.com"
-	
+
 				mockStorage.EXPECT().PreSignUrl(ctx, &v1.StoragePreSignUrlRequest{
 					BucketName: bucketName,
 					Key:        fileName,
@@ -291,34 +291,34 @@ var _ = Describe("File", func() {
 					Url: url,
 				}, nil).Times(1)
 			})
-	
-			It("should return a valid url stirng", func ()  {
+
+			It("should return a valid url stirng", func() {
 				_url, err := file.DownloadUrl(ctx, expiry)
-	
+
 				By("not returning any errors")
 				Expect(err).ToNot(HaveOccurred())
 				By("returning a valid url")
 				Expect(_url).To(Equal(url))
-			})	
+			})
 		})
-		
+
 		When("the grpc server returns an error", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
-	
+
 				mockStorage.EXPECT().PreSignUrl(gomock.Any(), gomock.Any()).Return(
 					&v1.StoragePreSignUrlResponse{
 						Url: "",
-					}, 
+					},
 					errors.New(errorMsg),
 				).Times(1)
 			})
 
 			It("should pass through the returned error", func() {
 				_url, err := file.DownloadUrl(ctx, expiry)
-				
+
 				By("returning error with expected message")
 				Expect(err).To(HaveOccurred())
 				Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
@@ -330,20 +330,20 @@ var _ = Describe("File", func() {
 	})
 })
 
-var _ = Describe("fileImpl", func ()  {
+var _ = Describe("fileImpl", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockStorage   *mock_v1.MockStorageClient
-		bucket       *bucketImpl
-		file    File
-		fileI 	*fileImpl
-		bucketName string
-		fileName string
-		ok 		bool
-		ctx 		context.Context
+		ctrl        *gomock.Controller
+		mockStorage *mock_v1.MockStorageClient
+		bucket      *bucketImpl
+		file        File
+		fileI       *fileImpl
+		bucketName  string
+		fileName    string
+		ok          bool
+		ctx         context.Context
 	)
 
-	BeforeEach(func ()  {
+	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockStorage = mock_v1.NewMockStorageClient(ctrl)
 
@@ -370,14 +370,14 @@ var _ = Describe("fileImpl", func ()  {
 	Describe("signUrl()", func() {
 		var expiry int
 
-		BeforeEach(func ()  {
+		BeforeEach(func() {
 			expiry = 1 * 24 * 60 * 60 // 1 day
 		})
 
 		When("invalid mode is provided", func() {
 			It("should return an error", func() {
 				_, err := fileI.signUrl(ctx, PresignUrlOptions{
-					Mode: 9999, // Invalid Mode
+					Mode:   9999, // Invalid Mode
 					Expiry: expiry,
 				})
 				Expect(err).Should(HaveOccurred())
@@ -388,7 +388,7 @@ var _ = Describe("fileImpl", func ()  {
 		When("The grpc server returns an error", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
 
 				By("the gRPC server returning an error")
@@ -402,10 +402,10 @@ var _ = Describe("fileImpl", func ()  {
 
 			It("should pass through the returned error", func() {
 				_url, err := fileI.signUrl(ctx, PresignUrlOptions{
-					Mode: ModeRead,
+					Mode:   ModeRead,
 					Expiry: expiry,
 				})
-				
+
 				By("returning error with expected message")
 				Expect(err).To(HaveOccurred())
 				Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
@@ -419,7 +419,7 @@ var _ = Describe("fileImpl", func ()  {
 			var url string
 			var mode Mode
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				url = "http://example.com"
 				mode = ModeWrite
 
@@ -443,83 +443,83 @@ var _ = Describe("fileImpl", func ()  {
 				Expect(_url).To(Equal(url))
 			})
 		})
-	})	
+	})
 })
 
-var _ = Describe("PresignUrlOptions", func ()  {
-	var mode   Mode
+var _ = Describe("PresignUrlOptions", func() {
+	var mode Mode
 	var expiry int
 	var p *PresignUrlOptions
 
 	Describe("isValid()", func() {
 		When("valid mode and expiry are passed", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				expiry = 1 * 24 * 60 * 60 // 1 day
 				mode = ModeRead
 
 				p = &PresignUrlOptions{
-					Mode: mode,
+					Mode:   mode,
 					Expiry: expiry,
 				}
 			})
 
-			It("should not return an error", func ()  {
+			It("should not return an error", func() {
 				err := p.isValid()
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
-		
+
 		When("invalid mode is passed", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "invalid mode"
 				expiry = 1 * 24 * 60 * 60 // 1 day
 
 				p = &PresignUrlOptions{
-					Mode: 7,
+					Mode:   7,
 					Expiry: expiry,
 				}
 			})
 
-			It("should return an error", func ()  {
+			It("should return an error", func() {
 				err := p.isValid()
 				By("occurance of error")
 				Expect(err).To(HaveOccurred())
 
 				By("containing appropriate error message")
 				Expect(strings.Contains(
-						strings.ToLower(err.Error()), 
-						strings.ToLower(errorMsg),
-					),
+					strings.ToLower(err.Error()),
+					strings.ToLower(errorMsg),
+				),
 				).To(BeTrue())
 			})
 		})
-		
+
 		When("invalid expiry is passed", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "invalid expiry"
 				expiry = 9999 * 24 * 60 * 60 // 9999 days
 				mode = ModeRead
 
 				p = &PresignUrlOptions{
-					Mode: mode,
+					Mode:   mode,
 					Expiry: expiry,
 				}
 			})
 
-			It("should return an error", func ()  {
+			It("should return an error", func() {
 				err := p.isValid()
 				By("occurance of error")
 				Expect(err).To(HaveOccurred())
 
 				By("containing appropriate error message")
 				Expect(strings.Contains(
-						strings.ToLower(err.Error()), 
-						strings.ToLower(errorMsg),
-					),
+					strings.ToLower(err.Error()),
+					strings.ToLower(errorMsg),
+				),
 				).To(BeTrue())
 			})
 		})

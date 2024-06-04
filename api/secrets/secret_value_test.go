@@ -14,16 +14,12 @@
 
 package secrets
 
-// import (
-// 	. "github.com/onsi/ginkgo"
-// 	. "github.com/onsi/gomega"
-// )
-
 import (
 	"github.com/golang/mock/gomock"
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("secretValueImpl", func() {
@@ -34,7 +30,7 @@ var _ = Describe("secretValueImpl", func() {
 		versionName string
 		sv          SecretVersionRef
 		secretValue SecretValue
-		value 		[]byte
+		value       []byte
 	)
 
 	BeforeEach(func() {
@@ -42,7 +38,7 @@ var _ = Describe("secretValueImpl", func() {
 		mockSC = mock_v1.NewMockSecretManagerClient(ctrl)
 		secretName = "test-secret"
 		versionName = "test-version"
-		
+
 		sv = &secretVersionRefImpl{
 			secretClient: mockSC,
 			secret: &secretRefImpl{
@@ -55,7 +51,7 @@ var _ = Describe("secretValueImpl", func() {
 		value = []byte("ssssshhhh... it's a secret")
 		secretValue = &secretValueImpl{
 			version: sv,
-			val: value,
+			val:     value,
 		}
 	})
 

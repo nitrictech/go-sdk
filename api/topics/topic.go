@@ -18,11 +18,12 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/protobuf/types/known/durationpb"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 	"github.com/nitrictech/protoutils"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type PublishOption = func(*v1.TopicPublishRequest)

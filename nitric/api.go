@@ -40,7 +40,7 @@ type Route interface {
 
 type route struct {
 	path       string
-	api    		*api
+	api        *api
 	middleware handler.HttpMiddleware
 	manager    *manager
 }
@@ -63,7 +63,7 @@ func (a *api) NewRoute(match string, middleware ...handler.HttpMiddleware) Route
 		r = &route{
 			manager:    a.manager,
 			path:       path.Join(a.path, match),
-			api:    	a,
+			api:        a,
 			middleware: composeRouteMiddleware(a.middleware, middleware),
 		}
 	}
@@ -81,9 +81,9 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 	// default methodOptions will contain OidcOptions passed to API instance and securityDisabled to false
 	mo := &methodOptions{
 		securityDisabled: false,
-		security: r.api.security,
+		security:         r.api.security,
 	}
-	
+
 	for _, o := range opts {
 		o(mo)
 	}
@@ -95,10 +95,10 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 
 	apiOpts := &apispb.ApiWorkerOptions{
 		SecurityDisabled: mo.securityDisabled,
-		Security:        map[string]*apispb.ApiWorkerScopes{},
+		Security:         map[string]*apispb.ApiWorkerScopes{},
 	}
 
-	if  mo.security != nil && !mo.securityDisabled {
+	if mo.security != nil && !mo.securityDisabled {
 		for _, oidcOption := range mo.security {
 			err := attachOidc(r.api.name, oidcOption)
 			if err != nil {
@@ -120,7 +120,7 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 
 	wkr := workers.NewApiWorker(&workers.ApiWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware: composedHandler,
+		Middleware:          composedHandler,
 	})
 
 	r.manager.addWorker("route:"+bName, wkr)
@@ -203,11 +203,11 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 		o(a)
 	}
 
-	apiResource :=  &resourcev1.ApiResource{}
+	apiResource := &resourcev1.ApiResource{}
 
 	// Attaching OIDC Options to API
 	if a.security != nil {
-		for _, oidcOption := range a.security	{
+		for _, oidcOption := range a.security {
 			attachOidc(a.name, oidcOption)
 
 			if apiResource.GetSecurity() == nil {
@@ -229,7 +229,6 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 			Api: apiResource,
 		},
 	})
-
 	if err != nil {
 		return nil, err
 	}

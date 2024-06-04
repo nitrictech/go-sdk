@@ -113,7 +113,7 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 }
 
 func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFilter string, middleware ...handler.BlobEventMiddleware) {
-	var blobEventType storagepb.BlobEventType;
+	var blobEventType storagepb.BlobEventType
 	switch notificationType {
 	case handler.WriteNotification:
 		blobEventType = storagepb.BlobEventType_Created
@@ -122,21 +122,21 @@ func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFi
 	}
 
 	registrationRequest := &storagepb.RegistrationRequest{
-		BucketName: b.name,
-		BlobEventType: blobEventType,
+		BucketName:      b.name,
+		BlobEventType:   blobEventType,
 		KeyPrefixFilter: notificationPrefixFilter,
 	}
-	
+
 	composedHandler := handler.ComposeBlobEventMiddleware(middleware...)
 
 	opts := &workers.BlobEventWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware: composedHandler,
+		Middleware:          composedHandler,
 	}
 
 	worker := workers.NewBlobEventWorker(opts)
-	
-	b.manager.addWorker("bucketNotification:"+ strings.Join([]string{
+
+	b.manager.addWorker("bucketNotification:"+strings.Join([]string{
 		b.name, notificationPrefixFilter, string(notificationType),
-	},"-"), worker)
+	}, "-"), worker)
 }

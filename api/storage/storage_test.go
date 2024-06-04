@@ -26,36 +26,36 @@ import (
 
 var _ = Describe("Storage API", func() {
 	var (
-		ctrl     *gomock.Controller
-		mockStorage   *mock_v1.MockStorageClient
-		s		 	 Storage
+		ctrl        *gomock.Controller
+		mockStorage *mock_v1.MockStorageClient
+		s           Storage
 	)
-	
-	BeforeEach(func ()  {
+
+	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockStorage = mock_v1.NewMockStorageClient(ctrl)
-		
+
 		s = &storageImpl{
 			storageClient: mockStorage,
 		}
 	})
-	
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})
-	
+
 	Describe("Bucket()", func() {
 		var bucketName string
 		var bucketI *bucketImpl
 		var ok bool
-		
+
 		When("creating a new Bucket reference", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				bucketName = "test-bucket"
 				bucket := s.Bucket(bucketName)
 				bucketI, ok = bucket.(*bucketImpl)
 			})
-			
+
 			It("should return a bucketImpl instance", func() {
 				Expect(ok).To(BeTrue())
 			})
@@ -79,12 +79,12 @@ var _ = Describe("Storage API", func() {
 				AfterEach(func() {
 					os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
 				})
-				
+
 				s, err := New()
-				
+
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
-					
+
 					By("not returning a storage client")
 					Expect(s).To(BeNil())
 				})

@@ -21,10 +21,10 @@ import (
 )
 
 type OidcOptions struct {
-	Name    string
-	Issuer 	string
+	Name      string
+	Issuer    string
 	Audiences []string
-	Scopes []string
+	Scopes    []string
 }
 
 func attachOidc(apiName string, options OidcOptions) error {
@@ -35,19 +35,17 @@ func attachOidc(apiName string, options OidcOptions) error {
 	return nil
 }
 
-type SecurityOption = func (scopes []string) OidcOptions
+type SecurityOption = func(scopes []string) OidcOptions
 
-type OidcSecurityDefinition interface {
-
-}
+type OidcSecurityDefinition interface{}
 
 type oidcSecurityDefinition struct {
 	OidcSecurityDefinition
 
-	ApiName    string
-	RuleName	string
-	Issuer		string
-	Audiences	[]string
+	ApiName   string
+	RuleName  string
+	Issuer    string
+	Audiences []string
 
 	manager Manager
 }
@@ -63,11 +61,11 @@ func (m *manager) newOidcSecurityDefinition(apiName string, options OidcOptions)
 	}
 
 	o := &oidcSecurityDefinition{
-		ApiName: apiName,
-		RuleName: options.Name,
-		Issuer: options.Issuer,
+		ApiName:   apiName,
+		RuleName:  options.Name,
+		Issuer:    options.Issuer,
 		Audiences: options.Audiences,
-		manager: m,
+		manager:   m,
 	}
 
 	// declare resource
@@ -81,18 +79,16 @@ func (m *manager) newOidcSecurityDefinition(apiName string, options OidcOptions)
 				ApiName: apiName,
 				Definition: &v1.ApiSecurityDefinitionResource_Oidc{
 					Oidc: &v1.ApiOpenIdConnectionDefinition{
-						Issuer: o.Issuer,
+						Issuer:    o.Issuer,
 						Audiences: o.Audiences,
 					},
 				},
 			},
 		},
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
 	return o, nil
 }
-

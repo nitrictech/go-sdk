@@ -26,36 +26,36 @@ import (
 
 var _ = Describe("Topics API", func() {
 	var (
-		ctrl     	 *gomock.Controller
-		mockTopics   *mock_v1.MockTopicsClient
-		ts		 	 Topics
+		ctrl       *gomock.Controller
+		mockTopics *mock_v1.MockTopicsClient
+		ts         Topics
 	)
-	
-	BeforeEach(func ()  {
+
+	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockTopics = mock_v1.NewMockTopicsClient(ctrl)
-		
+
 		ts = &topicsImpl{
 			topicClient: mockTopics,
 		}
 	})
-	
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})
-	
+
 	Describe("Topic()", func() {
 		var topicName string
 		var topicI *topicImpl
 		var ok bool
-		
+
 		When("creating a new Topic reference", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				topicName = "test-topic"
 				topic := ts.Topic(topicName)
 				topicI, ok = topic.(*topicImpl)
 			})
-			
+
 			It("should return a topicImpl instance", func() {
 				Expect(ok).To(BeTrue())
 			})
@@ -79,12 +79,12 @@ var _ = Describe("Topics API", func() {
 				AfterEach(func() {
 					os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
 				})
-				
+
 				ts, err := New()
-				
+
 				It("should return an error", func() {
 					Expect(err).To(HaveOccurred())
-					
+
 					By("not returning a topics client")
 					Expect(ts).To(BeNil())
 				})

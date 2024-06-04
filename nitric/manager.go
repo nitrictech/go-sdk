@@ -66,9 +66,7 @@ type manager struct {
 	kvstores keyvalue.KeyValue
 }
 
-var (
-	defaultManager = New()
-)
+var defaultManager = New()
 
 // New is used to create the top level resource manager.
 // Note: this is not required if you are using

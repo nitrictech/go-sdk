@@ -90,7 +90,7 @@ func (c *HttpContext) WithError(err error) {
 }
 
 type MessageContext struct {
-	id 		string
+	id       string
 	Request  MessageRequest
 	Response *MessageResponse
 	Extras   map[string]interface{}
@@ -112,7 +112,7 @@ func NewMessageContext(msg *topics.ServerMessage) *MessageContext {
 		id: msg.Id,
 		Request: &messageRequestImpl{
 			topicName: msg.GetMessageRequest().TopicName,
-			message: msg.GetMessageRequest().Message.GetStructPayload().AsMap(),
+			message:   msg.GetMessageRequest().Message.GetStructPayload().AsMap(),
 		},
 		Response: &MessageResponse{
 			Success: true,
@@ -120,14 +120,14 @@ func NewMessageContext(msg *topics.ServerMessage) *MessageContext {
 	}
 }
 
-func (c *MessageContext) WithError(err error){
+func (c *MessageContext) WithError(err error) {
 	c.Response = &MessageResponse{
 		Success: false,
 	}
 }
 
 type IntervalContext struct {
-	id		string
+	id       string
 	Request  IntervalRequest
 	Response *IntervalResponse
 	Extras   map[string]interface{}
@@ -154,14 +154,14 @@ func NewIntervalContext(msg *schedules.ServerMessage) *IntervalContext {
 	}
 }
 
-func (c *IntervalContext) WithError(err error){
+func (c *IntervalContext) WithError(err error) {
 	c.Response = &IntervalResponse{
 		Success: false,
 	}
 }
 
 type BlobEventContext struct {
-	id 		string
+	id       string
 	Request  BlobEventRequest
 	Response *BlobEventResponse
 	Extras   map[string]interface{}
@@ -180,7 +180,7 @@ func (c *BlobEventContext) ToClientMessage() *storage.ClientMessage {
 
 func NewBlobEventContext(msg *storage.ServerMessage) *BlobEventContext {
 	req := msg.GetBlobEventRequest()
-	
+
 	return &BlobEventContext{
 		id: msg.Id,
 		Request: &blobEventRequestImpl{
@@ -192,7 +192,7 @@ func NewBlobEventContext(msg *storage.ServerMessage) *BlobEventContext {
 	}
 }
 
-func (c *BlobEventContext) WithError(err error){
+func (c *BlobEventContext) WithError(err error) {
 	c.Response = &BlobEventResponse{
 		Success: false,
 	}
@@ -205,7 +205,7 @@ type FileEventContext struct {
 }
 
 type WebsocketContext struct {
-	id 		string
+	id       string
 	Request  WebsocketRequest
 	Response *WebsocketResponse
 	Extras   map[string]interface{}
@@ -229,8 +229,8 @@ func (c *WebsocketContext) ToClientMessage() *websockets.ClientMessage {
 func NewWebsocketContext(msg *websockets.ServerMessage) *WebsocketContext {
 	req := msg.GetWebsocketEventRequest()
 
-	var eventType WebsocketEventType;
-	switch req.WebsocketEvent.(type){
+	var eventType WebsocketEventType
+	switch req.WebsocketEvent.(type) {
 	case *websockets.WebsocketEventRequest_Disconnection:
 		eventType = WebsocketDisconnect
 	case *websockets.WebsocketEventRequest_Message:
@@ -241,7 +241,7 @@ func NewWebsocketContext(msg *websockets.ServerMessage) *WebsocketContext {
 
 	queryParams := make(map[string]*http.QueryValue)
 	if eventType == WebsocketConnect {
-		for key, value := range req.GetConnection().GetQueryParams(){
+		for key, value := range req.GetConnection().GetQueryParams() {
 			queryParams[key] = &http.QueryValue{
 				Value: value.Value,
 			}
@@ -256,11 +256,11 @@ func NewWebsocketContext(msg *websockets.ServerMessage) *WebsocketContext {
 	return &WebsocketContext{
 		id: msg.Id,
 		Request: &websocketRequestImpl{
-			socketName: req.SocketName,
-			eventType: eventType,
+			socketName:   req.SocketName,
+			eventType:    eventType,
 			connectionId: req.ConnectionId,
-			queryParams: queryParams,
-			message: _message,
+			queryParams:  queryParams,
+			message:      _message,
 		},
 		Response: &WebsocketResponse{
 			Reject: false,
@@ -268,7 +268,7 @@ func NewWebsocketContext(msg *websockets.ServerMessage) *WebsocketContext {
 	}
 }
 
-func (c *WebsocketContext) WithError(err error){
+func (c *WebsocketContext) WithError(err error) {
 	c.Response = &WebsocketResponse{
 		Reject: true,
 	}

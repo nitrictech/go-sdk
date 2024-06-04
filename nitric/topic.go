@@ -129,9 +129,9 @@ func (t *subscribableTopic) Subscribe(middleware ...handler.MessageMiddleware) {
 
 	opts := &workers.SubscriptionWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware: composeHandler,	
+		Middleware:          composeHandler,
 	}
 
 	worker := workers.NewSubscriptionWorker(opts)
-	t.manager.addWorker("SubscriptionWorker:" + t.name, worker)
+	t.manager.addWorker("SubscriptionWorker:"+t.name, worker)
 }

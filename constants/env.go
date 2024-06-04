@@ -38,7 +38,6 @@ func GetEnvWithFallback(varName string, fallback string) string {
 
 // NitricDialTimeout - Retrieves default service dial timeout in milliseconds
 func NitricDialTimeout() time.Duration {
-
 	tInt, _ := strconv.ParseInt(nitricServiceDialTimeoutDefault, 10, 64)
 
 	return time.Duration(tInt) * time.Millisecond

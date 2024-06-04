@@ -34,7 +34,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 		secretName  string
 		versionName string
 		sv          SecretVersionRef
-		sr 		SecretRef
+		sr          SecretRef
 		ctx         context.Context
 	)
 
@@ -43,7 +43,7 @@ var _ = Describe("secretVersionRefImpl", func() {
 		mockSC = mock_v1.NewMockSecretManagerClient(ctrl)
 		secretName = "test-secret"
 		versionName = "test-version"
-		
+
 		sr = &secretRefImpl{
 			name:         secretName,
 			secretClient: mockSC,
@@ -51,8 +51,8 @@ var _ = Describe("secretVersionRefImpl", func() {
 
 		sv = &secretVersionRefImpl{
 			secretClient: mockSC,
-			secret: sr,
-			version: versionName,
+			secret:       sr,
+			version:      versionName,
 		}
 		ctx = context.Background()
 	})
@@ -139,7 +139,6 @@ var _ = Describe("secretVersionRefImpl", func() {
 		})
 	})
 
-	
 	Context("Secret", func() {
 		When("retrieving the parent secret of a secretVersionRefImpl", func() {
 			It("should return it's internal secret field", func() {

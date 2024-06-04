@@ -30,20 +30,20 @@ import (
 
 var _ = Describe("File", func() {
 	var (
-		ctrl     	*gomock.Controller
-		mockTopic   *mock_v1.MockTopicsClient
-		t 			 Topic
-		topicName 	 string
-		ctx 		 context.Context
+		ctrl      *gomock.Controller
+		mockTopic *mock_v1.MockTopicsClient
+		t         Topic
+		topicName string
+		ctx       context.Context
 	)
 
-	BeforeEach(func ()  {
+	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockTopic = mock_v1.NewMockTopicsClient(ctrl)
 
 		topicName = "test-topic"
 		t = &topicImpl{
-			name: topicName,
+			name:        topicName,
 			topicClient: mockTopic,
 		}
 
@@ -55,7 +55,7 @@ var _ = Describe("File", func() {
 	})
 
 	Describe("Name()", func() {
-		It("should have the same topic name as the one provided", func ()  {
+		It("should have the same topic name as the one provided", func() {
 			_topicName := t.Name()
 			Expect(_topicName).To(Equal(topicName))
 		})
@@ -64,14 +64,14 @@ var _ = Describe("File", func() {
 	Describe("Publish()", func() {
 		var messageToBePublished map[string]interface{}
 
-		BeforeEach(func ()  {
+		BeforeEach(func() {
 			messageToBePublished = map[string]interface{}{
 				"data": "hello world",
 			}
 		})
 
 		When("the gRPC Read operation is successful", func() {
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				payloadStruct, err := protoutils.NewStruct(messageToBePublished)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -84,10 +84,10 @@ var _ = Describe("File", func() {
 					},
 				}).Return(
 					&v1.TopicPublishResponse{},
-				nil).Times(1)
+					nil).Times(1)
 			})
 
-			It("should not return error", func ()  {
+			It("should not return error", func() {
 				err := t.Publish(ctx, messageToBePublished)
 
 				Expect(err).ToNot(HaveOccurred())
@@ -97,7 +97,7 @@ var _ = Describe("File", func() {
 		When("the grpc server returns an error", func() {
 			var errorMsg string
 
-			BeforeEach(func ()  {
+			BeforeEach(func() {
 				errorMsg = "Internal Error"
 
 				By("the gRPC server returning an error")

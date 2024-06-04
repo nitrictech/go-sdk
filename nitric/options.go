@@ -33,13 +33,13 @@ type methodOptions struct {
 	securityDisabled bool
 }
 
-func OidcRule(name string,  issuer string , audiences []string) SecurityOption {
+func OidcRule(name string, issuer string, audiences []string) SecurityOption {
 	return func(scopes []string) OidcOptions {
 		return OidcOptions{
-			Name: name,
-			Issuer: issuer,
+			Name:      name,
+			Issuer:    issuer,
 			Audiences: audiences,
-			Scopes: scopes,
+			Scopes:    scopes,
 		}
 	}
 }
@@ -71,7 +71,7 @@ func WithSecurity(oidcOptions OidcOptions) ApiOption {
 		} else {
 			api.security = append(api.security, oidcOptions)
 		}
-	}	
+	}
 }
 
 // WithPath - Prefixes API with the given path
@@ -95,5 +95,5 @@ func WithMethodSecurity(oidcOptions OidcOptions) MethodOption {
 		} else {
 			mo.security = append(mo.security, oidcOptions)
 		}
-	}	
+	}
 }
