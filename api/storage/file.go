@@ -44,9 +44,9 @@ type File interface {
 	// Delete - Delete this object
 	Delete(ctx context.Context) error
 	// UploadUrl - Creates a signed Url for uploading this file reference
-	UploadUrl(ctx context.Context, expiry int) (string, error)
+	UploadUrl(ctx context.Context, expiry time.Duration) (string, error)
 	// DownloadUrl - Creates a signed Url for downloading this file reference
-	DownloadUrl(ctx context.Context, expiry int) (string, error)
+	DownloadUrl(ctx context.Context, expiry time.Duration) (string, error)
 }
 
 type fileImpl struct {
@@ -96,7 +96,7 @@ func (o *fileImpl) Delete(ctx context.Context) error {
 
 type PresignUrlOptions struct {
 	Mode   Mode
-	Expiry int
+	Expiry time.Duration
 }
 
 func (p PresignUrlOptions) isValid() error {
@@ -107,11 +107,11 @@ func (p PresignUrlOptions) isValid() error {
 	return nil
 }
 
-func (o *fileImpl) UploadUrl(ctx context.Context, expiry int) (string, error) {
+func (o *fileImpl) UploadUrl(ctx context.Context, expiry time.Duration) (string, error) {
 	return o.signUrl(ctx, PresignUrlOptions{Expiry: expiry, Mode: ModeWrite})
 }
 
-func (o *fileImpl) DownloadUrl(ctx context.Context, expiry int) (string, error) {
+func (o *fileImpl) DownloadUrl(ctx context.Context, expiry time.Duration) (string, error) {
 	return o.signUrl(ctx, PresignUrlOptions{Expiry: expiry, Mode: ModeRead})
 }
 
@@ -130,7 +130,7 @@ func (o *fileImpl) signUrl(ctx context.Context, opts PresignUrlOptions) (string,
 		BucketName: o.bucket,
 		Key:        o.key,
 		Operation:  op,
-		Expiry:     durationpb.New(time.Duration(opts.Expiry) * time.Second),
+		Expiry:     durationpb.New(opts.Expiry),
 	})
 	if err != nil {
 		return "", errors.FromGrpcError(err)

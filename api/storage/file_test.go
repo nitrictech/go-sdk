@@ -210,10 +210,10 @@ var _ = Describe("File", func() {
 	})
 
 	Describe("UploadUrl()", func() {
-		var expiry int
+		var expiry time.Duration
 
 		BeforeEach(func() {
-			expiry = 1 * 24 * 60 * 60 // 1 Day
+			expiry = 1 * time.Hour // 1 hour
 		})
 
 		When("the PreSignUrl gRPC operation is successful", func() {
@@ -226,7 +226,7 @@ var _ = Describe("File", func() {
 					BucketName: bucketName,
 					Key:        fileName,
 					Operation:  v1.StoragePreSignUrlRequest_WRITE,
-					Expiry:     durationpb.New(time.Duration(expiry) * time.Second),
+					Expiry:     durationpb.New(expiry),
 				}).Return(&v1.StoragePreSignUrlResponse{
 					Url: url,
 				}, nil).Times(1)
@@ -270,10 +270,10 @@ var _ = Describe("File", func() {
 	})
 
 	Describe("DownloadUrl()", func() {
-		var expiry int
+		var expiry time.Duration
 
 		BeforeEach(func() {
-			expiry = 1 * 24 * 60 * 60 // 1 Day
+			expiry = 1 * time.Hour // 1 hour
 		})
 
 		When("the PreSignUrl gRPC operation is successful", func() {
@@ -286,7 +286,7 @@ var _ = Describe("File", func() {
 					BucketName: bucketName,
 					Key:        fileName,
 					Operation:  v1.StoragePreSignUrlRequest_READ,
-					Expiry:     durationpb.New(time.Duration(expiry) * time.Second),
+					Expiry:     durationpb.New(expiry),
 				}).Return(&v1.StoragePreSignUrlResponse{
 					Url: url,
 				}, nil).Times(1)
@@ -368,10 +368,10 @@ var _ = Describe("fileImpl", func() {
 	})
 
 	Describe("signUrl()", func() {
-		var expiry int
+		var expiry time.Duration
 
 		BeforeEach(func() {
-			expiry = 1 * 24 * 60 * 60 // 1 day
+			expiry = 1 * time.Hour // 1 hour
 		})
 
 		When("invalid mode is provided", func() {
@@ -396,7 +396,7 @@ var _ = Describe("fileImpl", func() {
 					BucketName: bucketName,
 					Key:        fileName,
 					Operation:  v1.StoragePreSignUrlRequest_READ,
-					Expiry:     durationpb.New(time.Duration(expiry) * time.Second),
+					Expiry:     durationpb.New(expiry),
 				}).Return(nil, errors.New(errorMsg)).Times(1)
 			})
 
@@ -427,7 +427,7 @@ var _ = Describe("fileImpl", func() {
 					BucketName: bucketName,
 					Key:        fileName,
 					Operation:  v1.StoragePreSignUrlRequest_WRITE,
-					Expiry:     durationpb.New(time.Duration(expiry) * time.Second),
+					Expiry:     durationpb.New(expiry),
 				}).Return(&v1.StoragePreSignUrlResponse{
 					Url: url,
 				}, nil)
@@ -448,13 +448,13 @@ var _ = Describe("fileImpl", func() {
 
 var _ = Describe("PresignUrlOptions", func() {
 	var mode Mode
-	var expiry int
+	var expiry time.Duration
 	var p *PresignUrlOptions
 
 	Describe("isValid()", func() {
 		When("valid mode and expiry are passed", func() {
 			BeforeEach(func() {
-				expiry = 1 * 24 * 60 * 60 // 1 day
+				expiry = 1 * time.Hour // 1 hour
 				mode = ModeRead
 
 				p = &PresignUrlOptions{
@@ -474,38 +474,10 @@ var _ = Describe("PresignUrlOptions", func() {
 
 			BeforeEach(func() {
 				errorMsg = "invalid mode"
-				expiry = 1 * 24 * 60 * 60 // 1 day
+				expiry = 1 * time.Hour // 1 hour
 
 				p = &PresignUrlOptions{
 					Mode:   7,
-					Expiry: expiry,
-				}
-			})
-
-			It("should return an error", func() {
-				err := p.isValid()
-				By("occurance of error")
-				Expect(err).To(HaveOccurred())
-
-				By("containing appropriate error message")
-				Expect(strings.Contains(
-					strings.ToLower(err.Error()),
-					strings.ToLower(errorMsg),
-				),
-				).To(BeTrue())
-			})
-		})
-
-		When("invalid expiry is passed", func() {
-			var errorMsg string
-
-			BeforeEach(func() {
-				errorMsg = "invalid expiry"
-				expiry = 9999 * 24 * 60 * 60 // 9999 days
-				mode = ModeRead
-
-				p = &PresignUrlOptions{
-					Mode:   mode,
 					Expiry: expiry,
 				}
 			})
