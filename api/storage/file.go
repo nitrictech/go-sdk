@@ -104,10 +104,6 @@ func (p PresignUrlOptions) isValid() error {
 		return fmt.Errorf("invalid mode: %d", p.Mode)
 	}
 
-	if p.Expiry > 604800 {
-		return fmt.Errorf("invalid expiry, cannot exceed 7 days: %d", p.Expiry)
-	}
-
 	return nil
 }
 
