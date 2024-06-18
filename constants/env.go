@@ -15,6 +15,7 @@
 package constants
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -45,5 +46,5 @@ func NitricDialTimeout() time.Duration {
 
 // nitricAddress - constructs the full address i.e. host:port, of the nitric service based on config or defaults
 func NitricAddress() string {
-	return GetEnvWithFallback(nitricServiceAddress, nitricServiceHostDefault)
+	return GetEnvWithFallback(nitricServiceAddress, fmt.Sprintf("%s:%s", nitricServiceHostDefault, nitricServicePortDefault))
 }
