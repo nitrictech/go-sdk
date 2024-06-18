@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/nitrictech/go-sdk/api/errors"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/secrets/v1"
 )
 
 // SecretVersionRef - A reference to a secret version
@@ -30,7 +30,7 @@ type SecretVersionRef interface {
 }
 
 type secretVersionRefImpl struct {
-	secretClient v1.SecretServiceClient
+	secretClient v1.SecretManagerClient
 	secret       SecretRef
 	version      string
 }

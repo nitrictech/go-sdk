@@ -17,10 +17,13 @@ package nitric
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/nitrictech/go-sdk/api/storage"
-	"github.com/nitrictech/go-sdk/faas"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
+	storagepb "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 type BucketPermission string
@@ -31,17 +34,17 @@ type bucket struct {
 }
 
 type Bucket interface {
-	With(permissions ...BucketPermission) (storage.Bucket, error)
-	On(faas.NotificationType, string, ...faas.BucketNotificationMiddleware)
+	Allow(BucketPermission, ...BucketPermission) (storage.Bucket, error)
+	On(handler.BlobEventType, string, ...handler.BlobEventMiddleware)
 }
 
 const (
-	BucketReading  BucketPermission = "reading"
-	BucketWriting  BucketPermission = "writing"
-	BucketDeleting BucketPermission = "deleting"
+	BucketRead   BucketPermission = "read"
+	BucketWrite  BucketPermission = "write"
+	BucketDelete BucketPermission = "delete"
 )
 
-var BucketEverything []BucketPermission = []BucketPermission{BucketReading, BucketWriting, BucketDeleting}
+var BucketEverything []BucketPermission = []BucketPermission{BucketRead, BucketWrite, BucketDelete}
 
 // NewBucket register this bucket as a required resource for the calling function/container and
 // register the permissions required by the currently scoped function for this resource.
@@ -52,8 +55,10 @@ func NewBucket(name string) Bucket {
 	}
 }
 
-func (b *bucket) With(permissions ...BucketPermission) (storage.Bucket, error) {
-	return defaultManager.newBucket(b.name, permissions...)
+func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (storage.Bucket, error) {
+	allPerms := append([]BucketPermission{permission}, permissions...)
+
+	return defaultManager.newBucket(b.name, allPerms...)
 }
 
 func (m *manager) newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
@@ -62,13 +67,13 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 		return nil, err
 	}
 
-	res := &v1.Resource{
+	res := &v1.ResourceIdentifier{
 		Type: v1.ResourceType_Bucket,
 		Name: name,
 	}
 
 	dr := &v1.ResourceDeclareRequest{
-		Resource: res,
+		Id: res,
 		Config: &v1.ResourceDeclareRequest_Bucket{
 			Bucket: &v1.BucketResource{},
 		},
@@ -81,11 +86,11 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case BucketReading:
+		case BucketRead:
 			actions = append(actions, v1.Action_BucketFileGet, v1.Action_BucketFileList)
-		case BucketWriting:
+		case BucketWrite:
 			actions = append(actions, v1.Action_BucketFilePut)
-		case BucketDeleting:
+		case BucketDelete:
 			actions = append(actions, v1.Action_BucketFileDelete)
 		default:
 			return nil, fmt.Errorf("bucketPermission %s unknown", perm)
@@ -107,11 +112,31 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 	return m.storage.Bucket(name), nil
 }
 
-func (b *bucket) On(notificationType faas.NotificationType, notificationPrefixFilter string, middleware ...faas.BucketNotificationMiddleware) {
-	f := faas.New()
+func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFilter string, middleware ...handler.BlobEventMiddleware) {
+	var blobEventType storagepb.BlobEventType
+	switch notificationType {
+	case handler.WriteNotification:
+		blobEventType = storagepb.BlobEventType_Created
+	case handler.DeleteNotification:
+		blobEventType = storagepb.BlobEventType_Deleted
+	}
 
-	f.BucketNotification(middleware...)
-	f.WithBucketNotificationWorkerOptions(faas.BucketNotificationWorkerOptions{Bucket: b.name, NotificationType: notificationType, NotificationPrefixFilter: notificationPrefixFilter})
+	registrationRequest := &storagepb.RegistrationRequest{
+		BucketName:      b.name,
+		BlobEventType:   blobEventType,
+		KeyPrefixFilter: notificationPrefixFilter,
+	}
 
-	b.manager.addWorker(fmt.Sprintf("bucket:notification %s %s/%s", b.name, notificationType, notificationPrefixFilter), f)
+	composedHandler := handler.ComposeBlobEventMiddleware(middleware...)
+
+	opts := &workers.BlobEventWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware:          composedHandler,
+	}
+
+	worker := workers.NewBlobEventWorker(opts)
+
+	b.manager.addWorker("bucketNotification:"+strings.Join([]string{
+		b.name, notificationPrefixFilter, string(notificationType),
+	}, "-"), worker)
 }

@@ -19,20 +19,20 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/queues"
-	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 type QueuePermission string
 
 const (
-	QueueSending   QueuePermission = "sending"
-	QueueReceiving QueuePermission = "receiving"
+	QueueEnqueue QueuePermission = "enqueue"
+	QueueDequeue QueuePermission = "dequeue"
 )
 
-var QueueEverything []QueuePermission = []QueuePermission{QueueSending, QueueReceiving}
+var QueueEverything []QueuePermission = []QueuePermission{QueueEnqueue, QueueDequeue}
 
 type Queue interface {
-	With(...QueuePermission) (queues.Queue, error)
+	Allow(QueuePermission, ...QueuePermission) (queues.Queue, error)
 }
 
 type queue struct {
@@ -48,8 +48,10 @@ func NewQueue(name string) *queue {
 }
 
 // NewQueue registers this queue as a required resource for the calling function/container.
-func (q *queue) With(permissions ...QueuePermission) (queues.Queue, error) {
-	return defaultManager.newQueue(q.name, permissions...)
+func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (queues.Queue, error) {
+	allPerms := append([]QueuePermission{permission}, permissions...)
+
+	return defaultManager.newQueue(q.name, allPerms...)
 }
 
 func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
@@ -58,15 +60,15 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	colRes := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Queue,
+	colRes := &v1.ResourceIdentifier{
+		Type: v1.ResourceType_Queue,
 		Name: name,
 	}
 
-	dr := &nitricv1.ResourceDeclareRequest{
-		Resource: colRes,
-		Config: &nitricv1.ResourceDeclareRequest_Queue{
-			Queue: &nitricv1.QueueResource{},
+	dr := &v1.ResourceDeclareRequest{
+		Id: colRes,
+		Config: &v1.ResourceDeclareRequest_Queue{
+			Queue: &v1.QueueResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -74,19 +76,16 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		return nil, err
 	}
 
-	actions := []nitricv1.Action{}
+	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case QueueReceiving:
-			actions = append(actions, nitricv1.Action_QueueReceive)
-		case QueueSending:
-			actions = append(actions, nitricv1.Action_QueueSend)
+		case QueueDequeue:
+			actions = append(actions, v1.Action_QueueDequeue)
+		case QueueEnqueue:
+			actions = append(actions, v1.Action_QueueEnqueue)
 		default:
 			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
 		}
-	}
-	if len(actions) > 0 {
-		actions = append(actions, nitricv1.Action_QueueDetail, nitricv1.Action_QueueList)
 	}
 
 	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))

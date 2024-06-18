@@ -17,10 +17,13 @@ package storage
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 type Mode int
@@ -41,15 +44,15 @@ type File interface {
 	// Delete - Delete this object
 	Delete(ctx context.Context) error
 	// UploadUrl - Creates a signed Url for uploading this file reference
-	UploadUrl(ctx context.Context, expiry int) (string, error)
+	UploadUrl(ctx context.Context, expiry time.Duration) (string, error)
 	// DownloadUrl - Creates a signed Url for downloading this file reference
-	DownloadUrl(ctx context.Context, expiry int) (string, error)
+	DownloadUrl(ctx context.Context, expiry time.Duration) (string, error)
 }
 
 type fileImpl struct {
 	bucket        string
 	key           string
-	storageClient v1.StorageServiceClient
+	storageClient v1.StorageClient
 }
 
 func (o *fileImpl) Name() string {
@@ -93,7 +96,7 @@ func (o *fileImpl) Delete(ctx context.Context) error {
 
 type PresignUrlOptions struct {
 	Mode   Mode
-	Expiry int
+	Expiry time.Duration
 }
 
 func (p PresignUrlOptions) isValid() error {
@@ -104,11 +107,11 @@ func (p PresignUrlOptions) isValid() error {
 	return nil
 }
 
-func (o *fileImpl) UploadUrl(ctx context.Context, expiry int) (string, error) {
+func (o *fileImpl) UploadUrl(ctx context.Context, expiry time.Duration) (string, error) {
 	return o.signUrl(ctx, PresignUrlOptions{Expiry: expiry, Mode: ModeWrite})
 }
 
-func (o *fileImpl) DownloadUrl(ctx context.Context, expiry int) (string, error) {
+func (o *fileImpl) DownloadUrl(ctx context.Context, expiry time.Duration) (string, error) {
 	return o.signUrl(ctx, PresignUrlOptions{Expiry: expiry, Mode: ModeRead})
 }
 
@@ -127,7 +130,7 @@ func (o *fileImpl) signUrl(ctx context.Context, opts PresignUrlOptions) (string,
 		BucketName: o.bucket,
 		Key:        o.key,
 		Operation:  op,
-		Expiry:     uint32(opts.Expiry),
+		Expiry:     durationpb.New(opts.Expiry),
 	})
 	if err != nil {
 		return "", errors.FromGrpcError(err)

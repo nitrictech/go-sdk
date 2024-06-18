@@ -15,50 +15,65 @@
 package secrets
 
 import (
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
 var _ = Describe("secretValueImpl", func() {
-	Context("Ref", func() {
-		When("retrieving the ref of a secretValueImpl", func() {
-			svi := &secretValueImpl{
-				version: &secretVersionRefImpl{
-					secret: &secretRefImpl{
-						name: "test",
-					},
-					version: "test",
-				},
-				val: []byte("test"),
-			}
+	var (
+		ctrl        *gomock.Controller
+		mockSC      *mock_v1.MockSecretManagerClient
+		secretName  string
+		versionName string
+		sv          SecretVersionRef
+		secretValue SecretValue
+		value       []byte
+	)
 
-			It("should return it's internal version field", func() {
-				Expect(svi.Version()).To(Equal(svi.version))
-			})
+	BeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		mockSC = mock_v1.NewMockSecretManagerClient(ctrl)
+		secretName = "test-secret"
+		versionName = "test-version"
+
+		sv = &secretVersionRefImpl{
+			secretClient: mockSC,
+			secret: &secretRefImpl{
+				name:         secretName,
+				secretClient: mockSC,
+			},
+			version: versionName,
+		}
+
+		value = []byte("ssssshhhh... it's a secret")
+		secretValue = &secretValueImpl{
+			version: sv,
+			val:     value,
+		}
+	})
+
+	AfterEach(func() {
+		ctrl.Finish()
+	})
+
+	Describe("Version", func() {
+		It("should return the correct secret version reference", func() {
+			Expect(secretValue.Version()).To(Equal(sv))
 		})
 	})
 
-	Context("AsBytes", func() {
-		When("retrieving secret value as bytes", func() {
-			svi := &secretValueImpl{
-				val: []byte("test"),
-			}
-
-			It("should return it's internal val field", func() {
-				Expect(svi.AsBytes()).To(Equal([]byte("test")))
-			})
+	Describe("AsBytes", func() {
+		It("should return the correct secret value as bytes", func() {
+			Expect(secretValue.AsBytes()).To(Equal(value))
 		})
 	})
 
-	Context("AsString", func() {
-		When("retrieving secret value as a string", func() {
-			svi := &secretValueImpl{
-				val: []byte("test"),
-			}
-
-			It("should return it's internal val field", func() {
-				Expect(svi.AsString()).To(Equal("test"))
-			})
+	Describe("AsString", func() {
+		It("should return the correct secret value as string", func() {
+			Expect(secretValue.AsString()).To(Equal(string(value)))
 		})
 	})
 })

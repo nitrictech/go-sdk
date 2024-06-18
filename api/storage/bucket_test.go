@@ -16,103 +16,144 @@ package storage
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"strings"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 var _ = Describe("Bucket", func() {
-	Context("File", func() {
+	var (
+		ctrl        *gomock.Controller
+		mockStorage *mock_v1.MockStorageClient
+		bucket      *bucketImpl
+		bucketName  string
+		fileName    string
+		ctx         context.Context
+	)
+
+	BeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		mockStorage = mock_v1.NewMockStorageClient(ctrl)
+
+		bucketName = "test-bucket"
+		fileName = "test-file.txt"
+
+		bucket = &bucketImpl{
+			name:          bucketName,
+			storageClient: mockStorage,
+		}
+
+		ctx = context.Background()
+	})
+
+	AfterEach(func() {
+		ctrl.Finish()
+	})
+
+	Describe("File()", func() {
 		When("creating a new File reference", func() {
-			ctrl := gomock.NewController(GinkgoT())
-			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
+			var (
+				file  File
+				fileI *fileImpl
+				ok    bool
+			)
 
-			bucket := &bucketImpl{
-				name:          "test-bucket",
-				storageClient: mockStorage,
-			}
+			BeforeEach(func() {
+				file = bucket.File(fileName)
+				fileI, ok = file.(*fileImpl)
+			})
 
-			object := bucket.File("test-object")
-			objectI, ok := object.(*fileImpl)
-
-			It("should return an objectImpl instance", func() {
+			It("it should succesfully return File Instance", func() {
+				By("returning an fileImpl instance")
 				Expect(ok).To(BeTrue())
-			})
 
-			It("should have the provided file name", func() {
-				Expect(objectI.key).To(Equal("test-object"))
-			})
+				By("having the provided file name")
+				Expect(fileI.key).To(Equal(fileName))
 
-			It("should share the buckets name", func() {
-				Expect(objectI.bucket).To(Equal("test-bucket"))
-			})
+				By("sharing the bucket name")
+				Expect(fileI.bucket).To(Equal(bucketName))
 
-			It("should share the bucket references gRPC client", func() {
-				Expect(objectI.storageClient).To(Equal(mockStorage))
+				By("sharing the Bucket's gRPC client")
+				Expect(fileI.storageClient).To(Equal(mockStorage))
 			})
 		})
 	})
 
-	Context("Files", func() {
-		When("failing to list files in a bucket", func() {
-			ctrl := gomock.NewController(GinkgoT())
-			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
-			bucketRef := &bucketImpl{
-				name:          "test",
-				storageClient: mockStorage,
-			}
+	Describe("Files()", func() {
+		When("the gRPC opreation of ListBlobs fails", func() {
+			var errorMsg string
+
+			BeforeEach(func() {
+				errorMsg = "Internal Error"
+
+				By("the nitric membrane returning an error")
+				mockStorage.EXPECT().ListBlobs(gomock.Any(), &v1.StorageListBlobsRequest{
+					BucketName: bucketName,
+				}).Times(1).Return(nil, errors.New(errorMsg))
+			})
 
 			It("should return an error", func() {
-				By("the nitric membrane returning an error")
-				mockStorage.EXPECT().ListFiles(gomock.Any(), &v1.StorageListFilesRequest{
-					BucketName: "test",
-				}).Times(1).Return(nil, fmt.Errorf("mock-error"))
-
 				By("calling Files() on the bucket reference")
-				files, err := bucketRef.Files(context.TODO())
+				files, err := bucket.Files(ctx)
+
+				By("receiving an error with same error message")
+				Expect(err).Should(HaveOccurred())
+				Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
 
 				By("receiving nil files")
 				Expect(files).To(BeNil())
-
-				By("receiving an error")
-				Expect(err).Should(HaveOccurred())
 			})
 		})
 
-		When("listing files in a bucket", func() {
-			ctrl := gomock.NewController(GinkgoT())
-			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
+		When("the gRPC opreation of ListBlobs succeeds", func() {
+			var files []File
 
-			bucketRef := &bucketImpl{
-				name:          "test-bucket",
-				storageClient: mockStorage,
-			}
+			BeforeEach(func() {
+				files = []File{
+					bucket.File("file-1.txt"),
+					bucket.File("file-2.txt"),
+				}
+
+				blobs := make([]*v1.Blob, 0, len(files))
+				for _, file := range files {
+					fileI, ok := file.(*fileImpl)
+					Expect(ok).To(BeTrue())
+					blobs = append(blobs, &v1.Blob{
+						Key: fileI.key,
+					})
+				}
+
+				By("the bucket not being empty")
+				mockStorage.EXPECT().ListBlobs(gomock.Any(), &v1.StorageListBlobsRequest{
+					BucketName: bucketName,
+				}).Return(&v1.StorageListBlobsResponse{
+					Blobs: blobs,
+				}, nil).Times(1)
+			})
 
 			It("should list the files in the bucket", func() {
-				By("the bucket not being empty")
-				mockStorage.EXPECT().ListFiles(gomock.Any(), &v1.StorageListFilesRequest{
-					BucketName: "test-bucket",
-				}).Times(1).Return(&v1.StorageListFilesResponse{
-					Files: []*v1.File{{
-						Key: "test.txt",
-					}},
-				}, nil)
-
 				By("bucket.Files() being called")
-				files, err := bucketRef.Files(context.TODO())
+				_files, err := bucket.Files(ctx)
 
 				By("not returning an error")
-				Expect(err).ShouldNot(HaveOccurred())
+				Expect(err).ToNot(HaveOccurred())
 
 				By("returning the files")
-				Expect(files).To(HaveLen(1))
-				Expect(files[0].Name()).To(Equal("test.txt"))
+				Expect(_files).To(HaveExactElements(files))
 			})
+		})
+	})
+
+	Describe("Name()", func() {
+		It("should have the same name as the one provided", func() {
+			_bucketName := bucket.Name()
+			Expect(_bucketName).To(Equal(bucketName))
 		})
 	})
 })

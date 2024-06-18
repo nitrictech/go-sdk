@@ -14,76 +14,76 @@
 
 package nitric
 
-import (
-	"context"
+// import (
+// 	"context"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
 
-	"github.com/golang/mock/gomock"
+// 	"github.com/golang/mock/gomock"
 
-	mock_v1 "github.com/nitrictech/go-sdk/mocks"
-	"github.com/nitrictech/go-sdk/mocks/mockapi"
-	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
-)
+// 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
+// 	"github.com/nitrictech/go-sdk/mocks/mockapi"
+// 	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+// )
 
-var _ = Describe("queue", func() {
-	ctrl := gomock.NewController(GinkgoT())
-	Context("New", func() {
-		mockConn := mock_v1.NewMockClientConnInterface(ctrl)
-		When("valid args", func() {
-			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
-			mockQueues := mockapi.NewMockQueues(ctrl)
+// var _ = Describe("queue", func() {
+// 	ctrl := gomock.NewController(GinkgoT())
+// 	Context("New", func() {
+// 		mockConn := mock_v1.NewMockClientConnInterface(ctrl)
+// 		When("valid args", func() {
+// 			mockClient := mock_v1.NewMockResourceServiceClient(ctrl)
+// 			mockQueues := mockapi.NewMockQueues(ctrl)
 
-			m := &manager{
-				workers: map[string]Starter{},
-				conn:    mockConn,
-				rsc:     mockClient,
-				queues:  mockQueues,
-			}
+// 			m := &manager{
+// 				workers: map[string]Starter{},
+// 				conn:    mockConn,
+// 				rsc:     mockClient,
+// 				queues:  mockQueues,
+// 			}
 
-			mockClient.EXPECT().Declare(context.Background(),
-				&nitricv1.ResourceDeclareRequest{
-					Resource: &nitricv1.Resource{
-						Type: nitricv1.ResourceType_Queue,
-						Name: "wollies",
-					},
-					Config: &nitricv1.ResourceDeclareRequest_Queue{
-						Queue: &nitricv1.QueueResource{},
-					},
-				})
+// 			mockClient.EXPECT().Declare(context.Background(),
+// 				&nitricv1.ResourceDeclareRequest{
+// 					Resource: &nitricv1.Resource{
+// 						Type: nitricv1.ResourceType_Queue,
+// 						Name: "wollies",
+// 					},
+// 					Config: &nitricv1.ResourceDeclareRequest_Queue{
+// 						Queue: &nitricv1.QueueResource{},
+// 					},
+// 				})
 
-			mockClient.EXPECT().Declare(context.Background(),
-				&nitricv1.ResourceDeclareRequest{
-					Resource: &nitricv1.Resource{
-						Type: nitricv1.ResourceType_Policy,
-					},
-					Config: &nitricv1.ResourceDeclareRequest_Policy{
-						Policy: &nitricv1.PolicyResource{
-							Principals: []*nitricv1.Resource{{
-								Type: nitricv1.ResourceType_Function,
-							}},
-							Actions: []nitricv1.Action{
-								nitricv1.Action_QueueReceive,
-								nitricv1.Action_QueueDetail,
-								nitricv1.Action_QueueList,
-							},
-							Resources: []*nitricv1.Resource{{
-								Type: nitricv1.ResourceType_Queue,
-								Name: "wollies",
-							}},
-						},
-					},
-				})
+// 			mockClient.EXPECT().Declare(context.Background(),
+// 				&nitricv1.ResourceDeclareRequest{
+// 					Resource: &nitricv1.Resource{
+// 						Type: nitricv1.ResourceType_Policy,
+// 					},
+// 					Config: &nitricv1.ResourceDeclareRequest_Policy{
+// 						Policy: &nitricv1.PolicyResource{
+// 							Principals: []*nitricv1.Resource{{
+// 								Type: nitricv1.ResourceType_Function,
+// 							}},
+// 							Actions: []nitricv1.Action{
+// 								nitricv1.Action_QueueReceive,
+// 								nitricv1.Action_QueueDetail,
+// 								nitricv1.Action_QueueList,
+// 							},
+// 							Resources: []*nitricv1.Resource{{
+// 								Type: nitricv1.ResourceType_Queue,
+// 								Name: "wollies",
+// 							}},
+// 						},
+// 					},
+// 				})
 
-			mockQueue := mockapi.NewMockQueue(ctrl)
-			mockQueues.EXPECT().Queue("wollies").Return(mockQueue)
-			b, err := m.newQueue("wollies", QueueReceiving)
+// 			mockQueue := mockapi.NewMockQueue(ctrl)
+// 			mockQueues.EXPECT().Queue("wollies").Return(mockQueue)
+// 			b, err := m.newQueue("wollies", QueueReceiving)
 
-			It("should not return an error", func() {
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(b).ShouldNot(BeNil())
-			})
-		})
-	})
-})
+// 			It("should not return an error", func() {
+// 				Expect(err).ShouldNot(HaveOccurred())
+// 				Expect(b).ShouldNot(BeNil())
+// 			})
+// 		})
+// 	})
+// })

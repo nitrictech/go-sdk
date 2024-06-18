@@ -19,87 +19,87 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/queues/v1"
 )
 
-// Queue is a resource for async send/receive messaging.
+// Queue is a resource for async enqueueing/dequeueing of messages.
 type Queue interface {
 	// Name - The name of the queue
 	Name() string
-	// Send - Push a number of tasks to a queue
-	Send(context.Context, []*Task) ([]*FailedTask, error)
-	// Receive - Retrieve tasks from a queue to a maximum of the given depth
-	Receive(context.Context, int) ([]ReceivedTask, error)
+	// Enqueue - Push a number of messages to a queue
+	Enqueue(context.Context, []map[string]interface{}) ([]*FailedMessage, error)
+	// Dequeue - Retrieve messages from a queue to a maximum of the given depth
+	Dequeue(context.Context, int) ([]ReceivedMessage, error)
 }
 
 type queueImpl struct {
 	name        string
-	queueClient v1.QueueServiceClient
+	queueClient v1.QueuesClient
 }
 
 func (q *queueImpl) Name() string {
 	return q.name
 }
 
-func (q *queueImpl) Receive(ctx context.Context, depth int) ([]ReceivedTask, error) {
+func (q *queueImpl) Dequeue(ctx context.Context, depth int) ([]ReceivedMessage, error) {
 	if depth < 1 {
-		return nil, errors.New(codes.InvalidArgument, "Queue.Receive: depth cannot be less than 1")
+		return nil, errors.New(codes.InvalidArgument, "Queue.Dequeue: depth cannot be less than 1")
 	}
 
-	r, err := q.queueClient.Receive(ctx, &v1.QueueReceiveRequest{
-		Queue: q.name,
-		Depth: int32(depth),
+	r, err := q.queueClient.Dequeue(ctx, &v1.QueueDequeueRequest{
+		QueueName: q.name,
+		Depth:     int32(depth),
 	})
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
 
-	rts := make([]ReceivedTask, len(r.GetTasks()))
+	rts := make([]ReceivedMessage, len(r.GetMessages()))
 
-	for i, task := range r.GetTasks() {
-		rts[i] = &receivedTaskImpl{
-			queue:       q.name,
+	for i, message := range r.GetMessages() {
+		rts[i] = &receivedMessageImpl{
+			queueName:   q.name,
 			queueClient: q.queueClient,
-			leaseId:     task.GetLeaseId(),
-			task:        wireToTask(task),
+			leaseId:     message.GetLeaseId(),
+			message:     wireToMessage(message.GetMessage()),
 		}
 	}
 
 	return rts, nil
 }
 
-func (q *queueImpl) Send(ctx context.Context, tasks []*Task) ([]*FailedTask, error) {
-	// Convert SDK Task objects to gRPC Task objects
-	wireTasks := make([]*v1.NitricTask, len(tasks))
-	for i, task := range tasks {
-		wireTask, err := taskToWire(task)
+func (q *queueImpl) Enqueue(ctx context.Context, messages []map[string]interface{}) ([]*FailedMessage, error) {
+	// Convert SDK Message objects to gRPC Message objects
+	wireMessages := make([]*v1.QueueMessage, len(messages))
+	for i, message := range messages {
+		wireMessage, err := messageToWire(message)
 		if err != nil {
 			return nil, errors.NewWithCause(
 				codes.Internal,
-				"Queue.Send: Unable to send tasks",
+				"Queue.Enqueue: Unable to enqueue messages",
 				err,
 			)
 		}
-		wireTasks[i] = wireTask
+		wireMessages[i] = wireMessage
 	}
 
-	// Push the tasks to the queue
-	res, err := q.queueClient.SendBatch(ctx, &v1.QueueSendBatchRequest{
-		Queue: q.name,
-		Tasks: wireTasks,
+	// Push the messages to the queue
+	res, err := q.queueClient.Enqueue(ctx, &v1.QueueEnqueueRequest{
+		QueueName: q.name,
+		Messages:  wireMessages,
 	})
 	if err != nil {
 		return nil, errors.FromGrpcError(err)
 	}
 
-	// Convert the gRPC Failed Tasks to SDK Failed Task objects
-	failedTasks := make([]*FailedTask, len(res.GetFailedTasks()))
-	for i, failedTask := range res.GetFailedTasks() {
-		failedTasks[i] = &FailedTask{
-			Task:   wireToTask(failedTask.GetTask()),
-			Reason: failedTask.GetMessage(),
+	// Convert the gRPC Failed Messages to SDK Failed Message objects
+	failedMessages := make([]*FailedMessage, len(res.GetFailedMessages()))
+	for i, failedMessage := range res.GetFailedMessages() {
+		failedMessages[i] = &FailedMessage{
+			Message: wireToMessage(failedMessage.GetMessage()),
+			Reason:  failedMessage.GetDetails(),
 		}
 	}
 
-	return failedTasks, nil
+	return failedMessages, nil
 }

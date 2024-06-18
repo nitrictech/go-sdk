@@ -24,10 +24,64 @@ import (
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
-var _ = Describe("Secrets", func() {
-	Context("New", func() {
+var _ = Describe("Secrets API", func() {
+	var (
+		ctrl    *gomock.Controller
+		mockSC  *mock_v1.MockSecretManagerClient
+		secrets *secretsImpl
+	)
+
+	BeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		mockSC = mock_v1.NewMockSecretManagerClient(ctrl)
+		secrets = &secretsImpl{
+			secretClient: mockSC,
+		}
+	})
+
+	AfterEach(func() {
+		ctrl.Finish()
+	})
+
+	Describe("Secret method", func() {
+		When("creating a new Secret reference", func() {
+			var (
+				sr          SecretRef
+				secretsName string
+				srImpl      *secretRefImpl
+				ok          bool
+			)
+
+			BeforeEach(func() {
+				secretsName = "test-secret"
+				sr = secrets.Secret(secretsName)
+				srImpl, ok = sr.(*secretRefImpl)
+			})
+
+			It("should be an instance of secretsImpl", func() {
+				Expect(ok).To(BeTrue())
+			})
+
+			It("should have the provided secrets name", func() {
+				Expect(sr.Name()).To(Equal(secretsName))
+			})
+
+			It("should share the Secret's gRPC client", func() {
+				Expect(srImpl.secretClient).To(Equal(mockSC))
+			})
+		})
+	})
+
+	Describe("New method", func() {
 		When("Constructing a new Secrets client with no rpc server available", func() {
-			os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
+			BeforeEach(func() {
+				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
+
+			})
+			AfterEach(func() {
+				os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
+			})
+
 			c, err := New()
 
 			It("should return a nil client", func() {
@@ -38,26 +92,9 @@ var _ = Describe("Secrets", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
-	})
 
-	Context("Secret", func() {
-		When("Retrieving a new secret reference", func() {
-			ctrl := gomock.NewController(GinkgoT())
-			mc := mock_v1.NewMockSecretServiceClient(ctrl)
-			c := &secretsImpl{
-				secretClient: mc,
-			}
-
-			It("should successfully return a correct secret reference", func() {
-				s := c.Secret("test")
-
-				By("returning s secretRefImpl")
-				_, ok := s.(*secretRefImpl)
-				Expect(ok).To(BeTrue())
-
-				By("containing the requested name")
-				Expect(s.Name()).To(Equal("test"))
-			})
+		PWhen("constructing a new Secrets client without dial blocking", func() {
+			// TODO:
 		})
 	})
 })

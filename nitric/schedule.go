@@ -15,16 +15,16 @@
 package nitric
 
 import (
-	"fmt"
-	"strconv"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/faas"
+	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
+	schedulespb "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
 type Schedule interface {
-	Cron(cron string, middleware ...faas.EventMiddleware)
-	Every(rate string, middleware ...faas.EventMiddleware) error
+	Cron(cron string, middleware ...handler.IntervalMiddleware)
+	Every(rate string, middleware ...handler.IntervalMiddleware)
 }
 
 type schedule struct {
@@ -46,77 +46,56 @@ func (m *manager) newSchedule(name string) Schedule {
 	}
 }
 
-func (s *schedule) Cron(cron string, middleware ...faas.EventMiddleware) {
-	f := s.manager.getBuilder(s.name)
-	if f == nil {
-		f = faas.New()
+// Run middleware at a certain interval defined by the cronExpression.
+func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
+	scheduleCron := &schedulespb.ScheduleCron{
+		Expression: cron,
 	}
 
-	f.Event(middleware...).
-		WithCronWorkerOpts(faas.CronWorkerOptions{
-			Description: s.name,
-			Cron:        cron,
-		})
+	registrationRequest := &schedulespb.RegistrationRequest{
+		ScheduleName: s.name,
+		Cadence: &schedulespb.RegistrationRequest_Cron{
+			Cron: scheduleCron,
+		},
+	}
 
-	s.manager.addWorker(fmt.Sprintf("schedule:%s/%s", s.name, cron), f)
-	s.manager.addBuilder(s.name, f)
+	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
+
+	opts := &workers.IntervalWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware:          composeHandler,
+	}
+
+	worker := workers.NewIntervalWorker(opts)
+	s.manager.addWorker("IntervalWorkerCron:"+strings.Join([]string{
+		s.name,
+		cron,
+	}, "-"), worker)
 }
 
-func rateSplit(rate string) (int, faas.Frequency, error) {
-	rateParts := strings.Split(rate, " ")
-
-	if len(rateParts) < 1 || len(rateParts) > 2 {
-		return -1, "", fmt.Errorf("invalid rate expression %s; rate should be in the form '[rate] [frequency]' e.g. '7 days'", rate)
+// Run middleware at a certain interval defined by the rate. The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
+func (s *schedule) Every(rate string, middleware ...handler.IntervalMiddleware) {
+	scheduleEvery := &schedulespb.ScheduleEvery{
+		Rate: rate,
 	}
 
-	// Handle a single rate e.g. 'day'
-	if len(rateParts) == 1 {
-		for _, r := range []string{"minute", "hour", "day"} {
-			if r == rateParts[0] {
-				return 1, faas.Frequency(r + "s"), nil
-			}
-		}
+	registrationRequest := &schedulespb.RegistrationRequest{
+		ScheduleName: s.name,
+		Cadence: &schedulespb.RegistrationRequest_Every{
+			Every: scheduleEvery,
+		},
 	}
 
-	// Handle a full rate expression e.g. '7 days'
-	rateNum := rateParts[0]
-	rateType := rateParts[1]
+	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
 
-	num, err := strconv.Atoi(rateNum)
-	if err != nil {
-		return -1, "", fmt.Errorf("invalid rate expression %s; %w", rate, err)
+	opts := &workers.IntervalWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware:          composeHandler,
 	}
 
-	for _, r := range faas.Frequencies {
-		if string(r) == rateType {
-			return num, faas.Frequency(rateType), nil
-		}
-	}
-
-	return -1, "", fmt.Errorf("invalid rate expression %s; %s must be one of [minutes, hours, days]", rate, rateType)
-}
-
-// The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
-func (s *schedule) Every(rate string, middleware ...faas.EventMiddleware) error {
-	f := s.manager.getBuilder(s.name)
-	if f == nil {
-		f = faas.New()
-	}
-
-	rateNum, frequency, err := rateSplit(rate)
-	if err != nil {
-		return err
-	}
-
-	f.Event(middleware...).
-		WithRateWorkerOpts(faas.RateWorkerOptions{
-			Description: s.name,
-			Frequency:   frequency,
-			Rate:        rateNum,
-		})
-
-	s.manager.addBuilder(s.name, f)
-	s.manager.addWorker(fmt.Sprintf("schedule:%s/%s", s.name, rate), f)
-
-	return nil
+	worker := workers.NewIntervalWorker(opts)
+	s.manager.addWorker("IntervalWorkerEvery:"+strings.Join([]string{
+		s.name,
+		rate,
+	}, "-"), worker)
 }

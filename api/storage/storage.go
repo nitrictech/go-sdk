@@ -15,12 +15,14 @@
 package storage
 
 import (
+	"context"
+
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 // Storage - Nitric storage API client
@@ -30,7 +32,7 @@ type Storage interface {
 }
 
 type storageImpl struct {
-	storageClient v1.StorageServiceClient
+	storageClient v1.StorageClient
 }
 
 func (s *storageImpl) Bucket(name string) Bucket {
@@ -42,7 +44,10 @@ func (s *storageImpl) Bucket(name string) Bucket {
 
 // New - Create a new Storage client with default options
 func New() (Storage, error) {
-	conn, err := grpc.Dial(
+	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+
+	conn, err := grpc.DialContext(
+		ctx,
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
@@ -54,7 +59,7 @@ func New() (Storage, error) {
 		)
 	}
 
-	sClient := v1.NewStorageServiceClient(conn)
+	sClient := v1.NewStorageClient(conn)
 
 	return &storageImpl{
 		storageClient: sClient,

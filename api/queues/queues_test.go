@@ -24,12 +24,63 @@ import (
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
-var _ = Describe("Queues", func() {
-	ctrl := gomock.NewController(GinkgoT())
+var _ = Describe("Queues API", func() {
+	var (
+		ctrl   *gomock.Controller
+		mockQ  *mock_v1.MockQueuesClient
+		queues *queuesImpl
+	)
 
-	Context("New", func() {
+	BeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		mockQ = mock_v1.NewMockQueuesClient(ctrl)
+		queues = &queuesImpl{
+			queueClient: mockQ,
+		}
+	})
+
+	AfterEach(func() {
+		ctrl.Finish()
+	})
+
+	Describe("Queue method", func() {
+		When("creating a new Queue reference", func() {
+			var (
+				q         Queue
+				queueName string
+				qImpl     *queueImpl
+				ok        bool
+			)
+
+			BeforeEach(func() {
+				queueName = "test-queue"
+				q = queues.Queue(queueName)
+				qImpl, ok = q.(*queueImpl)
+			})
+
+			It("should be an instance of queueImpl", func() {
+				Expect(ok).To(BeTrue())
+			})
+
+			It("should have the provided queue name", func() {
+				Expect(q.Name()).To(Equal(queueName))
+			})
+
+			It("should share the Queue's gRPC client", func() {
+				Expect(qImpl.queueClient).To(Equal(mockQ))
+			})
+		})
+	})
+
+	Describe("New method", func() {
 		When("constructing a new queue client without the membrane", func() {
-			os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
+			BeforeEach(func() {
+				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
+			})
+			AfterEach(func() {
+				os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
+			})
+
 			c, err := New()
 
 			It("should return a nil client", func() {
@@ -42,33 +93,7 @@ var _ = Describe("Queues", func() {
 		})
 
 		PWhen("constructing a new queue client without dial blocking", func() {
-			// TODO: Do mock dial or non-blocking dial test here...
-		})
-	})
-
-	Context("Queue", func() {
-		When("creating a new Queue reference", func() {
-			mockQ := mock_v1.NewMockQueueServiceClient(ctrl)
-
-			queues := &queuesImpl{
-				queueClient: mockQ,
-			}
-
-			q := queues.Queue("test-queue")
-
-			qImpl, ok := q.(*queueImpl)
-
-			It("Should have the provided queue name", func() {
-				Expect(q.Name()).To(Equal("test-queue"))
-			})
-
-			It("Should be an instance of queueImpl", func() {
-				Expect(ok).To(BeTrue())
-			})
-
-			It("Should share a client with the Queues client", func() {
-				Expect(qImpl.queueClient).To(Equal(mockQ))
-			})
+			// TODO:
 		})
 	})
 })

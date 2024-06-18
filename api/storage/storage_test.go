@@ -24,52 +24,74 @@ import (
 	mock_v1 "github.com/nitrictech/go-sdk/mocks"
 )
 
-var _ = Describe("Storage", func() {
-	ctrl := gomock.NewController(GinkgoT())
+var _ = Describe("Storage API", func() {
+	var (
+		ctrl        *gomock.Controller
+		mockStorage *mock_v1.MockStorageClient
+		s           Storage
+	)
 
-	Context("New", func() {
-		When("constructing a new storage client", func() {
-			When("the gRPC connection is unavailable", func() {
-				// Set the timeout to 10 milliseconds
-				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-				sc, err := New()
+	BeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		mockStorage = mock_v1.NewMockStorageClient(ctrl)
 
-				It("should return an error", func() {
-					Expect(err).To(HaveOccurred())
-				})
-
-				It("should not return a storage client", func() {
-					Expect(sc).To(BeNil())
-				})
-			})
-
-			PWhen("the gRPC connection is available", func() {
-				// TODO: Mock an available server to connect to
-			})
-		})
+		s = &storageImpl{
+			storageClient: mockStorage,
+		}
 	})
 
-	Context("Bucket", func() {
+	AfterEach(func() {
+		ctrl.Finish()
+	})
+
+	Describe("Bucket()", func() {
+		var bucketName string
+		var bucketI *bucketImpl
+		var ok bool
+
 		When("creating a new Bucket reference", func() {
-			mockStorage := mock_v1.NewMockStorageServiceClient(ctrl)
-
-			sc := &storageImpl{
-				storageClient: mockStorage,
-			}
-
-			bucket := sc.Bucket("test-bucket")
-			bucketI, ok := bucket.(*bucketImpl)
+			BeforeEach(func() {
+				bucketName = "test-bucket"
+				bucket := s.Bucket(bucketName)
+				bucketI, ok = bucket.(*bucketImpl)
+			})
 
 			It("should return a bucketImpl instance", func() {
 				Expect(ok).To(BeTrue())
 			})
 
 			It("should have the provied bucket name", func() {
-				Expect(bucketI.name).To(Equal("test-bucket"))
+				Expect(bucketI.name).To(Equal(bucketName))
 			})
 
 			It("should share the storage clients gRPC client", func() {
 				Expect(bucketI.storageClient).To(Equal(mockStorage))
+			})
+		})
+	})
+
+	Describe("New()", func() {
+		Context("constructing a new storage client", func() {
+			When("the gRPC connection is unavailable", func() {
+				BeforeEach(func() {
+					os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
+				})
+				AfterEach(func() {
+					os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
+				})
+
+				s, err := New()
+
+				It("should return an error", func() {
+					Expect(err).To(HaveOccurred())
+
+					By("not returning a storage client")
+					Expect(s).To(BeNil())
+				})
+			})
+
+			PWhen("constructing a new storage client without dial blocking", func() {
+				// TODO: Mock an available server to connect to
 			})
 		})
 	})

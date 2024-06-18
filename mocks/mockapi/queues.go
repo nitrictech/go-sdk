@@ -72,6 +72,36 @@ func (m *MockQueue) EXPECT() *MockQueueMockRecorder {
 	return m.recorder
 }
 
+// Dequeue mocks base method.
+func (m *MockQueue) Dequeue(arg0 context.Context, arg1 int) ([]queues.ReceivedMessage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Dequeue", arg0, arg1)
+	ret0, _ := ret[0].([]queues.ReceivedMessage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Dequeue indicates an expected call of Dequeue.
+func (mr *MockQueueMockRecorder) Dequeue(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dequeue", reflect.TypeOf((*MockQueue)(nil).Dequeue), arg0, arg1)
+}
+
+// Enqueue mocks base method.
+func (m *MockQueue) Enqueue(arg0 context.Context, arg1 []map[string]interface{}) ([]*queues.FailedMessage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Enqueue", arg0, arg1)
+	ret0, _ := ret[0].([]*queues.FailedMessage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Enqueue indicates an expected call of Enqueue.
+func (mr *MockQueueMockRecorder) Enqueue(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enqueue", reflect.TypeOf((*MockQueue)(nil).Enqueue), arg0, arg1)
+}
+
 // Name mocks base method.
 func (m *MockQueue) Name() string {
 	m.ctrl.T.Helper()
@@ -84,34 +114,4 @@ func (m *MockQueue) Name() string {
 func (mr *MockQueueMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockQueue)(nil).Name))
-}
-
-// Receive mocks base method.
-func (m *MockQueue) Receive(arg0 context.Context, arg1 int) ([]queues.ReceivedTask, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Receive", arg0, arg1)
-	ret0, _ := ret[0].([]queues.ReceivedTask)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Receive indicates an expected call of Receive.
-func (mr *MockQueueMockRecorder) Receive(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Receive", reflect.TypeOf((*MockQueue)(nil).Receive), arg0, arg1)
-}
-
-// Send mocks base method.
-func (m *MockQueue) Send(arg0 context.Context, arg1 []*queues.Task) ([]*queues.FailedTask, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", arg0, arg1)
-	ret0, _ := ret[0].([]*queues.FailedTask)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Send indicates an expected call of Send.
-func (mr *MockQueueMockRecorder) Send(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockQueue)(nil).Send), arg0, arg1)
 }

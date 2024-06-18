@@ -16,21 +16,22 @@ package nitric
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/faas"
-	v1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
-	websocketv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/websocket/v1"
+	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
+	resourcesv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
+	websocketsv1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
 type Websocket interface {
 	Name() string
-	On(eventType faas.WebsocketEventType, mwares ...faas.WebsocketMiddleware)
+	On(eventType handler.WebsocketEventType, mwares ...handler.WebsocketMiddleware)
 	Send(ctx context.Context, connectionId string, message []byte) error
 	Close(ctx context.Context, connectionId string) error
 }
@@ -40,7 +41,7 @@ type websocket struct {
 
 	name    string
 	manager Manager
-	client  websocketv1.WebsocketServiceClient
+	client  websocketsv1.WebsocketClient
 }
 
 // NewCollection register this collection as a required resource for the calling function/container.
@@ -49,7 +50,10 @@ func NewWebsocket(name string) (Websocket, error) {
 }
 
 func (m *manager) newWebsocket(name string) (Websocket, error) {
-	conn, err := grpc.Dial(
+	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+
+	conn, err := grpc.DialContext(
+		ctx,
 		constants.NitricAddress(),
 		constants.DefaultOptions()...,
 	)
@@ -61,20 +65,18 @@ func (m *manager) newWebsocket(name string) (Websocket, error) {
 		)
 	}
 
-	wClient := websocketv1.NewWebsocketServiceClient(conn)
-
 	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return nil, err
 	}
 
-	res := &v1.Resource{
-		Type: v1.ResourceType_Websocket,
+	res := &resourcesv1.ResourceIdentifier{
+		Type: resourcesv1.ResourceType_Websocket,
 		Name: name,
 	}
 
-	dr := &v1.ResourceDeclareRequest{
-		Resource: res,
+	dr := &resourcesv1.ResourceDeclareRequest{
+		Id: res,
 	}
 
 	_, err = rsc.Declare(context.Background(), dr)
@@ -82,12 +84,14 @@ func (m *manager) newWebsocket(name string) (Websocket, error) {
 		return nil, err
 	}
 
-	actions := []v1.Action{v1.Action_WebsocketManage}
+	actions := []resourcesv1.Action{resourcesv1.Action_WebsocketManage}
 
 	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(res, actions))
 	if err != nil {
 		return nil, err
 	}
+
+	wClient := websocketsv1.NewWebsocketClient(conn)
 
 	return &websocket{
 		manager: m,
@@ -100,21 +104,39 @@ func (w *websocket) Name() string {
 	return w.name
 }
 
-func (w *websocket) On(eventType faas.WebsocketEventType, middleware ...faas.WebsocketMiddleware) {
-	f := faas.New()
+func (w *websocket) On(eventType handler.WebsocketEventType, middleware ...handler.WebsocketMiddleware) {
+	// mapping handler.WebsocketEventType to protobuf requirement i.e websocketsv1.WebsocketEventType
+	var _eventType websocketsv1.WebsocketEventType
+	switch eventType {
+	case handler.WebsocketDisconnect:
+		_eventType = websocketsv1.WebsocketEventType_Disconnect
+	case handler.WebsocketMessage:
+		_eventType = websocketsv1.WebsocketEventType_Message
+	default:
+		_eventType = websocketsv1.WebsocketEventType_Connect
+	}
 
-	f.Websocket(middleware...).
-		WithWebsocketWorkerOptions(faas.WebsocketWorkerOptions{
-			Socket:    w.name,
-			EventType: eventType,
-		})
+	registrationRequest := &websocketsv1.RegistrationRequest{
+		SocketName: w.name,
+		EventType:  _eventType,
+	}
+	composeHandler := handler.ComposeWebsocketMiddleware(middleware...)
 
-	w.manager.addWorker(fmt.Sprintf("websocket:%s/%s", w.name, eventType), f)
+	opts := &workers.WebsocketWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware:          composeHandler,
+	}
+
+	worker := workers.NewWebsocketWorker(opts)
+	w.manager.addWorker("WebsocketWorker:"+strings.Join([]string{
+		w.name,
+		string(eventType),
+	}, "-"), worker)
 }
 
 func (w *websocket) Send(ctx context.Context, connectionId string, message []byte) error {
-	_, err := w.client.Send(ctx, &websocketv1.WebsocketSendRequest{
-		Socket:       w.name,
+	_, err := w.client.SendMessage(ctx, &websocketsv1.WebsocketSendRequest{
+		SocketName:   w.name,
 		ConnectionId: connectionId,
 		Data:         message,
 	})
@@ -123,26 +145,10 @@ func (w *websocket) Send(ctx context.Context, connectionId string, message []byt
 }
 
 func (w *websocket) Close(ctx context.Context, connectionId string) error {
-	_, err := w.client.Close(ctx, &websocketv1.WebsocketCloseRequest{
-		Socket:       w.name,
+	_, err := w.client.CloseConnection(ctx, &websocketsv1.WebsocketCloseConnectionRequest{
+		SocketName:   w.name,
 		ConnectionId: connectionId,
 	})
 
 	return err
-}
-
-func (w *websocket) Details(ctx context.Context) (*v1.ResourceDetailsResponse, error) {
-	rsc, err := w.manager.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	dec := &v1.ResourceDetailsRequest{
-		Resource: &v1.Resource{
-			Name: w.name,
-			Type: v1.ResourceType_Websocket,
-		},
-	}
-
-	return rsc.Details(ctx, dec)
 }

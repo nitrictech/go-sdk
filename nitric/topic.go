@@ -18,9 +18,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/events"
-	"github.com/nitrictech/go-sdk/faas"
-	nitricv1 "github.com/nitrictech/nitric/core/pkg/api/nitric/v1"
+	"github.com/nitrictech/go-sdk/api/topics"
+	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/workers"
+
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
+	topicspb "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
 // TopicPermission defines the available permissions on a topic
@@ -28,22 +31,22 @@ type TopicPermission string
 
 const (
 	// TopicPublishing is required to call Publish on a topic.
-	TopicPublishing TopicPermission = "publishing"
+	TopicPublish TopicPermission = "publish"
 )
 
 type Topic interface {
-	events.Topic
+	topics.Topic
 }
 
 type SubscribableTopic interface {
-	With(permissions ...TopicPermission) (Topic, error)
+	Allow(TopicPermission, ...TopicPermission) (Topic, error)
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
-	Subscribe(...faas.EventMiddleware)
+	Subscribe(...handler.MessageMiddleware)
 }
 
 type topic struct {
-	events.Topic
+	topics.Topic
 
 	manager Manager
 }
@@ -61,8 +64,10 @@ func NewTopic(name string) SubscribableTopic {
 	}
 }
 
-func (t *subscribableTopic) With(permissions ...TopicPermission) (Topic, error) {
-	return defaultManager.newTopic(t.name, permissions...)
+func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...TopicPermission) (Topic, error) {
+	allPerms := append([]TopicPermission{permission}, permissions...)
+
+	return defaultManager.newTopic(t.name, allPerms...)
 }
 
 func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, error) {
@@ -71,15 +76,15 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 		return nil, err
 	}
 
-	res := &nitricv1.Resource{
-		Type: nitricv1.ResourceType_Topic,
+	res := &v1.ResourceIdentifier{
+		Type: v1.ResourceType_Topic,
 		Name: name,
 	}
 
-	dr := &nitricv1.ResourceDeclareRequest{
-		Resource: res,
-		Config: &nitricv1.ResourceDeclareRequest_Topic{
-			Topic: &nitricv1.TopicResource{},
+	dr := &v1.ResourceDeclareRequest{
+		Id: res,
+		Config: &v1.ResourceDeclareRequest_Topic{
+			Topic: &v1.TopicResource{},
 		},
 	}
 	_, err = rsc.Declare(context.Background(), dr)
@@ -87,11 +92,11 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 		return nil, err
 	}
 
-	actions := []nitricv1.Action{}
+	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case TopicPublishing:
-			actions = append(actions, nitricv1.Action_TopicDetail, nitricv1.Action_TopicEventPublish, nitricv1.Action_TopicList)
+		case TopicPublish:
+			actions = append(actions, v1.Action_TopicPublish)
 		default:
 			return nil, fmt.Errorf("TopicPermission %s unknown", perm)
 		}
@@ -102,29 +107,31 @@ func (m *manager) newTopic(name string, permissions ...TopicPermission) (Topic, 
 		return nil, err
 	}
 
-	if m.evts == nil {
-		evts, err := events.New()
+	if m.topics == nil {
+		evts, err := topics.New()
 		if err != nil {
 			return nil, err
 		}
-		m.evts = evts
+		m.topics = evts
 	}
 
 	return &topic{
-		Topic:   m.evts.Topic(name),
+		Topic:   m.topics.Topic(name),
 		manager: m,
 	}, nil
 }
 
-func (t *subscribableTopic) Subscribe(middleware ...faas.EventMiddleware) {
-	f := t.manager.getBuilder(t.name)
-	if f == nil {
-		f = faas.New()
+func (t *subscribableTopic) Subscribe(middleware ...handler.MessageMiddleware) {
+	registrationRequest := &topicspb.RegistrationRequest{
+		TopicName: t.name,
+	}
+	composeHandler := handler.ComposeMessageMiddleware(middleware...)
+
+	opts := &workers.SubscriptionWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Middleware:          composeHandler,
 	}
 
-	f.Event(middleware...)
-	f.WithSubscriptionWorkerOpts(faas.SubscriptionWorkerOptions{Topic: t.name})
-
-	t.manager.addBuilder(t.name, f)
-	t.manager.addWorker(fmt.Sprintf("topic:subscribe %s", t.name), f)
+	worker := workers.NewSubscriptionWorker(opts)
+	t.manager.addWorker("SubscriptionWorker:"+t.name, worker)
 }

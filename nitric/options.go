@@ -14,7 +14,9 @@
 
 package nitric
 
-import "github.com/nitrictech/go-sdk/faas"
+import (
+	"github.com/nitrictech/go-sdk/handler"
+)
 
 type (
 	ApiOption    = func(api *api)
@@ -27,16 +29,27 @@ type JwtSecurityRule struct {
 }
 
 type methodOptions struct {
-	security         map[string][]string
+	security         []OidcOptions
 	securityDisabled bool
 }
 
-func WithMiddleware(middleware ...faas.HttpMiddleware) ApiOption {
+func OidcRule(name string, issuer string, audiences []string) SecurityOption {
+	return func(scopes []string) OidcOptions {
+		return OidcOptions{
+			Name:      name,
+			Issuer:    issuer,
+			Audiences: audiences,
+			Scopes:    scopes,
+		}
+	}
+}
+
+func WithMiddleware(middleware ...handler.HttpMiddleware) ApiOption {
 	return func(api *api) {
 		if api.middleware != nil {
-			api.middleware = faas.ComposeHttpMiddleware(api.middleware, faas.ComposeHttpMiddleware(middleware...))
+			api.middleware = handler.ComposeHttpMiddleware(api.middleware, handler.ComposeHttpMiddleware(middleware...))
 		} else {
-			api.middleware = faas.ComposeHttpMiddleware(middleware...)
+			api.middleware = handler.ComposeHttpMiddleware(middleware...)
 		}
 	}
 }
@@ -51,13 +64,13 @@ func WithSecurityJwtRule(name string, rule JwtSecurityRule) ApiOption {
 	}
 }
 
-func WithSecurity(name string, scopes []string) ApiOption {
+func WithSecurity(oidcOptions OidcOptions) ApiOption {
 	return func(api *api) {
 		if api.security == nil {
-			api.security = make(map[string][]string)
+			api.security = []OidcOptions{oidcOptions}
+		} else {
+			api.security = append(api.security, oidcOptions)
 		}
-
-		api.security[name] = scopes
 	}
 }
 
@@ -74,16 +87,13 @@ func WithNoMethodSecurity() MethodOption {
 	}
 }
 
-func WithMethodSecurity(name string, scopes []string) MethodOption {
+func WithMethodSecurity(oidcOptions OidcOptions) MethodOption {
 	return func(mo *methodOptions) {
-		if name == "" {
-			mo.securityDisabled = true
+		mo.securityDisabled = false
+		if mo.security == nil {
+			mo.security = []OidcOptions{oidcOptions}
 		} else {
-			if mo.security == nil {
-				mo.security = map[string][]string{}
-			}
-
-			mo.security[name] = scopes
+			mo.security = append(mo.security, oidcOptions)
 		}
 	}
 }
