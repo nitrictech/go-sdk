@@ -24,7 +24,16 @@ import (
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/kvstore/v1"
 )
 
-type ScanKeysOption = func(*v1.KvStoreScanKeysRequest)
+type ScanKeysRequest = v1.KvStoreScanKeysRequest
+
+type ScanKeysOption = func(*ScanKeysRequest)
+
+// Apply a prefix to the scan keys request
+func WithPrefix(prefix string) ScanKeysOption {
+	return func(req *ScanKeysRequest) {
+		req.Prefix = prefix
+	}
+}
 
 // TODO: maybe move keystream to separate file
 type KeyStream struct {
