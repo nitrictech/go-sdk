@@ -25,12 +25,12 @@ import (
 type KvStorePermission string
 
 const (
-	KvStoreWrite  KvStorePermission = "write"
-	KvStoreRead   KvStorePermission = "read"
+	KvStoreSet    KvStorePermission = "set"
+	KvStoreGet    KvStorePermission = "get"
 	KvStoreDelete KvStorePermission = "delete"
 )
 
-var KvStoreEverything []KvStorePermission = []KvStorePermission{KvStoreWrite, KvStoreRead, KvStoreDelete}
+var KvStoreEverything []KvStorePermission = []KvStorePermission{KvStoreSet, KvStoreGet, KvStoreDelete}
 
 type KvStore interface {
 	Allow(KvStorePermission, ...KvStorePermission) (keyvalue.Store, error)
@@ -80,9 +80,9 @@ func (m *manager) newKv(name string, permissions ...KvStorePermission) (keyvalue
 	actions := []v1.Action{}
 	for _, perm := range permissions {
 		switch perm {
-		case KvStoreRead:
+		case KvStoreGet:
 			actions = append(actions, v1.Action_KeyValueStoreRead)
-		case KvStoreWrite:
+		case KvStoreSet:
 			actions = append(actions, v1.Action_KeyValueStoreWrite)
 		case KvStoreDelete:
 			actions = append(actions, v1.Action_KeyValueStoreDelete)
