@@ -24,6 +24,7 @@ import (
 type HttpRequest interface {
 	Method() string
 	Path() string
+	Data() []byte
 	Query() map[string][]string
 	Headers() map[string][]string
 	PathParams() map[string]string
@@ -32,6 +33,7 @@ type HttpRequest interface {
 type httpRequestImpl struct {
 	method     string
 	path       string
+	data       []byte
 	query      map[string][]string
 	headers    map[string][]string
 	pathParams map[string]string
@@ -43,6 +45,10 @@ func (h *httpRequestImpl) Method() string {
 
 func (h *httpRequestImpl) Path() string {
 	return h.path
+}
+
+func (h *httpRequestImpl) Data() []byte {
+	return h.data
 }
 
 func (h *httpRequestImpl) Query() map[string][]string {
