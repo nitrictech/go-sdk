@@ -70,6 +70,7 @@ func NewHttpContext(msg *http.ServerMessage) *HttpContext {
 			pathParams: req.PathParams,
 			query:      query,
 			headers:    headers,
+			data:       req.Body,
 		},
 		Response: &HttpResponse{
 			Status:  200,
