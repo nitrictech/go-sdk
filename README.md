@@ -22,7 +22,7 @@
 
 # Go SDK for Nitric
 
-The Go SDK supports the use of the Nitric framework with GoLang 1.19. For more information, check out the main [Nitric repo](https://github.com/nitrictech/nitric).
+The Go SDK supports the use of the Nitric framework with GoLang 1.21. For more information, check out the main [Nitric repo](https://github.com/nitrictech/nitric).
 
 Nitric SDKs provide an infrastructure-as-code style that lets you define resources in code. You can also write the functions that support the logic behind APIs, subscribers and schedules.
 
