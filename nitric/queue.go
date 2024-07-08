@@ -15,7 +15,6 @@
 package nitric
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/queues"
@@ -36,48 +35,37 @@ type Queue interface {
 }
 
 type queue struct {
-	name    string
-	manager Manager
+	name         string
+	manager      Manager
+	registerChan <-chan RegisterResult
 }
 
 func NewQueue(name string) *queue {
-	return &queue{
-		name:    name,
-		manager: defaultManager,
+	queue := &queue{
+		name:         name,
+		manager:      defaultManager,
+		registerChan: make(chan RegisterResult),
 	}
+
+	queue.registerChan = defaultManager.registerResource(&v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_Queue,
+			Name: name,
+		},
+		Config: &v1.ResourceDeclareRequest_Queue{
+			Queue: &v1.QueueResource{},
+		},
+	})
+
+	return queue
 }
 
 // NewQueue registers this queue as a required resource for the calling function/container.
 func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (queues.Queue, error) {
 	allPerms := append([]QueuePermission{permission}, permissions...)
 
-	return defaultManager.newQueue(q.name, allPerms...)
-}
-
-func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.Queue, error) {
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	colRes := &v1.ResourceIdentifier{
-		Type: v1.ResourceType_Queue,
-		Name: name,
-	}
-
-	dr := &v1.ResourceDeclareRequest{
-		Id: colRes,
-		Config: &v1.ResourceDeclareRequest_Queue{
-			Queue: &v1.QueueResource{},
-		},
-	}
-	_, err = rsc.Declare(context.Background(), dr)
-	if err != nil {
-		return nil, err
-	}
-
 	actions := []v1.Action{}
-	for _, perm := range permissions {
+	for _, perm := range allPerms {
 		switch perm {
 		case QueueDequeue:
 			actions = append(actions, v1.Action_QueueDequeue)
@@ -88,7 +76,12 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		}
 	}
 
-	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))
+	registerResult := <-q.registerChan
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
+	}
+
+	m, err := q.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,5 +93,5 @@ func (m *manager) newQueue(name string, permissions ...QueuePermission) (queues.
 		}
 	}
 
-	return m.queues.Queue(name), nil
+	return m.queues.Queue(q.name), nil
 }

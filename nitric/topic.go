@@ -53,18 +53,17 @@ type topic struct {
 type subscribableTopic struct {
 	name         string
 	manager      Manager
-	registerChan chan RegisterResult
+	registerChan <-chan RegisterResult
 }
 
 // NewTopic creates a new Topic with the give permissions.
 func NewTopic(name string) SubscribableTopic {
 	topic := &subscribableTopic{
-		name:         name,
-		manager:      defaultManager,
-		registerChan: make(chan RegisterResult),
+		name:    name,
+		manager: defaultManager,
 	}
 
-	go defaultManager.registerResource(&v1.ResourceDeclareRequest{
+	topic.registerChan = defaultManager.registerResource(&v1.ResourceDeclareRequest{
 		Id: &v1.ResourceIdentifier{
 			Type: v1.ResourceType_Topic,
 			Name: name,
@@ -72,7 +71,7 @@ func NewTopic(name string) SubscribableTopic {
 		Config: &v1.ResourceDeclareRequest_Topic{
 			Topic: &v1.TopicResource{},
 		},
-	}, topic.registerChan)
+	})
 
 	return topic
 }

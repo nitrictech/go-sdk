@@ -41,17 +41,8 @@ type Manager interface {
 	Run() error
 	addWorker(name string, s workers.Worker)
 	resourceServiceClient() (v1.ResourcesClient, error)
-	registerResource(request *v1.ResourceDeclareRequest, registerResourceChan chan RegisterResult)
+	registerResource(request *v1.ResourceDeclareRequest) <-chan RegisterResult
 	registerPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) (*manager, error)
-
-	newApi(name string, opts ...ApiOption) (Api, error)
-	newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error)
-	newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error)
-	newQueue(name string, permissions ...QueuePermission) (queues.Queue, error)
-	newSchedule(name string) Schedule
-	newWebsocket(socket string) (Websocket, error)
-	newKv(name string, permissions ...KvStorePermission) (keyvalue.Store, error)
-	newOidcSecurityDefinition(apiName string, options OidcOptions) (OidcSecurityDefinition, error)
 }
 
 type RegisterResult struct {
@@ -110,31 +101,37 @@ func (m *manager) resourceServiceClient() (v1.ResourcesClient, error) {
 	return m.rsc, nil
 }
 
-func (m *manager) registerResource(request *v1.ResourceDeclareRequest, registerResourceChan chan RegisterResult) {
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		registerResourceChan <- RegisterResult{
-			Err:        err,
-			Identifier: nil,
+func (m *manager) registerResource(request *v1.ResourceDeclareRequest) <-chan RegisterResult {
+	registerResourceChan := make(chan RegisterResult)
+
+	go func() {
+		rsc, err := m.resourceServiceClient()
+		if err != nil {
+			registerResourceChan <- RegisterResult{
+				Err:        err,
+				Identifier: nil,
+			}
+
+			return
 		}
 
-		return
-	}
+		_, err = rsc.Declare(context.Background(), request)
+		if err != nil {
+			registerResourceChan <- RegisterResult{
+				Err:        err,
+				Identifier: nil,
+			}
 
-	_, err = rsc.Declare(context.Background(), request)
-	if err != nil {
-		registerResourceChan <- RegisterResult{
-			Err:        err,
-			Identifier: nil,
+			return
 		}
 
-		return
-	}
+		registerResourceChan <- RegisterResult{
+			Err:        nil,
+			Identifier: request.Id,
+		}
+	}()
 
-	registerResourceChan <- RegisterResult{
-		Err:        nil,
-		Identifier: request.Id,
-	}
+	return registerResourceChan
 }
 
 func (m *manager) registerPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) (*manager, error) {

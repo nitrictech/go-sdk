@@ -15,7 +15,6 @@
 package nitric
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/keyvalue"
@@ -37,48 +36,37 @@ type KvStore interface {
 }
 
 type kvstore struct {
-	name    string
-	manager Manager
+	name         string
+	manager      Manager
+	registerChan <-chan RegisterResult
 }
 
 func NewKv(name string) *kvstore {
-	return &kvstore{
-		name:    name,
-		manager: defaultManager,
+	kvstore := &kvstore{
+		name:         name,
+		manager:      defaultManager,
+		registerChan: make(chan RegisterResult),
 	}
+
+	kvstore.registerChan = defaultManager.registerResource(&v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_KeyValueStore,
+			Name: name,
+		},
+		Config: &v1.ResourceDeclareRequest_KeyValueStore{
+			KeyValueStore: &v1.KeyValueStoreResource{},
+		},
+	})
+
+	return kvstore
 }
 
 // NewQueue registers this queue as a required resource for the calling function/container.
 func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) (keyvalue.Store, error) {
 	allPerms := append([]KvStorePermission{permission}, permissions...)
 
-	return defaultManager.newKv(k.name, allPerms...)
-}
-
-func (m *manager) newKv(name string, permissions ...KvStorePermission) (keyvalue.Store, error) {
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	colRes := &v1.ResourceIdentifier{
-		Type: v1.ResourceType_KeyValueStore,
-		Name: name,
-	}
-
-	dr := &v1.ResourceDeclareRequest{
-		Id: colRes,
-		Config: &v1.ResourceDeclareRequest_KeyValueStore{
-			KeyValueStore: &v1.KeyValueStoreResource{},
-		},
-	}
-	_, err = rsc.Declare(context.Background(), dr)
-	if err != nil {
-		return nil, err
-	}
-
 	actions := []v1.Action{}
-	for _, perm := range permissions {
+	for _, perm := range allPerms {
 		switch perm {
 		case KvStoreGet:
 			actions = append(actions, v1.Action_KeyValueStoreRead)
@@ -91,7 +79,13 @@ func (m *manager) newKv(name string, permissions ...KvStorePermission) (keyvalue
 		}
 	}
 
-	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))
+	registerResult := <-k.registerChan
+
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
+	}
+
+	m, err := k.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,5 +97,5 @@ func (m *manager) newKv(name string, permissions ...KvStorePermission) (keyvalue
 		}
 	}
 
-	return m.kvstores.Store(name), nil
+	return m.kvstores.Store(k.name), nil
 }

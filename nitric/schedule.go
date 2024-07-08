@@ -36,13 +36,9 @@ type schedule struct {
 
 // NewSchedule provides a new schedule, which can be configured with a rate/cron and a callback to run on the schedule.
 func NewSchedule(name string) Schedule {
-	return defaultManager.newSchedule(name)
-}
-
-func (m *manager) newSchedule(name string) Schedule {
 	return &schedule{
 		name:    name,
-		manager: m,
+		manager: defaultManager,
 	}
 }
 

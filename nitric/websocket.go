@@ -18,11 +18,6 @@ import (
 	"context"
 	"strings"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/api/errors"
-	"github.com/nitrictech/go-sdk/api/errors/codes"
-	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/handler"
 	"github.com/nitrictech/go-sdk/workers"
 	resourcesv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
@@ -46,55 +41,27 @@ type websocket struct {
 
 // NewCollection register this collection as a required resource for the calling function/container.
 func NewWebsocket(name string) (Websocket, error) {
-	return defaultManager.newWebsocket(name)
-}
-
-func (m *manager) newWebsocket(name string) (Websocket, error) {
-	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
-
-	conn, err := grpc.DialContext(
-		ctx,
-		constants.NitricAddress(),
-		constants.DefaultOptions()...,
-	)
-	if err != nil {
-		return nil, errors.NewWithCause(
-			codes.Unavailable,
-			"Websocket.New: Unable to reach WebsocketServiceServer",
-			err,
-		)
-	}
-
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	res := &resourcesv1.ResourceIdentifier{
-		Type: resourcesv1.ResourceType_Websocket,
-		Name: name,
-	}
-
-	dr := &resourcesv1.ResourceDeclareRequest{
-		Id: res,
-	}
-
-	_, err = rsc.Declare(context.Background(), dr)
-	if err != nil {
-		return nil, err
+	registerResult := <-defaultManager.registerResource(&resourcesv1.ResourceDeclareRequest{
+		Id: &resourcesv1.ResourceIdentifier{
+			Type: resourcesv1.ResourceType_Websocket,
+			Name: name,
+		},
+	})
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
 	}
 
 	actions := []resourcesv1.Action{resourcesv1.Action_WebsocketManage}
 
-	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(res, actions))
+	m, err := defaultManager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	wClient := websocketsv1.NewWebsocketClient(conn)
+	wClient := websocketsv1.NewWebsocketClient(m.conn)
 
 	return &websocket{
-		manager: m,
+		manager: defaultManager,
 		client:  wClient,
 		name:    name,
 	}, nil
