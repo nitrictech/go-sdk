@@ -15,8 +15,6 @@
 package nitric
 
 import (
-	"context"
-
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -51,25 +49,16 @@ type oidcSecurityDefinition struct {
 }
 
 func NewOidcSecurityDefinition(apiName string, options OidcOptions) (OidcSecurityDefinition, error) {
-	return defaultManager.newOidcSecurityDefinition(apiName, options)
-}
-
-func (m *manager) newOidcSecurityDefinition(apiName string, options OidcOptions) (OidcSecurityDefinition, error) {
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
 	o := &oidcSecurityDefinition{
 		ApiName:   apiName,
 		RuleName:  options.Name,
 		Issuer:    options.Issuer,
 		Audiences: options.Audiences,
-		manager:   m,
+		manager:   defaultManager,
 	}
 
 	// declare resource
-	_, err = rsc.Declare(context.TODO(), &v1.ResourceDeclareRequest{
+	registerResult := <-defaultManager.registerResource(&v1.ResourceDeclareRequest{
 		Id: &v1.ResourceIdentifier{
 			Name: options.Name,
 			Type: v1.ResourceType_ApiSecurityDefinition,
@@ -86,8 +75,8 @@ func (m *manager) newOidcSecurityDefinition(apiName string, options OidcOptions)
 			},
 		},
 	})
-	if err != nil {
-		return nil, err
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
 	}
 
 	return o, nil

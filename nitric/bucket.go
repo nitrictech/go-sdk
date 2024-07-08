@@ -15,7 +15,6 @@
 package nitric
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -29,8 +28,9 @@ import (
 type BucketPermission string
 
 type bucket struct {
-	name    string
-	manager Manager
+	name         string
+	manager      Manager
+	registerChan <-chan RegisterResult
 }
 
 type Bucket interface {
@@ -49,42 +49,29 @@ var BucketEverything []BucketPermission = []BucketPermission{BucketRead, BucketW
 // NewBucket register this bucket as a required resource for the calling function/container and
 // register the permissions required by the currently scoped function for this resource.
 func NewBucket(name string) Bucket {
-	return &bucket{
+	bucket := &bucket{
 		name:    name,
 		manager: defaultManager,
 	}
+
+	bucket.registerChan = defaultManager.registerResource(&v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_Bucket,
+			Name: name,
+		},
+		Config: &v1.ResourceDeclareRequest_Bucket{
+			Bucket: &v1.BucketResource{},
+		},
+	})
+
+	return bucket
 }
 
 func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (storage.Bucket, error) {
 	allPerms := append([]BucketPermission{permission}, permissions...)
 
-	return defaultManager.newBucket(b.name, allPerms...)
-}
-
-func (m *manager) newBucket(name string, permissions ...BucketPermission) (storage.Bucket, error) {
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	res := &v1.ResourceIdentifier{
-		Type: v1.ResourceType_Bucket,
-		Name: name,
-	}
-
-	dr := &v1.ResourceDeclareRequest{
-		Id: res,
-		Config: &v1.ResourceDeclareRequest_Bucket{
-			Bucket: &v1.BucketResource{},
-		},
-	}
-	_, err = rsc.Declare(context.Background(), dr)
-	if err != nil {
-		return nil, err
-	}
-
 	actions := []v1.Action{}
-	for _, perm := range permissions {
+	for _, perm := range allPerms {
 		switch perm {
 		case BucketRead:
 			actions = append(actions, v1.Action_BucketFileGet, v1.Action_BucketFileList)
@@ -97,7 +84,12 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 		}
 	}
 
-	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(res, actions))
+	registerResult := <-b.registerChan
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
+	}
+
+	m, err := b.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +101,7 @@ func (m *manager) newBucket(name string, permissions ...BucketPermission) (stora
 		}
 	}
 
-	return m.storage.Bucket(name), nil
+	return m.storage.Bucket(b.name), nil
 }
 
 func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFilter string, middleware ...handler.BlobEventMiddleware) {

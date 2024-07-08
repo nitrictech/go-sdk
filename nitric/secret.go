@@ -15,7 +15,6 @@
 package nitric
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/secrets"
@@ -31,50 +30,40 @@ const (
 
 var SecretEverything []SecretPermission = []SecretPermission{SecretAccess, SecretPut}
 
-type Secret interface{}
+type Secret interface {
+	Allow(SecretPermission, ...SecretPermission) (secrets.SecretRef, error)
+}
 
 type secret struct {
-	name    string
-	manager Manager
+	name         string
+	manager      Manager
+	registerChan <-chan RegisterResult
 }
 
 func NewSecret(name string) *secret {
-	return &secret{
+	secret := &secret{
 		name:    name,
 		manager: defaultManager,
 	}
+
+	secret.registerChan = defaultManager.registerResource(&v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_Secret,
+			Name: name,
+		},
+		Config: &v1.ResourceDeclareRequest_Secret{
+			Secret: &v1.SecretResource{},
+		},
+	})
+
+	return secret
 }
 
 func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) (secrets.SecretRef, error) {
 	allPerms := append([]SecretPermission{permission}, permissions...)
 
-	return defaultManager.newSecret(s.name, allPerms...)
-}
-
-func (m *manager) newSecret(name string, permissions ...SecretPermission) (secrets.SecretRef, error) {
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	colRes := &v1.ResourceIdentifier{
-		Type: v1.ResourceType_Secret,
-		Name: name,
-	}
-
-	dr := &v1.ResourceDeclareRequest{
-		Id: colRes,
-		Config: &v1.ResourceDeclareRequest_Secret{
-			Secret: &v1.SecretResource{},
-		},
-	}
-	_, err = rsc.Declare(context.Background(), dr)
-	if err != nil {
-		return nil, err
-	}
-
 	actions := []v1.Action{}
-	for _, perm := range permissions {
+	for _, perm := range allPerms {
 		switch perm {
 		case SecretAccess:
 			actions = append(actions, v1.Action_SecretAccess)
@@ -85,7 +74,12 @@ func (m *manager) newSecret(name string, permissions ...SecretPermission) (secre
 		}
 	}
 
-	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(colRes, actions))
+	registerResult := <-s.registerChan
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
+	}
+
+	m, err := s.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,5 +91,5 @@ func (m *manager) newSecret(name string, permissions ...SecretPermission) (secre
 		}
 	}
 
-	return m.secrets.Secret(name), nil
+	return m.secrets.Secret(s.name), nil
 }

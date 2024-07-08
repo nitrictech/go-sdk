@@ -15,7 +15,6 @@
 package nitric
 
 import (
-	"context"
 	"net/http"
 	"path"
 	"strings"
@@ -42,7 +41,7 @@ type route struct {
 	path       string
 	api        *api
 	middleware handler.HttpMiddleware
-	manager    *manager
+	manager    Manager
 }
 
 func composeRouteMiddleware(apiMiddleware handler.HttpMiddleware, routeMiddleware []handler.HttpMiddleware) handler.HttpMiddleware {
@@ -179,23 +178,21 @@ type ApiDetails struct {
 type api struct {
 	name          string
 	routes        map[string]Route
-	manager       *manager
+	manager       Manager
 	securityRules map[string]interface{}
 	security      []OidcOptions
 	path          string
 	middleware    handler.HttpMiddleware
 }
 
-func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
-	rsc, err := m.resourceServiceClient()
-	if err != nil {
-		return nil, err
-	}
-
+// NewApi Registers a new API Resource.
+//
+// The returned API object can be used to register Routes and Methods, with Handlers.
+func NewApi(name string, opts ...ApiOption) (Api, error) {
 	a := &api{
 		name:    name,
 		routes:  map[string]Route{},
-		manager: m,
+		manager: defaultManager,
 	}
 
 	// Apply options
@@ -218,9 +215,8 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 			}
 		}
 	}
-
 	// declare resource
-	_, err = rsc.Declare(context.TODO(), &resourcev1.ResourceDeclareRequest{
+	result := <-defaultManager.registerResource(&resourcev1.ResourceDeclareRequest{
 		Id: &resourcev1.ResourceIdentifier{
 			Name: name,
 			Type: resourcev1.ResourceType_Api,
@@ -229,18 +225,11 @@ func (m *manager) newApi(name string, opts ...ApiOption) (Api, error) {
 			Api: apiResource,
 		},
 	})
-	if err != nil {
-		return nil, err
+	if result.Err != nil {
+		return nil, result.Err
 	}
 
 	return a, nil
-}
-
-// NewApi Registers a new API Resource.
-//
-// The returned API object can be used to register Routes and Methods, with Handlers.
-func NewApi(name string, opts ...ApiOption) (Api, error) {
-	return defaultManager.newApi(name, opts...)
 }
 
 // Get adds a Get method handler to the path with any specified opts.
