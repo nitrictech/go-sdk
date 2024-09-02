@@ -19,8 +19,6 @@ import (
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 )
 
-// Http
-
 type HttpRequest interface {
 	Method() string
 	Path() string
@@ -81,6 +79,26 @@ func (m *messageRequestImpl) TopicName() string {
 
 func (m *messageRequestImpl) Message() map[string]interface{} {
 	return m.message
+}
+
+// Job
+
+type JobRequest interface {
+	JobName() string
+	Data() map[string]interface{}
+}
+
+type jobRequest struct {
+	jobName string
+	data    map[string]interface{}
+}
+
+func (m *jobRequest) JobName() string {
+	return m.jobName
+}
+
+func (m *jobRequest) Data() map[string]interface{} {
+	return m.data
 }
 
 // Interval

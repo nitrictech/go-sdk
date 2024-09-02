@@ -44,7 +44,8 @@ func (s *secretsImpl) Secret(name string) SecretRef {
 
 // New - Create a new Secrets client
 func New() (Secrets, error) {
-	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+	ctx, cancel := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+	defer cancel()
 
 	conn, err := grpc.DialContext(
 		ctx,

@@ -69,7 +69,7 @@ func (s *topicImpl) Publish(ctx context.Context, message map[string]interface{},
 		},
 	}
 
-	// Apply options to the event payload
+	// Apply options to the request
 	for _, opt := range opts {
 		opt(event)
 	}

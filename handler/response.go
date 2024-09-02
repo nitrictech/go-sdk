@@ -24,6 +24,10 @@ type MessageResponse struct {
 	Success bool
 }
 
+type JobResponse struct {
+	Success bool
+}
+
 type IntervalResponse struct {
 	Success bool
 }

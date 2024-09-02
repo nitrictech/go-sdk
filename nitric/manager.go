@@ -25,6 +25,7 @@ import (
 	multierror "github.com/missionMeteora/toolkit/errors"
 	"google.golang.org/grpc"
 
+	"github.com/nitrictech/go-sdk/api/batch"
 	apierrors "github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/keyvalue"
 	"github.com/nitrictech/go-sdk/api/queues"
@@ -57,6 +58,7 @@ type manager struct {
 
 	rsc      v1.ResourcesClient
 	topics   topics.Topics
+	batch    batch.Batch
 	storage  storage.Storage
 	secrets  secrets.Secrets
 	queues   queues.Queues
@@ -83,7 +85,8 @@ func (m *manager) resourceServiceClient() (v1.ResourcesClient, error) {
 	defer m.connMutex.Unlock()
 
 	if m.conn == nil {
-		ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+		ctx, cancel := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+		defer cancel()
 
 		conn, err := grpc.DialContext(
 			ctx,

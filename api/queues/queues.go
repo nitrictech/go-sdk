@@ -43,7 +43,8 @@ func (q *queuesImpl) Queue(name string) Queue {
 
 // New - Construct a new Queueing Client with default options
 func New() (Queues, error) {
-	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+	ctx, cancel := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+	defer cancel()
 
 	conn, err := grpc.DialContext(
 		ctx,

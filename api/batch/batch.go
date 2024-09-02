@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package keyvalue
+package batch
 
 import (
 	"context"
@@ -22,28 +22,30 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/kvstore/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/batch/v1"
 )
 
-// KeyValue - Idiomatic interface for the nitric Key Value Store Service
-type KeyValue interface {
-	// Gets a store instance that refers to the store at the specified path.
-	Store(string) Store
+// Batch
+type Batch interface {
+	// Job - Retrieve a Job reference
+	Job(name string) Job
 }
 
-type keyValueImpl struct {
-	kvClient v1.KvStoreClient
+type batchImpl struct {
+	batchClient v1.BatchClient
 }
 
-func (k *keyValueImpl) Store(name string) Store {
-	return &storeImpl{
-		name:     name,
-		kvClient: k.kvClient,
+func (s *batchImpl) Job(name string) Job {
+	// Just return the straight job reference
+	// we can fail if the job does not exist
+	return &jobImpl{
+		name:        name,
+		batchClient: s.batchClient,
 	}
 }
 
-// New - Construct a new Key Value Store Client with default options
-func New() (KeyValue, error) {
+// New - Construct a new Batch Client with default options
+func New() (Batch, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
 	defer cancel()
 
@@ -53,16 +55,12 @@ func New() (KeyValue, error) {
 		constants.DefaultOptions()...,
 	)
 	if err != nil {
-		return nil, errors.NewWithCause(
-			codes.Unavailable,
-			"KeyValue.New: Unable to reach KVStoreServiceServer",
-			err,
-		)
+		return nil, errors.NewWithCause(codes.Unavailable, "Unable to dial Batch service", err)
 	}
 
-	kvClient := v1.NewKvStoreClient(conn)
+	tc := v1.NewBatchClient(conn)
 
-	return &keyValueImpl{
-		kvClient: kvClient,
+	return &batchImpl{
+		batchClient: tc,
 	}, nil
 }

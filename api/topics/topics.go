@@ -46,7 +46,8 @@ func (s *topicsImpl) Topic(name string) Topic {
 
 // New - Construct a new Eventing Client with default options
 func New() (Topics, error) {
-	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+	ctx, cancel := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
+	defer cancel()
 
 	conn, err := grpc.DialContext(
 		ctx,
