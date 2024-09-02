@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/batch"
-	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/handler/job"
 	"github.com/nitrictech/go-sdk/workers"
 	batchpb "github.com/nitrictech/nitric/core/pkg/proto/batch/v1"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
@@ -32,8 +32,10 @@ const (
 	JobSubmit JobPermission = "submit"
 )
 
-type Job interface {
+type jobRef struct {
 	batch.Job
+
+	manager Manager
 }
 
 type JobResourceRequirements struct {
@@ -43,27 +45,21 @@ type JobResourceRequirements struct {
 }
 
 // The resource declaration, not the runtime interact-able object
-type JobDefinition interface {
+type JobRef interface {
 	Allow(JobPermission, ...JobPermission) (batch.Job, error)
 
-	// Handler - Set the job handler function
-	Handler(JobResourceRequirements, ...handler.JobMiddleware)
+	// Handler sets the job handler and requirements
+	Handler(JobResourceRequirements, ...job.Middleware)
 }
 
-type job struct {
-	batch.Job
-
-	manager Manager
-}
-
-type definableJob struct {
+type jobResource struct {
 	name         string
 	manager      Manager
 	registerChan <-chan RegisterResult
 }
 
-func NewJob(name string) JobDefinition {
-	job := &definableJob{
+func NewJob(name string) JobRef {
+	job := &jobResource{
 		name:    name,
 		manager: defaultManager,
 	}
@@ -81,7 +77,7 @@ func NewJob(name string) JobDefinition {
 	return job
 }
 
-func (j *definableJob) Allow(permission JobPermission, permissions ...JobPermission) (batch.Job, error) {
+func (j *jobResource) Allow(permission JobPermission, permissions ...JobPermission) (batch.Job, error) {
 	allPerms := append([]JobPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -112,13 +108,13 @@ func (j *definableJob) Allow(permission JobPermission, permissions ...JobPermiss
 		m.batch = evts
 	}
 
-	return &job{
+	return &jobRef{
 		Job:     m.batch.Job(j.name),
 		manager: m,
 	}, nil
 }
 
-func (j *definableJob) Handler(reqs JobResourceRequirements, middleware ...handler.JobMiddleware) {
+func (j *jobResource) Handler(reqs JobResourceRequirements, middleware ...job.Middleware) {
 	registrationRequest := &batchpb.RegistrationRequest{
 		JobName: j.name,
 		Requirements: &batchpb.JobResourceRequirements{
@@ -127,7 +123,7 @@ func (j *definableJob) Handler(reqs JobResourceRequirements, middleware ...handl
 			Gpus:   reqs.Gpus,
 		},
 	}
-	composeHandler := handler.ComposeJobMiddleware(middleware...)
+	composeHandler := job.ComposeJobMiddleware(middleware...)
 
 	opts := &workers.JobWorkerOpts{
 		RegistrationRequest: registrationRequest,

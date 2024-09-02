@@ -81,26 +81,6 @@ func (m *messageRequestImpl) Message() map[string]interface{} {
 	return m.message
 }
 
-// Job
-
-type JobRequest interface {
-	JobName() string
-	Data() map[string]interface{}
-}
-
-type jobRequest struct {
-	jobName string
-	data    map[string]interface{}
-}
-
-func (m *jobRequest) JobName() string {
-	return m.jobName
-}
-
-func (m *jobRequest) Data() map[string]interface{} {
-	return m.data
-}
-
 // Interval
 
 type IntervalRequest interface {
