@@ -88,7 +88,7 @@ func (mr *MockJobMockRecorder) Name() *gomock.Call {
 }
 
 // Submit mocks base method.
-func (m *MockJob) Submit(arg0 context.Context, arg1 map[string]interface{}, arg2 ...func(*batchpb.SubmitJobRequest)) error {
+func (m *MockJob) Submit(arg0 context.Context, arg1 map[string]interface{}, arg2 ...func(*batchpb.JobSubmitRequest)) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

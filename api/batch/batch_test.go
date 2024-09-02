@@ -75,15 +75,15 @@ var _ = Describe("File", func() {
 				payloadStruct, err := protoutils.NewStruct(dataToBeSubmitted)
 				Expect(err).ToNot(HaveOccurred())
 
-				mockBatchClient.EXPECT().SubmitJob(gomock.Any(), &v1.SubmitJobRequest{
-					Name: jobName,
+				mockBatchClient.EXPECT().SubmitJob(gomock.Any(), &v1.JobSubmitRequest{
+					JobName: jobName,
 					Data: &v1.JobData{
 						Data: &v1.JobData_Struct{
 							Struct: payloadStruct,
 						},
 					},
 				}).Return(
-					&v1.SubmitJobResponse{},
+					&v1.JobSubmitResponse{},
 					nil).Times(1)
 			})
 

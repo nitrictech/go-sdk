@@ -9,7 +9,7 @@ import (
 	"github.com/nitrictech/protoutils"
 )
 
-type SubmitOption = func(*v1.SubmitJobRequest)
+type SubmitOption = func(*v1.JobSubmitRequest)
 
 type Job interface {
 	// Name returns the Job name.
@@ -35,8 +35,8 @@ func (s *jobImpl) Submit(ctx context.Context, data map[string]interface{}, opts 
 		return errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
 	}
 
-	req := &v1.SubmitJobRequest{
-		Name: s.name,
+	req := &v1.JobSubmitRequest{
+		JobName: s.name,
 		Data: &v1.JobData{
 			Data: &v1.JobData_Struct{
 				Struct: dataStruct,

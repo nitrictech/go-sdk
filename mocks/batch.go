@@ -37,14 +37,14 @@ func (m *MockBatchClient) EXPECT() *MockBatchClientMockRecorder {
 }
 
 // SubmitJob mocks base method.
-func (m *MockBatchClient) SubmitJob(arg0 context.Context, arg1 *batchpb.SubmitJobRequest, arg2 ...grpc.CallOption) (*batchpb.SubmitJobResponse, error) {
+func (m *MockBatchClient) SubmitJob(arg0 context.Context, arg1 *batchpb.JobSubmitRequest, arg2 ...grpc.CallOption) (*batchpb.JobSubmitResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SubmitJob", varargs...)
-	ret0, _ := ret[0].(*batchpb.SubmitJobResponse)
+	ret0, _ := ret[0].(*batchpb.JobSubmitResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

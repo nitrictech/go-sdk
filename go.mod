@@ -10,7 +10,7 @@ require (
 	github.com/golangci/golangci-lint v1.56.1
 	github.com/google/addlicense v1.1.1
 	github.com/missionMeteora/toolkit v0.0.0-20170713173850-88364e3ef8cc
-	github.com/nitrictech/nitric/core v0.0.0-20240902004054-11f3dfa04c6c
+	github.com/nitrictech/nitric/core v0.0.0-20240902041254-c5beb733ae42
 	github.com/nitrictech/protoutils v0.0.0-20220321044654-02667a814cdf
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.28.1
