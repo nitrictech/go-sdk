@@ -24,18 +24,18 @@ import (
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/handler/job"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/batch/v1"
 )
 
 type JobWorker struct {
 	client              v1.JobClient
 	registrationRequest *v1.RegistrationRequest
-	middleware          handler.JobMiddleware
+	middleware          job.Middleware
 }
 type JobWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          handler.JobMiddleware
+	Middleware          job.Middleware
 }
 
 // Start implements Worker.
@@ -57,7 +57,7 @@ func (s *JobWorker) Start(ctx context.Context) error {
 		return err
 	}
 	for {
-		var ctx *handler.JobContext
+		var ctx *job.Context
 
 		resp, err := stream.Recv()
 
@@ -72,8 +72,8 @@ func (s *JobWorker) Start(ctx context.Context) error {
 			// Job worker has connected with Nitric server
 			fmt.Println("JobWorker connected with Nitric server")
 		} else if err == nil && resp.GetJobRequest() != nil {
-			ctx = handler.NewJobContext(resp)
-			ctx, err = s.middleware(ctx, handler.JobDummy)
+			ctx = job.NewJobContext(resp)
+			err = s.middleware(ctx, job.NoOpHandler)
 			if err != nil {
 				ctx.WithError(err)
 			}
