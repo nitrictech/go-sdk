@@ -16,7 +16,6 @@ package handler
 
 import (
 	http "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
-	batch "github.com/nitrictech/nitric/core/pkg/proto/batch/v1"
 	schedules "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 	storage "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 	topics "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
@@ -124,43 +123,6 @@ func NewMessageContext(msg *topics.ServerMessage) *MessageContext {
 
 func (c *MessageContext) WithError(err error) {
 	c.Response = &MessageResponse{
-		Success: false,
-	}
-}
-
-type JobContext struct {
-	id       string
-	Request  JobRequest
-	Response *JobResponse
-	Extras   map[string]interface{}
-}
-
-func (c *JobContext) ToClientMessage() *batch.ClientMessage {
-	return &batch.ClientMessage{
-		Id: c.id,
-		Content: &batch.ClientMessage_JobResponse{
-			JobResponse: &batch.JobResponse{
-				Success: true,
-			},
-		},
-	}
-}
-
-func NewJobContext(msg *batch.ServerMessage) *JobContext {
-	return &JobContext{
-		id: msg.Id,
-		Request: &jobRequest{
-			jobName: msg.GetJobRequest().JobName,
-			data:    msg.GetJobRequest().Data.GetStruct().AsMap(),
-		},
-		Response: &JobResponse{
-			Success: true,
-		},
-	}
-}
-
-func (c *JobContext) WithError(err error) {
-	c.Response = &JobResponse{
 		Success: false,
 	}
 }
