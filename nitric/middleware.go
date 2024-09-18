@@ -33,10 +33,23 @@ func dummyHandler[T any](ctx *T) (*T, error) {
 func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
 	var handlerType Middleware[T]
 	switch typ := mw.(type) {
+	case Middleware[T]:
+		handlerType = typ
 	case func(*T, Handler[T]) (*T, error):
 		handlerType = Middleware[T](typ)
+	case Handler[T]:
+		handlerType = handlerToMware(typ)
 	case func(*T) (*T, error):
 		handlerType = handlerToMware(typ)
+	case func(*T) *T:
+		handlerType = handlerToMware(func(ctx *T) (*T, error) {
+			return typ(ctx), nil
+		})
+	case func(*T):
+		handlerType = handlerToMware(func(ctx *T) (*T, error) {
+			typ(ctx)
+			return ctx, nil
+		})
 	default:
 		return nil, fmt.Errorf("invalid middleware type: %T", mw)
 	}
