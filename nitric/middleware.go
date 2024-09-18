@@ -30,6 +30,30 @@ func dummyHandler[T any](ctx *T) (*T, error) {
 	return ctx, nil
 }
 
+func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
+	var handlerType Middleware[T]
+	switch typ := mw.(type) {
+	case Middleware[T]:
+		handlerType = typ
+	case Handler[T]:
+		handlerType = handlerToMware(typ)
+	default:
+		return nil, fmt.Errorf("invalid middleware type: %T", mw)
+	}
+
+	return handlerType, nil
+}
+
+func handlerToMware[T any](h Handler[T]) Middleware[T] {
+	return func(ctx *T, next Handler[T]) (*T, error) {
+		ctx, err := h(ctx)
+		if err != nil {
+			return next(ctx)
+		}
+		return nil, err
+	}
+}
+
 func (c *chainedMiddleware[T]) invoke(ctx *T) (*T, error) {
 	// Chains are left open-ended so middleware can continue to be linked
 	// If the chain is incomplete, set a chained dummy handler for safety
