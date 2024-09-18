@@ -156,7 +156,7 @@ func (r *route) Options(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 //
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
 type Api interface {
-	Get(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Get(path string, handler Handler[httpx.Ctx], opts ...MethodOption)
 	Put(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
 	Patch(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
 	Post(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
@@ -232,7 +232,7 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 
 // Get adds a Get method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Get(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (a *api) Get(match string, handler Handler[httpx.Ctx], opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Get(handler, opts...)
