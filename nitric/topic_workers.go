@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package workers
+package nitric
 
 import (
 	"context"
@@ -23,33 +23,31 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	"github.com/nitrictech/go-sdk/api/topics"
 	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/handler"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
-type ApiWorker struct {
-	client              v1.ApiClient
-	middleware          handler.HttpMiddleware
+type subscriptionWorker struct {
+	client              v1.SubscriberClient
 	registrationRequest *v1.RegistrationRequest
+	middleware          Middleware[topics.Ctx]
 }
-
-type ApiWorkerOpts struct {
+type subscriptionWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          handler.HttpMiddleware
+	Middleware          Middleware[topics.Ctx]
 }
-
-var _ Worker = (*ApiWorker)(nil)
 
 // Start implements Worker.
-func (a *ApiWorker) Start(ctx context.Context) error {
+func (s *subscriptionWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: a.registrationRequest,
+			RegistrationRequest: s.registrationRequest,
 		},
 	}
 
-	stream, err := a.client.Serve(ctx)
+	// Create the request stream and send the initial request
+	stream, err := s.client.Subscribe(ctx)
 	if err != nil {
 		return err
 	}
@@ -58,9 +56,8 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	for {
-		var ctx *handler.HttpContext
+		var ctx *topics.Ctx
 
 		resp, err := stream.Recv()
 
@@ -72,12 +69,11 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Function connected with Nitric server
-			fmt.Println("Function connected with Nitric server")
-		} else if err == nil && resp.GetHttpRequest() != nil {
-			ctx = handler.NewHttpContext(resp)
-
-			ctx, err = a.middleware(ctx, handler.HttpDummy)
+			// Subscription worker has connected with Nitric server
+			fmt.Println("SubscriptionWorker connected with Nitric server")
+		} else if err == nil && resp.GetMessageRequest() != nil {
+			ctx = topics.NewCtx(resp)
+			ctx, err = s.middleware(ctx, dummyHandler)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -92,7 +88,7 @@ func (a *ApiWorker) Start(ctx context.Context) error {
 	}
 }
 
-func NewApiWorker(opts *ApiWorkerOpts) *ApiWorker {
+func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
 	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
 
 	conn, err := grpc.DialContext(
@@ -103,14 +99,14 @@ func NewApiWorker(opts *ApiWorkerOpts) *ApiWorker {
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewApiWorker: Unable to reach ApiClient",
+			"NewSubscriptionWorker: Unable to reach StorageListenerClient",
 			err,
 		))
 	}
 
-	client := v1.NewApiClient(conn)
+	client := v1.NewSubscriberClient(conn)
 
-	return &ApiWorker{
+	return &subscriptionWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
 		middleware:          opts.Middleware,

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package workers
+package nitric
 
 import (
 	"context"
@@ -23,23 +23,23 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/handler"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
-type BlobEventWorker struct {
+type bucketEventWorker struct {
 	client              v1.StorageListenerClient
 	registrationRequest *v1.RegistrationRequest
-	middleware          handler.BlobEventMiddleware
+	middleware          Middleware[storage.Ctx]
 }
-type BlobEventWorkerOpts struct {
+type bucketEventWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          handler.BlobEventMiddleware
+	Middleware          Middleware[storage.Ctx]
 }
 
 // Start implements Worker.
-func (b *BlobEventWorker) Start(ctx context.Context) error {
+func (b *bucketEventWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
 			RegistrationRequest: b.registrationRequest,
@@ -57,7 +57,7 @@ func (b *BlobEventWorker) Start(ctx context.Context) error {
 		return err
 	}
 	for {
-		var ctx *handler.BlobEventContext
+		var ctx *storage.Ctx
 
 		resp, err := stream.Recv()
 
@@ -72,8 +72,8 @@ func (b *BlobEventWorker) Start(ctx context.Context) error {
 			// Blob Notification has connected with Nitric server
 			fmt.Println("BlobEventWorker connected with Nitric server")
 		} else if err == nil && resp.GetBlobEventRequest() != nil {
-			ctx = handler.NewBlobEventContext(resp)
-			ctx, err = b.middleware(ctx, handler.BlobEventDummy)
+			ctx = storage.NewCtx(resp)
+			ctx, err = b.middleware(ctx, dummyHandler)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -88,7 +88,7 @@ func (b *BlobEventWorker) Start(ctx context.Context) error {
 	}
 }
 
-func NewBlobEventWorker(opts *BlobEventWorkerOpts) *BlobEventWorker {
+func newBucketEventWorker(opts *bucketEventWorkerOpts) *bucketEventWorker {
 	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
 
 	conn, err := grpc.DialContext(
@@ -106,7 +106,7 @@ func NewBlobEventWorker(opts *BlobEventWorkerOpts) *BlobEventWorker {
 
 	client := v1.NewStorageListenerClient(conn)
 
-	return &BlobEventWorker{
+	return &bucketEventWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
 		middleware:          opts.Middleware,

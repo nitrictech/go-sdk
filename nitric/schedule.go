@@ -17,14 +17,13 @@ package nitric
 import (
 	"strings"
 
-	"github.com/nitrictech/go-sdk/handler"
-	"github.com/nitrictech/go-sdk/workers"
+	"github.com/nitrictech/go-sdk/api/schedules"
 	schedulespb "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
 type Schedule interface {
-	Cron(cron string, middleware ...handler.IntervalMiddleware)
-	Every(rate string, middleware ...handler.IntervalMiddleware)
+	Cron(cron string, middleware ...Middleware[schedules.Ctx])
+	Every(rate string, middleware ...Middleware[schedules.Ctx])
 }
 
 type schedule struct {
@@ -43,7 +42,7 @@ func NewSchedule(name string) Schedule {
 }
 
 // Run middleware at a certain interval defined by the cronExpression.
-func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
+func (s *schedule) Cron(cron string, middleware ...Middleware[schedules.Ctx]) {
 	scheduleCron := &schedulespb.ScheduleCron{
 		Expression: cron,
 	}
@@ -55,14 +54,14 @@ func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
 		},
 	}
 
-	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
+	composeHandler := Compose(middleware...)
 
-	opts := &workers.IntervalWorkerOpts{
+	opts := &scheduleWorkerOpts{
 		RegistrationRequest: registrationRequest,
 		Middleware:          composeHandler,
 	}
 
-	worker := workers.NewIntervalWorker(opts)
+	worker := newScheduleWorker(opts)
 	s.manager.addWorker("IntervalWorkerCron:"+strings.Join([]string{
 		s.name,
 		cron,
@@ -70,7 +69,7 @@ func (s *schedule) Cron(cron string, middleware ...handler.IntervalMiddleware) {
 }
 
 // Run middleware at a certain interval defined by the rate. The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
-func (s *schedule) Every(rate string, middleware ...handler.IntervalMiddleware) {
+func (s *schedule) Every(rate string, middleware ...Middleware[schedules.Ctx]) {
 	scheduleEvery := &schedulespb.ScheduleEvery{
 		Rate: rate,
 	}
@@ -82,14 +81,14 @@ func (s *schedule) Every(rate string, middleware ...handler.IntervalMiddleware) 
 		},
 	}
 
-	composeHandler := handler.ComposeIntervalMiddleware(middleware...)
+	composeHandler := Compose(middleware...)
 
-	opts := &workers.IntervalWorkerOpts{
+	opts := &scheduleWorkerOpts{
 		RegistrationRequest: registrationRequest,
 		Middleware:          composeHandler,
 	}
 
-	worker := workers.NewIntervalWorker(opts)
+	worker := newScheduleWorker(opts)
 	s.manager.addWorker("IntervalWorkerEvery:"+strings.Join([]string{
 		s.name,
 		rate,

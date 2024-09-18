@@ -15,7 +15,7 @@
 package nitric
 
 import (
-	"github.com/nitrictech/go-sdk/handler"
+	"github.com/nitrictech/go-sdk/api/http"
 )
 
 type (
@@ -44,12 +44,12 @@ func OidcRule(name string, issuer string, audiences []string) SecurityOption {
 	}
 }
 
-func WithMiddleware(middleware ...handler.HttpMiddleware) ApiOption {
+func WithMiddleware(middleware ...Middleware[http.Ctx]) ApiOption {
 	return func(api *api) {
 		if api.middleware != nil {
-			api.middleware = handler.ComposeHttpMiddleware(api.middleware, handler.ComposeHttpMiddleware(middleware...))
+			api.middleware = Compose(api.middleware, Compose(middleware...))
 		} else {
-			api.middleware = handler.ComposeHttpMiddleware(middleware...)
+			api.middleware = Compose(middleware...)
 		}
 	}
 }

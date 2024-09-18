@@ -19,44 +19,38 @@ import (
 	"path"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/handler"
-	"github.com/nitrictech/go-sdk/workers"
+	httpx "github.com/nitrictech/go-sdk/api/http"
+
 	apispb "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 // Route providers convenience functions to register a handler in a single method.
 type Route interface {
-	All(handler handler.HttpMiddleware, opts ...MethodOption)
-	Get(handler handler.HttpMiddleware, opts ...MethodOption)
-	Patch(handler handler.HttpMiddleware, opts ...MethodOption)
-	Put(handler handler.HttpMiddleware, opts ...MethodOption)
-	Post(handler handler.HttpMiddleware, opts ...MethodOption)
-	Delete(handler handler.HttpMiddleware, opts ...MethodOption)
-	Options(handler handler.HttpMiddleware, opts ...MethodOption)
+	All(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Get(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Patch(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Put(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Post(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Delete(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Options(handler Middleware[httpx.Ctx], opts ...MethodOption)
 	ApiName() string
 }
 
 type route struct {
 	path       string
 	api        *api
-	middleware handler.HttpMiddleware
+	middleware Middleware[httpx.Ctx]
 	manager    Manager
 }
 
-func composeRouteMiddleware(apiMiddleware handler.HttpMiddleware, routeMiddleware []handler.HttpMiddleware) handler.HttpMiddleware {
-	if apiMiddleware != nil && len(routeMiddleware) > 0 {
-		return handler.ComposeHttpMiddleware(apiMiddleware, handler.ComposeHttpMiddleware(routeMiddleware...))
-	}
+func composeRouteMiddleware(apiMiddleware Middleware[httpx.Ctx], routeMiddleware []Middleware[httpx.Ctx]) Middleware[httpx.Ctx] {
+	allMiddleware := append([]Middleware[httpx.Ctx]{apiMiddleware}, routeMiddleware...)
 
-	if len(routeMiddleware) > 0 {
-		return handler.ComposeHttpMiddleware(routeMiddleware...)
-	}
-
-	return apiMiddleware
+	return Compose(allMiddleware...)
 }
 
-func (a *api) NewRoute(match string, middleware ...handler.HttpMiddleware) Route {
+func (a *api) NewRoute(match string, middleware ...Middleware[httpx.Ctx]) Route {
 	r, ok := a.routes[match]
 	if !ok {
 		r = &route{
@@ -74,7 +68,7 @@ func (r *route) ApiName() string {
 	return r.api.name
 }
 
-func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddleware, opts ...MethodOption) error {
+func (r *route) AddMethodHandler(methods []string, middleware Middleware[httpx.Ctx], opts ...MethodOption) error {
 	bName := path.Join(r.api.name, r.path, strings.Join(methods, "-"))
 
 	// default methodOptions will contain OidcOptions passed to API instance and securityDisabled to false
@@ -87,10 +81,7 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 		o(mo)
 	}
 
-	composedHandler := middleware
-	if r.middleware != nil {
-		composedHandler = handler.ComposeHttpMiddleware(r.middleware, middleware)
-	}
+	composedHandler := Compose(r.middleware, middleware)
 
 	apiOpts := &apispb.ApiWorkerOptions{
 		SecurityDisabled: mo.securityDisabled,
@@ -117,7 +108,7 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 		Options: apiOpts,
 	}
 
-	wkr := workers.NewApiWorker(&workers.ApiWorkerOpts{
+	wkr := newApiWorker(&apiWorkerOpts{
 		RegistrationRequest: registrationRequest,
 		Middleware:          composedHandler,
 	})
@@ -127,31 +118,31 @@ func (r *route) AddMethodHandler(methods []string, middleware handler.HttpMiddle
 	return nil
 }
 
-func (r *route) All(handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) All(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions}, handler, opts...)
 }
 
-func (r *route) Get(handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) Get(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodGet}, handler, opts...)
 }
 
-func (r *route) Post(handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) Post(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodPost}, handler, opts...)
 }
 
-func (r *route) Put(handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) Put(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodPut}, handler, opts...)
 }
 
-func (r *route) Patch(handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) Patch(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodPatch}, handler, opts...)
 }
 
-func (r *route) Delete(handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) Delete(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodDelete}, handler, opts...)
 }
 
-func (r *route) Options(handler handler.HttpMiddleware, opts ...MethodOption) {
+func (r *route) Options(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r.AddMethodHandler([]string{http.MethodOptions}, handler, opts...)
 }
 
@@ -161,13 +152,13 @@ func (r *route) Options(handler handler.HttpMiddleware, opts ...MethodOption) {
 //
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
 type Api interface {
-	Get(path string, handler handler.HttpMiddleware, opts ...MethodOption)
-	Put(path string, handler handler.HttpMiddleware, opts ...MethodOption)
-	Patch(path string, handler handler.HttpMiddleware, opts ...MethodOption)
-	Post(path string, handler handler.HttpMiddleware, opts ...MethodOption)
-	Delete(path string, handler handler.HttpMiddleware, opts ...MethodOption)
-	Options(path string, handler handler.HttpMiddleware, opts ...MethodOption)
-	NewRoute(path string, middleware ...handler.HttpMiddleware) Route
+	Get(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Put(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Patch(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Post(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Delete(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Options(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	NewRoute(path string, middleware ...Middleware[httpx.Ctx]) Route
 }
 
 type ApiDetails struct {
@@ -182,7 +173,7 @@ type api struct {
 	securityRules map[string]interface{}
 	security      []OidcOptions
 	path          string
-	middleware    handler.HttpMiddleware
+	middleware    Middleware[httpx.Ctx]
 }
 
 // NewApi Registers a new API Resource.
@@ -234,7 +225,7 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 
 // Get adds a Get method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Get(match string, handler handler.HttpMiddleware, opts ...MethodOption) {
+func (a *api) Get(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Get(handler, opts...)
@@ -243,7 +234,7 @@ func (a *api) Get(match string, handler handler.HttpMiddleware, opts ...MethodOp
 
 // Post adds a Post method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Post(match string, handler handler.HttpMiddleware, opts ...MethodOption) {
+func (a *api) Post(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Post(handler, opts...)
@@ -252,7 +243,7 @@ func (a *api) Post(match string, handler handler.HttpMiddleware, opts ...MethodO
 
 // Patch adds a Patch method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Patch(match string, handler handler.HttpMiddleware, opts ...MethodOption) {
+func (a *api) Patch(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Patch(handler, opts...)
@@ -261,7 +252,7 @@ func (a *api) Patch(match string, handler handler.HttpMiddleware, opts ...Method
 
 // Put adds a Put method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Put(match string, handler handler.HttpMiddleware, opts ...MethodOption) {
+func (a *api) Put(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Put(handler, opts...)
@@ -270,7 +261,7 @@ func (a *api) Put(match string, handler handler.HttpMiddleware, opts ...MethodOp
 
 // Delete adds a Delete method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Delete(match string, handler handler.HttpMiddleware, opts ...MethodOption) {
+func (a *api) Delete(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Delete(handler, opts...)
@@ -279,7 +270,7 @@ func (a *api) Delete(match string, handler handler.HttpMiddleware, opts ...Metho
 
 // Options adds an Options method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Options(match string, handler handler.HttpMiddleware, opts ...MethodOption) {
+func (a *api) Options(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Options(handler, opts...)

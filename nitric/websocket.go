@@ -18,15 +18,14 @@ import (
 	"context"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/handler"
-	"github.com/nitrictech/go-sdk/workers"
+	"github.com/nitrictech/go-sdk/api/websockets"
 	resourcesv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	websocketsv1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
 type Websocket interface {
 	Name() string
-	On(eventType handler.WebsocketEventType, mwares ...handler.WebsocketMiddleware)
+	On(eventType websockets.EventType, mwares ...Middleware[websockets.Ctx])
 	Send(ctx context.Context, connectionId string, message []byte) error
 	Close(ctx context.Context, connectionId string) error
 }
@@ -71,13 +70,12 @@ func (w *websocket) Name() string {
 	return w.name
 }
 
-func (w *websocket) On(eventType handler.WebsocketEventType, middleware ...handler.WebsocketMiddleware) {
-	// mapping handler.WebsocketEventType to protobuf requirement i.e websocketsv1.WebsocketEventType
+func (w *websocket) On(eventType websockets.EventType, middleware ...Middleware[websockets.Ctx]) {
 	var _eventType websocketsv1.WebsocketEventType
 	switch eventType {
-	case handler.WebsocketDisconnect:
+	case websockets.EventType_Disconnect:
 		_eventType = websocketsv1.WebsocketEventType_Disconnect
-	case handler.WebsocketMessage:
+	case websockets.EventType_Message:
 		_eventType = websocketsv1.WebsocketEventType_Message
 	default:
 		_eventType = websocketsv1.WebsocketEventType_Connect
@@ -87,14 +85,14 @@ func (w *websocket) On(eventType handler.WebsocketEventType, middleware ...handl
 		SocketName: w.name,
 		EventType:  _eventType,
 	}
-	composeHandler := handler.ComposeWebsocketMiddleware(middleware...)
+	composeHandler := Compose(middleware...)
 
-	opts := &workers.WebsocketWorkerOpts{
+	opts := &websocketWorkerOpts{
 		RegistrationRequest: registrationRequest,
 		Middleware:          composeHandler,
 	}
 
-	worker := workers.NewWebsocketWorker(opts)
+	worker := newWebsocketWorker(opts)
 	w.manager.addWorker("WebsocketWorker:"+strings.Join([]string{
 		w.name,
 		string(eventType),

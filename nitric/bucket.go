@@ -19,8 +19,6 @@ import (
 	"strings"
 
 	"github.com/nitrictech/go-sdk/api/storage"
-	"github.com/nitrictech/go-sdk/handler"
-	"github.com/nitrictech/go-sdk/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	storagepb "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
@@ -35,7 +33,7 @@ type bucket struct {
 
 type Bucket interface {
 	Allow(BucketPermission, ...BucketPermission) (storage.Bucket, error)
-	On(handler.BlobEventType, string, ...handler.BlobEventMiddleware)
+	On(storage.EventType, string, ...Middleware[storage.Ctx])
 }
 
 const (
@@ -104,12 +102,12 @@ func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermiss
 	return m.storage.Bucket(b.name), nil
 }
 
-func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFilter string, middleware ...handler.BlobEventMiddleware) {
+func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter string, middleware ...Middleware[storage.Ctx]) {
 	var blobEventType storagepb.BlobEventType
 	switch notificationType {
-	case handler.WriteNotification:
+	case storage.WriteNotification:
 		blobEventType = storagepb.BlobEventType_Created
-	case handler.DeleteNotification:
+	case storage.DeleteNotification:
 		blobEventType = storagepb.BlobEventType_Deleted
 	}
 
@@ -119,14 +117,14 @@ func (b *bucket) On(notificationType handler.BlobEventType, notificationPrefixFi
 		KeyPrefixFilter: notificationPrefixFilter,
 	}
 
-	composedHandler := handler.ComposeBlobEventMiddleware(middleware...)
+	composedHandler := Compose(middleware...)
 
-	opts := &workers.BlobEventWorkerOpts{
+	opts := &bucketEventWorkerOpts{
 		RegistrationRequest: registrationRequest,
 		Middleware:          composedHandler,
 	}
 
-	worker := workers.NewBlobEventWorker(opts)
+	worker := newBucketEventWorker(opts)
 
 	b.manager.addWorker("bucketNotification:"+strings.Join([]string{
 		b.name, notificationPrefixFilter, string(notificationType),

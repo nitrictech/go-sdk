@@ -18,8 +18,6 @@ import (
 	"fmt"
 
 	"github.com/nitrictech/go-sdk/api/topics"
-	"github.com/nitrictech/go-sdk/handler"
-	"github.com/nitrictech/go-sdk/workers"
 
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	topicspb "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
@@ -41,7 +39,7 @@ type SubscribableTopic interface {
 	Allow(TopicPermission, ...TopicPermission) (Topic, error)
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
-	Subscribe(...handler.MessageMiddleware)
+	Subscribe(...Middleware[topics.Ctx])
 }
 
 type topic struct {
@@ -113,17 +111,17 @@ func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...Top
 	}, nil
 }
 
-func (t *subscribableTopic) Subscribe(middleware ...handler.MessageMiddleware) {
+func (t *subscribableTopic) Subscribe(middleware ...Middleware[topics.Ctx]) {
 	registrationRequest := &topicspb.RegistrationRequest{
 		TopicName: t.name,
 	}
-	composeHandler := handler.ComposeMessageMiddleware(middleware...)
+	composeHandler := Compose(middleware...)
 
-	opts := &workers.SubscriptionWorkerOpts{
+	opts := &subscriptionWorkerOpts{
 		RegistrationRequest: registrationRequest,
 		Middleware:          composeHandler,
 	}
 
-	worker := workers.NewSubscriptionWorker(opts)
+	worker := newSubscriptionWorker(opts)
 	t.manager.addWorker("SubscriptionWorker:"+t.name, worker)
 }

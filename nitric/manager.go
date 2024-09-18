@@ -32,14 +32,13 @@ import (
 	"github.com/nitrictech/go-sdk/api/storage"
 	"github.com/nitrictech/go-sdk/api/topics"
 	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 // Manager is the top level object that resources are created on.
 type Manager interface {
 	Run() error
-	addWorker(name string, s workers.Worker)
+	addWorker(name string, s streamWorker)
 	resourceServiceClient() (v1.ResourcesClient, error)
 	registerResource(request *v1.ResourceDeclareRequest) <-chan RegisterResult
 	registerPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) (*manager, error)
@@ -51,7 +50,7 @@ type RegisterResult struct {
 }
 
 type manager struct {
-	workers   map[string]workers.Worker
+	workers   map[string]streamWorker
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
@@ -70,11 +69,11 @@ var defaultManager = New()
 // resources.NewApi() and the like. These use a default manager instance.
 func New() Manager {
 	return &manager{
-		workers: map[string]workers.Worker{},
+		workers: map[string]streamWorker{},
 	}
 }
 
-func (m *manager) addWorker(name string, s workers.Worker) {
+func (m *manager) addWorker(name string, s streamWorker) {
 	m.workers[name] = s
 }
 
@@ -159,7 +158,7 @@ func (m *manager) Run() error {
 
 	for _, worker := range m.workers {
 		wg.Add(1)
-		go func(s workers.Worker) {
+		go func(s streamWorker) {
 			defer wg.Done()
 
 			if err := s.Start(context.TODO()); err != nil {

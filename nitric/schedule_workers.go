@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package workers
+package nitric
 
 import (
 	"context"
@@ -23,31 +23,31 @@ import (
 
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
+	"github.com/nitrictech/go-sdk/api/schedules"
 	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/handler"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
-type WebsocketWorker struct {
-	client              v1.WebsocketHandlerClient
+type scheduleWorker struct {
+	client              v1.SchedulesClient
 	registrationRequest *v1.RegistrationRequest
-	middleware          handler.WebsocketMiddleware
+	middleware          Middleware[schedules.Ctx]
 }
-type WebsocketWorkerOpts struct {
+type scheduleWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          handler.WebsocketMiddleware
+	Middleware          Middleware[schedules.Ctx]
 }
 
 // Start implements Worker.
-func (w *WebsocketWorker) Start(ctx context.Context) error {
+func (i *scheduleWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: w.registrationRequest,
+			RegistrationRequest: i.registrationRequest,
 		},
 	}
 
 	// Create the request stream and send the initial request
-	stream, err := w.client.HandleEvents(ctx)
+	stream, err := i.client.Schedule(ctx)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (w *WebsocketWorker) Start(ctx context.Context) error {
 		return err
 	}
 	for {
-		var ctx *handler.WebsocketContext
+		var ctx *schedules.Ctx
 
 		resp, err := stream.Recv()
 
@@ -69,11 +69,11 @@ func (w *WebsocketWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Blob Notification has connected with Nitric server
-			fmt.Println("WebsocketWorker connected with Nitric server")
-		} else if err == nil && resp.GetWebsocketEventRequest() != nil {
-			ctx = handler.NewWebsocketContext(resp)
-			ctx, err = w.middleware(ctx, handler.WebsocketDummy)
+			// Interval worker has connected with Nitric server
+			fmt.Println("IntervalWorker connected with Nitric server")
+		} else if err == nil && resp.GetIntervalRequest() != nil {
+			ctx = schedules.NewCtx(resp)
+			ctx, err = i.middleware(ctx, dummyHandler)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -88,7 +88,7 @@ func (w *WebsocketWorker) Start(ctx context.Context) error {
 	}
 }
 
-func NewWebsocketWorker(opts *WebsocketWorkerOpts) *WebsocketWorker {
+func newScheduleWorker(opts *scheduleWorkerOpts) *scheduleWorker {
 	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
 
 	conn, err := grpc.DialContext(
@@ -99,14 +99,14 @@ func NewWebsocketWorker(opts *WebsocketWorkerOpts) *WebsocketWorker {
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewWebsocketWorker: Unable to reach StorageListenerClient",
+			"NewIntervalWorker: Unable to reach StorageListenerClient",
 			err,
 		))
 	}
 
-	client := v1.NewWebsocketHandlerClient(conn)
+	client := v1.NewSchedulesClient(conn)
 
-	return &WebsocketWorker{
+	return &scheduleWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
 		middleware:          opts.Middleware,

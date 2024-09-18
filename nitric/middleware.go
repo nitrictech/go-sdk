@@ -10,7 +10,7 @@ type chainedMiddleware[T any] struct {
 	nextFunc Handler[T]
 }
 
-func DummyHandler[T any](ctx *T) (*T, error) {
+func dummyHandler[T any](ctx *T) (*T, error) {
 	return ctx, nil
 }
 
@@ -18,7 +18,7 @@ func (c *chainedMiddleware[T]) invoke(ctx *T) (*T, error) {
 	// Chains are left open-ended so middleware can continue to be linked
 	// If the chain is incomplete, set a chained dummy handler for safety
 	if c.nextFunc == nil {
-		c.nextFunc = DummyHandler[T]
+		c.nextFunc = dummyHandler[T]
 	}
 
 	return c.fun(ctx, c.nextFunc)
