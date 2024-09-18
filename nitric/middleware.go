@@ -30,6 +30,13 @@ func dummyHandler[T any](ctx *T) (*T, error) {
 	return ctx, nil
 }
 
+type Callable[T any] interface {
+	func(*T, Handler[T]) (*T, error) |
+		func(*T) (*T, error) |
+		func(*T) *T |
+		func(*T)
+}
+
 func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
 	var handlerType Middleware[T]
 	switch typ := mw.(type) {

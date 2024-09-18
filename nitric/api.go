@@ -226,6 +226,10 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 	return a, nil
 }
 
+func Get[T, F Callable[T]](api Api, match string, handler F, opts ...MethodOption) {
+	api.Get(match, handler, opts...)
+}
+
 // Get adds a Get method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
 func (a *api) Get(match string, handler interface{}, opts ...MethodOption) {
