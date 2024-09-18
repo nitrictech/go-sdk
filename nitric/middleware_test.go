@@ -17,13 +17,9 @@ package nitric
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/golang/mock/gomock"
 )
 
 var _ = Describe("middleware", func() {
-	ctrl := gomock.NewController(GinkgoT())
-
 	// func()
 	// func() error
 	// func(*T)
