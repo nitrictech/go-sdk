@@ -122,7 +122,11 @@ func (r *route) All(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions}, handler, opts...)
 }
 
-func (r *route) Get(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) Get(handler Handler[httpx.Ctx], opts ...MethodOption) {
+	_ = r.AddMethodHandler([]string{http.MethodGet}, handlerToMware(handler), opts...)
+}
+
+func (r *route) GetMw(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodGet}, handler, opts...)
 }
 
