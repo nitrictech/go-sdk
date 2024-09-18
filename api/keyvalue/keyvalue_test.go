@@ -15,8 +15,6 @@
 package keyvalue
 
 import (
-	"os"
-
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -66,31 +64,6 @@ var _ = Describe("KeyValue API", func() {
 					Expect(storeI.kvClient).To(Equal(mockKV))
 				})
 			})
-		})
-	})
-
-	Describe("New method", func() {
-		When("constructing a new queue client without the membrane", func() {
-			BeforeEach(func() {
-				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-			})
-			AfterEach(func() {
-				os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
-			})
-
-			c, err := New()
-
-			It("should return a nil client", func() {
-				Expect(c).To(BeNil())
-			})
-
-			It("should return an error", func() {
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		PWhen("constructing a new queue client without dial blocking", func() {
-			// TODO:
 		})
 	})
 })

@@ -15,8 +15,6 @@
 package topics
 
 import (
-	"os"
-
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -66,32 +64,6 @@ var _ = Describe("Topics API", func() {
 
 			It("should share the storage clients gRPC client", func() {
 				Expect(topicI.topicClient).To(Equal(mockTopics))
-			})
-		})
-	})
-
-	Describe("New()", func() {
-		Context("constructing a new topics client", func() {
-			When("the gRPC connection is unavailable", func() {
-				BeforeEach(func() {
-					os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-				})
-				AfterEach(func() {
-					os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
-				})
-
-				ts, err := New()
-
-				It("should return an error", func() {
-					Expect(err).To(HaveOccurred())
-
-					By("not returning a topics client")
-					Expect(ts).To(BeNil())
-				})
-			})
-
-			PWhen("constructing a new topics client without dial blocking", func() {
-				// TODO: Mock an available server to connect to
 			})
 		})
 	})

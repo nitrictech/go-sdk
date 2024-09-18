@@ -33,7 +33,22 @@ type bucket struct {
 
 type Bucket interface {
 	Allow(BucketPermission, ...BucketPermission) (storage.Bucket, error)
-	On(storage.EventType, string, ...Middleware[storage.Ctx])
+
+	// On registers a handler for a specific event type on the bucket.
+	// Valid function signatures for middleware are:
+	//
+	//	func()
+	//	func() error
+	//	func(*storage.Ctx)
+	//	func(*storage.Ctx) error
+	//	func(*storage.Ctx) *storage.Ctx
+	//	func(*storage.Ctx) (*storage.Ctx, error)
+	//	func(*storage.Ctx, Handler[storage.Ctx]) *storage.Ctx
+	//	func(*storage.Ctx, Handler[storage.Ctx]) error
+	//	func(*storage.Ctx, Handler[storage.Ctx]) (*storage.Ctx, error)
+	//	Middleware[storage.Ctx]
+	//	Handler[storage.Ctx]
+	On(storage.EventType, string, ...interface{})
 }
 
 const (
@@ -102,7 +117,7 @@ func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermiss
 	return m.storage.Bucket(b.name), nil
 }
 
-func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter string, middleware ...Middleware[storage.Ctx]) {
+func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter string, middleware ...interface{}) {
 	var blobEventType storagepb.BlobEventType
 	switch notificationType {
 	case storage.WriteNotification:
@@ -117,7 +132,12 @@ func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter
 		KeyPrefixFilter: notificationPrefixFilter,
 	}
 
-	composedHandler := Compose(middleware...)
+	middlewares, err := interfacesToMiddleware[storage.Ctx](middleware)
+	if err != nil {
+		panic(err)
+	}
+
+	composedHandler := Compose(middlewares...)
 
 	opts := &bucketEventWorkerOpts{
 		RegistrationRequest: registrationRequest,

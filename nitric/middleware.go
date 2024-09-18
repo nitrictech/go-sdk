@@ -30,6 +30,18 @@ func dummyHandler[T any](ctx *T) (*T, error) {
 	return ctx, nil
 }
 
+func interfacesToMiddleware[T any](mws []interface{}) ([]Middleware[T], error) {
+	mwares := make([]Middleware[T], len(mws))
+	for i, mw := range mws {
+		mware, err := interfaceToMiddleware[T](mw)
+		if err != nil {
+			return nil, err
+		}
+		mwares[i] = mware
+	}
+	return mwares, nil
+}
+
 // interfaceToMiddleware - Converts a function to a Middleware
 // Valid function types are:
 // func()

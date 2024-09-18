@@ -162,90 +162,90 @@ type Api interface {
 	//
 	//	func()
 	//	func() error
-	//	func(*apis.Context)
-	//	func(*apis.Context) error
-	//	func(*apis.Context) *apis.Context
-	//	func(*apis.Context) (*apis.Context, error)
-	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
-	//	func(*apis.Context, Handler[apis.Context]) error
-	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
-	//	Middleware[apis.Context]
-	//	Handler[apis.Context]
+	//	func(*apis.Ctx)
+	//	func(*apis.Ctx) error
+	//	func(*apis.Ctx) *apis.Ctx
+	//	func(*apis.Ctx) (*apis.Ctx, error)
+	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
+	//	func(*apis.Ctx, Handler[apis.Ctx]) error
+	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
+	//	Middleware[apis.Ctx]
+	//	Handler[apis.Ctx]
 	Get(path string, handler interface{}, opts ...MethodOption)
 	// Put adds a Put method handler to the path with any specified opts.
 	// Valid function signatures:
 	//
 	//	func()
 	//	func() error
-	//	func(*apis.Context)
-	//	func(*apis.Context) error
-	//	func(*apis.Context) *apis.Context
-	//	func(*apis.Context) (*apis.Context, error)
-	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
-	//	func(*apis.Context, Handler[apis.Context]) error
-	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
-	//	Middleware[apis.Context]
-	//	Handler[apis.Context]
+	//	func(*apis.Ctx)
+	//	func(*apis.Ctx) error
+	//	func(*apis.Ctx) *apis.Ctx
+	//	func(*apis.Ctx) (*apis.Ctx, error)
+	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
+	//	func(*apis.Ctx, Handler[apis.Ctx]) error
+	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
+	//	Middleware[apis.Ctx]
+	//	Handler[apis.Ctx]
 	Put(path string, handler interface{}, opts ...MethodOption)
 	// Patch adds a Patch method handler to the path with any specified opts.
 	// Valid function signatures:
 	//
 	//	func()
 	//	func() error
-	//	func(*apis.Context)
-	//	func(*apis.Context) error
-	//	func(*apis.Context) *apis.Context
-	//	func(*apis.Context) (*apis.Context, error)
-	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
-	//	func(*apis.Context, Handler[apis.Context]) error
-	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
-	//	Middleware[apis.Context]
-	//	Handler[apis.Context]
+	//	func(*apis.Ctx)
+	//	func(*apis.Ctx) error
+	//	func(*apis.Ctx) *apis.Ctx
+	//	func(*apis.Ctx) (*apis.Ctx, error)
+	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
+	//	func(*apis.Ctx, Handler[apis.Ctx]) error
+	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
+	//	Middleware[apis.Ctx]
+	//	Handler[apis.Ctx]
 	Patch(path string, handler interface{}, opts ...MethodOption)
 	// Post adds a Post method handler to the path with any specified opts.
 	// Valid function signatures:
 	//
 	//	func()
 	//	func() error
-	//	func(*apis.Context)
-	//	func(*apis.Context) error
-	//	func(*apis.Context) *apis.Context
-	//	func(*apis.Context) (*apis.Context, error)
-	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
-	//	func(*apis.Context, Handler[apis.Context]) error
-	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
-	//	Middleware[apis.Context]
-	//	Handler[apis.Context]
+	//	func(*apis.Ctx)
+	//	func(*apis.Ctx) error
+	//	func(*apis.Ctx) *apis.Ctx
+	//	func(*apis.Ctx) (*apis.Ctx, error)
+	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
+	//	func(*apis.Ctx, Handler[apis.Ctx]) error
+	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
+	//	Middleware[apis.Ctx]
+	//	Handler[apis.Ctx]
 	Post(path string, handler interface{}, opts ...MethodOption)
 	// Delete adds a Delete method handler to the path with any specified opts.
 	// Valid function signatures:
 	//
 	//	func()
 	//	func() error
-	//	func(*apis.Context)
-	//	func(*apis.Context) error
-	//	func(*apis.Context) *apis.Context
-	//	func(*apis.Context) (*apis.Context, error)
-	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
-	//	func(*apis.Context, Handler[apis.Context]) error
-	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
-	//	Middleware[apis.Context]
-	//	Handler[apis.Context]
+	//	func(*apis.Ctx)
+	//	func(*apis.Ctx) error
+	//	func(*apis.Ctx) *apis.Ctx
+	//	func(*apis.Ctx) (*apis.Ctx, error)
+	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
+	//	func(*apis.Ctx, Handler[apis.Ctx]) error
+	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
+	//	Middleware[apis.Ctx]
+	//	Handler[apis.Ctx]
 	Delete(path string, handler interface{}, opts ...MethodOption)
 	// Options adds a Options method handler to the path with any specified opts.
 	// Valid function signatures:
 	//
 	//	func()
 	//	func() error
-	//	func(*apis.Context)
-	//	func(*apis.Context) error
-	//	func(*apis.Context) *apis.Context
-	//	func(*apis.Context) (*apis.Context, error)
-	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
-	//	func(*apis.Context, Handler[apis.Context]) error
-	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
-	//	Middleware[apis.Context]
-	//	Handler[apis.Context]
+	//	func(*apis.Ctx)
+	//	func(*apis.Ctx) error
+	//	func(*apis.Ctx) *apis.Ctx
+	//	func(*apis.Ctx) (*apis.Ctx, error)
+	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
+	//	func(*apis.Ctx, Handler[apis.Ctx]) error
+	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
+	//	Middleware[apis.Ctx]
+	//	Handler[apis.Ctx]
 	Options(path string, handler interface{}, opts ...MethodOption)
 	NewRoute(path string, middleware ...Middleware[httpx.Ctx]) Route
 }
@@ -326,7 +326,7 @@ func (a *api) Get(match string, handler interface{}, opts ...MethodOption) {
 
 // Post adds a Post method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Post(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (a *api) Post(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Post(handler, opts...)
@@ -335,7 +335,7 @@ func (a *api) Post(match string, handler Middleware[httpx.Ctx], opts ...MethodOp
 
 // Patch adds a Patch method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Patch(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (a *api) Patch(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Patch(handler, opts...)
@@ -344,7 +344,7 @@ func (a *api) Patch(match string, handler Middleware[httpx.Ctx], opts ...MethodO
 
 // Put adds a Put method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Put(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (a *api) Put(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Put(handler, opts...)
@@ -353,7 +353,7 @@ func (a *api) Put(match string, handler Middleware[httpx.Ctx], opts ...MethodOpt
 
 // Delete adds a Delete method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Delete(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (a *api) Delete(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Delete(handler, opts...)
@@ -362,7 +362,7 @@ func (a *api) Delete(match string, handler Middleware[httpx.Ctx], opts ...Method
 
 // Options adds an Options method handler to the path with any specified opts.
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
-func (a *api) Options(match string, handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (a *api) Options(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
 	r.Options(handler, opts...)

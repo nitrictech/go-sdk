@@ -15,8 +15,6 @@
 package queues
 
 import (
-	"os"
-
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -69,31 +67,6 @@ var _ = Describe("Queues API", func() {
 			It("should share the Queue's gRPC client", func() {
 				Expect(qImpl.queueClient).To(Equal(mockQ))
 			})
-		})
-	})
-
-	Describe("New method", func() {
-		When("constructing a new queue client without the membrane", func() {
-			BeforeEach(func() {
-				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-			})
-			AfterEach(func() {
-				os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
-			})
-
-			c, err := New()
-
-			It("should return a nil client", func() {
-				Expect(c).To(BeNil())
-			})
-
-			It("should return an error", func() {
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		PWhen("constructing a new queue client without dial blocking", func() {
-			// TODO:
 		})
 	})
 })

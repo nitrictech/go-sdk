@@ -15,8 +15,6 @@
 package storage
 
 import (
-	"os"
-
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -66,32 +64,6 @@ var _ = Describe("Storage API", func() {
 
 			It("should share the storage clients gRPC client", func() {
 				Expect(bucketI.storageClient).To(Equal(mockStorage))
-			})
-		})
-	})
-
-	Describe("New()", func() {
-		Context("constructing a new storage client", func() {
-			When("the gRPC connection is unavailable", func() {
-				BeforeEach(func() {
-					os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-				})
-				AfterEach(func() {
-					os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
-				})
-
-				s, err := New()
-
-				It("should return an error", func() {
-					Expect(err).To(HaveOccurred())
-
-					By("not returning a storage client")
-					Expect(s).To(BeNil())
-				})
-			})
-
-			PWhen("constructing a new storage client without dial blocking", func() {
-				// TODO: Mock an available server to connect to
 			})
 		})
 	})

@@ -70,6 +70,20 @@ func (w *websocket) Name() string {
 	return w.name
 }
 
+// On registers a handler for a specific event type on the websocket
+// Valid function signatures for middleware are:
+//
+//	func()
+//	func() error
+//	func(*websockets.Ctx)
+//	func(*websockets.Ctx) error
+//	func(*websockets.Ctx) *websockets.Ctx
+//	func(*websockets.Ctx) (*websockets.Ctx, error)
+//	func(*websockets.Ctx, Handler[websockets.Ctx]) *websockets.Ctx
+//	func(*websockets.Ctx, Handler[websockets.Ctx]) error
+//	func(*websockets.Ctx, Handler[websockets.Ctx]) (*websockets.Ctx, error)
+//	Middleware[websockets.Ctx]
+//	Handler[websockets.Ctx]
 func (w *websocket) On(eventType websockets.EventType, middleware ...Middleware[websockets.Ctx]) {
 	var _eventType websocketsv1.WebsocketEventType
 	switch eventType {

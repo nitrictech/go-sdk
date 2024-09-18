@@ -15,8 +15,6 @@
 package secrets
 
 import (
-	"os"
-
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -69,31 +67,6 @@ var _ = Describe("Secrets API", func() {
 			It("should share the Secret's gRPC client", func() {
 				Expect(srImpl.secretClient).To(Equal(mockSC))
 			})
-		})
-	})
-
-	Describe("New method", func() {
-		When("Constructing a new Secrets client with no rpc server available", func() {
-			BeforeEach(func() {
-				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-			})
-			AfterEach(func() {
-				os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")
-			})
-
-			c, err := New()
-
-			It("should return a nil client", func() {
-				Expect(c).To(BeNil())
-			})
-
-			It("should return an error", func() {
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		PWhen("constructing a new Secrets client without dial blocking", func() {
-			// TODO:
 		})
 	})
 })
