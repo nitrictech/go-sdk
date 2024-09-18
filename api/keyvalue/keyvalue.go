@@ -15,8 +15,6 @@
 package keyvalue
 
 import (
-	"context"
-
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -44,13 +42,7 @@ func (k *keyValueImpl) Store(name string) Store {
 
 // New - Construct a new Key Value Store Client with default options
 func New() (KeyValue, error) {
-	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
-
-	conn, err := grpc.DialContext(
-		ctx,
-		constants.NitricAddress(),
-		constants.DefaultOptions()...,
-	)
+	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,

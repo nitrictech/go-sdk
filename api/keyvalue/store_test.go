@@ -139,7 +139,6 @@ var _ = Describe("KeyValue Store API", func() {
 					Expect(strings.Contains(err.Error(), errorMsg)).To(BeTrue())
 				})
 			})
-
 		})
 
 		Describe("Delete", func() {

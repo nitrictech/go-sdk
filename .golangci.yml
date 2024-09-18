@@ -23,6 +23,9 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-files:
+    - tools/tools.go
+    - doc.go
   exclude-rules:
     - path: _test\.go
       linters:

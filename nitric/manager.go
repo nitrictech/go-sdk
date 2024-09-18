@@ -82,13 +82,7 @@ func (m *manager) resourceServiceClient() (v1.ResourcesClient, error) {
 	defer m.connMutex.Unlock()
 
 	if m.conn == nil {
-		ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
-
-		conn, err := grpc.DialContext(
-			ctx,
-			constants.NitricAddress(),
-			constants.DefaultOptions()...,
-		)
+		conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 		if err != nil {
 			return nil, err
 		}

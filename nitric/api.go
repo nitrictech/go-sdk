@@ -119,31 +119,31 @@ func (r *route) AddMethodHandler(methods []string, middleware Middleware[httpx.C
 }
 
 func (r *route) All(handler Middleware[httpx.Ctx], opts ...MethodOption) {
-	r.AddMethodHandler([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions}, handler, opts...)
+	_ = r.AddMethodHandler([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions}, handler, opts...)
 }
 
 func (r *route) Get(handler Middleware[httpx.Ctx], opts ...MethodOption) {
-	r.AddMethodHandler([]string{http.MethodGet}, handler, opts...)
+	_ = r.AddMethodHandler([]string{http.MethodGet}, handler, opts...)
 }
 
 func (r *route) Post(handler Middleware[httpx.Ctx], opts ...MethodOption) {
-	r.AddMethodHandler([]string{http.MethodPost}, handler, opts...)
+	_ = r.AddMethodHandler([]string{http.MethodPost}, handler, opts...)
 }
 
 func (r *route) Put(handler Middleware[httpx.Ctx], opts ...MethodOption) {
-	r.AddMethodHandler([]string{http.MethodPut}, handler, opts...)
+	_ = r.AddMethodHandler([]string{http.MethodPut}, handler, opts...)
 }
 
 func (r *route) Patch(handler Middleware[httpx.Ctx], opts ...MethodOption) {
-	r.AddMethodHandler([]string{http.MethodPatch}, handler, opts...)
+	_ = r.AddMethodHandler([]string{http.MethodPatch}, handler, opts...)
 }
 
 func (r *route) Delete(handler Middleware[httpx.Ctx], opts ...MethodOption) {
-	r.AddMethodHandler([]string{http.MethodDelete}, handler, opts...)
+	_ = r.AddMethodHandler([]string{http.MethodDelete}, handler, opts...)
 }
 
 func (r *route) Options(handler Middleware[httpx.Ctx], opts ...MethodOption) {
-	r.AddMethodHandler([]string{http.MethodOptions}, handler, opts...)
+	_ = r.AddMethodHandler([]string{http.MethodOptions}, handler, opts...)
 }
 
 // Api Resource represents an HTTP API, capable of routing and securing incoming HTTP requests to handlers.
@@ -196,7 +196,10 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 	// Attaching OIDC Options to API
 	if a.security != nil {
 		for _, oidcOption := range a.security {
-			attachOidc(a.name, oidcOption)
+			err := attachOidc(a.name, oidcOption)
+			if err != nil {
+				return nil, err
+			}
 
 			if apiResource.GetSecurity() == nil {
 				apiResource.Security = make(map[string]*resourcev1.ApiScopes)

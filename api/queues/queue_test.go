@@ -110,7 +110,7 @@ var _ = Describe("Queue interface", func() {
 					).Times(1)
 				})
 
-				It("should recieve a message from []*FailedMessage", func() {
+				It("should receive a message from []*FailedMessage", func() {
 					failedMessages, err := q.Enqueue(ctx, messages)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(failedMessages).To(HaveLen(1))

@@ -69,7 +69,7 @@ var _ = Describe("Bucket", func() {
 				fileI, ok = file.(*fileImpl)
 			})
 
-			It("it should succesfully return File Instance", func() {
+			It("it should successfully return File Instance", func() {
 				By("returning an fileImpl instance")
 				Expect(ok).To(BeTrue())
 

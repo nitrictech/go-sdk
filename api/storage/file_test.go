@@ -484,7 +484,7 @@ var _ = Describe("PresignUrlOptions", func() {
 
 			It("should return an error", func() {
 				err := p.isValid()
-				By("occurance of error")
+				By("occurrence of error")
 				Expect(err).To(HaveOccurred())
 
 				By("containing appropriate error message")

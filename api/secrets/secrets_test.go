@@ -76,7 +76,6 @@ var _ = Describe("Secrets API", func() {
 		When("Constructing a new Secrets client with no rpc server available", func() {
 			BeforeEach(func() {
 				os.Setenv("NITRIC_SERVICE_DIAL_TIMEOUT", "10")
-
 			})
 			AfterEach(func() {
 				os.Unsetenv("NITRIC_SERVICE_DIAL_TIMEOUT")

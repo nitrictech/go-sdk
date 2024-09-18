@@ -24,7 +24,6 @@ import (
 	_ "github.com/nitrictech/go-sdk/api/storage"
 	_ "github.com/nitrictech/go-sdk/api/topics"
 	_ "github.com/nitrictech/go-sdk/nitric"
-	_ "github.com/nitrictech/go-sdk/workers"
 )
 
 func main() {}

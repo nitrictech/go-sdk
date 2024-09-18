@@ -21,6 +21,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	errorsstd "errors"
+
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/api/topics"
@@ -61,7 +63,7 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 
 		resp, err := stream.Recv()
 
-		if err == io.EOF {
+		if errorsstd.Is(err, io.EOF) {
 			err = stream.CloseSend()
 			if err != nil {
 				return err
@@ -89,13 +91,7 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 }
 
 func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
-	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
-
-	conn, err := grpc.DialContext(
-		ctx,
-		constants.NitricAddress(),
-		constants.DefaultOptions()...,
-	)
+	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,

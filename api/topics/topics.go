@@ -15,8 +15,6 @@
 package topics
 
 import (
-	"context"
-
 	"google.golang.org/grpc"
 
 	"github.com/nitrictech/go-sdk/api/errors"
@@ -46,13 +44,7 @@ func (s *topicsImpl) Topic(name string) Topic {
 
 // New - Construct a new Eventing Client with default options
 func New() (Topics, error) {
-	ctx, _ := context.WithTimeout(context.Background(), constants.NitricDialTimeout())
-
-	conn, err := grpc.DialContext(
-		ctx,
-		constants.NitricAddress(),
-		constants.DefaultOptions()...,
-	)
+	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		return nil, errors.NewWithCause(codes.Unavailable, "Unable to dial Events service", err)
 	}

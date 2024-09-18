@@ -16,6 +16,7 @@ package nitric
 
 import (
 	"context"
+	errorsstd "errors"
 	"fmt"
 	"io"
 
@@ -61,7 +62,7 @@ func (w *websocketWorker) Start(ctx context.Context) error {
 
 		resp, err := stream.Recv()
 
-		if err == io.EOF {
+		if errorsstd.Is(err, io.EOF) {
 			err = stream.CloseSend()
 			if err != nil {
 				return err
@@ -89,13 +90,7 @@ func (w *websocketWorker) Start(ctx context.Context) error {
 }
 
 func newWebsocketWorker(opts *websocketWorkerOpts) *websocketWorker {
-	ctx, _ := context.WithTimeout(context.TODO(), constants.NitricDialTimeout())
-
-	conn, err := grpc.DialContext(
-		ctx,
-		constants.NitricAddress(),
-		constants.DefaultOptions()...,
-	)
+	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
