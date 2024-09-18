@@ -28,7 +28,7 @@ import (
 // Route providers convenience functions to register a handler in a single method.
 type Route interface {
 	All(handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Get(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	Get(handler Handler[httpx.Ctx], opts ...MethodOption)
 	Patch(handler Middleware[httpx.Ctx], opts ...MethodOption)
 	Put(handler Middleware[httpx.Ctx], opts ...MethodOption)
 	Post(handler Middleware[httpx.Ctx], opts ...MethodOption)
