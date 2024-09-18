@@ -47,7 +47,7 @@ func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
 func handlerToMware[T any](h Handler[T]) Middleware[T] {
 	return func(ctx *T, next Handler[T]) (*T, error) {
 		ctx, err := h(ctx)
-		if err != nil {
+		if err == nil {
 			return next(ctx)
 		}
 		return nil, err
