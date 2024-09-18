@@ -17,7 +17,6 @@ package nitric
 import (
 	"context"
 	errorsstd "errors"
-	"fmt"
 	"io"
 
 	"google.golang.org/grpc"
@@ -70,8 +69,7 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Blob Notification has connected with Nitric server
-			fmt.Println("BlobEventWorker connected with Nitric server")
+			// Do nothing
 		} else if err == nil && resp.GetBlobEventRequest() != nil {
 			ctx = storage.NewCtx(resp)
 			ctx, err = b.middleware(ctx, dummyHandler)

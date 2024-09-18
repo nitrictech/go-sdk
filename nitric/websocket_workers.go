@@ -17,7 +17,6 @@ package nitric
 import (
 	"context"
 	errorsstd "errors"
-	"fmt"
 	"io"
 
 	"google.golang.org/grpc"
@@ -70,8 +69,7 @@ func (w *websocketWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Blob Notification has connected with Nitric server
-			fmt.Println("WebsocketWorker connected with Nitric server")
+			// Do nothing
 		} else if err == nil && resp.GetWebsocketEventRequest() != nil {
 			ctx = websockets.NewCtx(resp)
 			ctx, err = w.middleware(ctx, dummyHandler)

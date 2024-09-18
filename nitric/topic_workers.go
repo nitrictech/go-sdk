@@ -16,7 +16,6 @@ package nitric
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"google.golang.org/grpc"
@@ -71,8 +70,7 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Subscription worker has connected with Nitric server
-			fmt.Println("SubscriptionWorker connected with Nitric server")
+			// Do nothing
 		} else if err == nil && resp.GetMessageRequest() != nil {
 			ctx = topics.NewCtx(resp)
 			ctx, err = s.middleware(ctx, dummyHandler)

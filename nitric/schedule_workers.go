@@ -17,7 +17,6 @@ package nitric
 import (
 	"context"
 	errorsstd "errors"
-	"fmt"
 	"io"
 
 	"google.golang.org/grpc"
@@ -70,8 +69,7 @@ func (i *scheduleWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Interval worker has connected with Nitric server
-			fmt.Println("IntervalWorker connected with Nitric server")
+			// Do nothing
 		} else if err == nil && resp.GetIntervalRequest() != nil {
 			ctx = schedules.NewCtx(resp)
 			ctx, err = i.middleware(ctx, dummyHandler)

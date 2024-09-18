@@ -17,7 +17,6 @@ package nitric
 import (
 	"context"
 	errorsstd "errors"
-	"fmt"
 	"io"
 
 	"google.golang.org/grpc"
@@ -73,8 +72,7 @@ func (a *apiWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Function connected with Nitric server
-			fmt.Println("Function connected with Nitric server")
+			// Do nothing
 		} else if err == nil && resp.GetHttpRequest() != nil {
 			ctx = httpx.NewCtx(resp)
 
