@@ -22,9 +22,9 @@ import (
 
 	"google.golang.org/grpc"
 
+	httpx "github.com/nitrictech/go-sdk/api/apis"
 	"github.com/nitrictech/go-sdk/api/errors"
 	"github.com/nitrictech/go-sdk/api/errors/codes"
-	httpx "github.com/nitrictech/go-sdk/api/http"
 	"github.com/nitrictech/go-sdk/constants"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 )

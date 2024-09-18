@@ -30,26 +30,74 @@ func dummyHandler[T any](ctx *T) (*T, error) {
 	return ctx, nil
 }
 
+// interfaceToMiddleware - Converts a function to a Middleware
+// Valid function types are:
+// func()
+// func() error
+// func(*T)
+// func(*T) error
+// func(*T) *T
+// func(*T) (*T, error)
+// func(*T, Handler[T]) *T
+// func(*T, Handler[T]) error
+// func(*T, Handler[T]) (*T, error)
+// Middleware[T]
+// Handler[T]
+// If the function is not a valid type, an error is returned
 func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
 	var handlerType Middleware[T]
 	switch typ := mw.(type) {
-	case Middleware[T]:
-		handlerType = typ
-	case func(*T, Handler[T]) (*T, error):
-		handlerType = Middleware[T](typ)
-	case Handler[T]:
-		handlerType = handlerToMware(typ)
-	case func(*T) (*T, error):
-		handlerType = handlerToMware(typ)
-	case func(*T) *T:
-		handlerType = handlerToMware(func(ctx *T) (*T, error) {
-			return typ(ctx), nil
-		})
+	case func():
+		handlerType = func(ctx *T, next Handler[T]) (*T, error) {
+			typ()
+			return next(ctx)
+		}
+	case func() error:
+		handlerType = func(ctx *T, next Handler[T]) (*T, error) {
+			err := typ()
+			if err != nil {
+				return nil, err
+			}
+			return next(ctx)
+		}
 	case func(*T):
 		handlerType = handlerToMware(func(ctx *T) (*T, error) {
 			typ(ctx)
 			return ctx, nil
 		})
+	case func(*T) error:
+		handlerType = handlerToMware(func(ctx *T) (*T, error) {
+			err := typ(ctx)
+			if err != nil {
+				return nil, err
+			}
+			return ctx, nil
+		})
+	case func(*T) *T:
+		handlerType = handlerToMware(func(ctx *T) (*T, error) {
+			return typ(ctx), nil
+		})
+	case func(*T) (*T, error):
+		handlerType = handlerToMware(typ)
+	case func(*T, Handler[T]) *T:
+		handlerType = Middleware[T](func(ctx *T, next Handler[T]) (*T, error) {
+			return typ(ctx, next), nil
+		})
+	case func(*T, Handler[T]) error:
+		handlerType = Middleware[T](func(ctx *T, next Handler[T]) (*T, error) {
+			err := typ(ctx, next)
+			if err != nil {
+				return nil, err
+			}
+			return next(ctx)
+		})
+	case func(*T, Handler[T]) (*T, error):
+		handlerType = Middleware[T](typ)
+	case Middleware[T]:
+		handlerType = typ
+	case Handler[T]:
+		handlerType = handlerToMware(typ)
+
 	default:
 		return nil, fmt.Errorf("invalid middleware type: %T", mw)
 	}

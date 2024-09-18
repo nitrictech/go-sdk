@@ -19,7 +19,7 @@ import (
 	"path"
 	"strings"
 
-	httpx "github.com/nitrictech/go-sdk/api/http"
+	httpx "github.com/nitrictech/go-sdk/api/apis"
 
 	apispb "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
@@ -27,13 +27,13 @@ import (
 
 // Route providers convenience functions to register a handler in a single method.
 type Route interface {
-	All(handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Get(handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Patch(handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Put(handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Post(handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Delete(handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Options(handler Middleware[httpx.Ctx], opts ...MethodOption)
+	All(handler interface{}, opts ...MethodOption)
+	Get(handler interface{}, opts ...MethodOption)
+	Patch(handler interface{}, opts ...MethodOption)
+	Put(handler interface{}, opts ...MethodOption)
+	Post(handler interface{}, opts ...MethodOption)
+	Delete(handler interface{}, opts ...MethodOption)
+	Options(handler interface{}, opts ...MethodOption)
 	ApiName() string
 }
 
@@ -68,7 +68,7 @@ func (r *route) ApiName() string {
 	return r.api.name
 }
 
-func (r *route) AddMethodHandler(methods []string, middleware Middleware[httpx.Ctx], opts ...MethodOption) error {
+func (r *route) AddMethodHandler(methods []string, middleware interface{}, opts ...MethodOption) error {
 	bName := path.Join(r.api.name, r.path, strings.Join(methods, "-"))
 
 	// default methodOptions will contain OidcOptions passed to API instance and securityDisabled to false
@@ -81,7 +81,12 @@ func (r *route) AddMethodHandler(methods []string, middleware Middleware[httpx.C
 		o(mo)
 	}
 
-	composedHandler := Compose(r.middleware, middleware)
+	mw, err := interfaceToMiddleware[httpx.Ctx](middleware)
+	if err != nil {
+		panic(err)
+	}
+
+	composedHandler := Compose(r.middleware, mw)
 
 	apiOpts := &apispb.ApiWorkerOptions{
 		SecurityDisabled: mo.securityDisabled,
@@ -118,31 +123,31 @@ func (r *route) AddMethodHandler(methods []string, middleware Middleware[httpx.C
 	return nil
 }
 
-func (r *route) All(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) All(handler interface{}, opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions}, handler, opts...)
 }
 
-func (r *route) Get(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) Get(handler interface{}, opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodGet}, handler, opts...)
 }
 
-func (r *route) Post(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) Post(handler interface{}, opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodPost}, handler, opts...)
 }
 
-func (r *route) Put(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) Put(handler interface{}, opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodPut}, handler, opts...)
 }
 
-func (r *route) Patch(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) Patch(handler interface{}, opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodPatch}, handler, opts...)
 }
 
-func (r *route) Delete(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) Delete(handler interface{}, opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodDelete}, handler, opts...)
 }
 
-func (r *route) Options(handler Middleware[httpx.Ctx], opts ...MethodOption) {
+func (r *route) Options(handler interface{}, opts ...MethodOption) {
 	_ = r.AddMethodHandler([]string{http.MethodOptions}, handler, opts...)
 }
 
@@ -152,12 +157,96 @@ func (r *route) Options(handler Middleware[httpx.Ctx], opts ...MethodOption) {
 //
 // Note: to chain middleware use handler.ComposeHttpMiddlware()
 type Api interface {
+	// Get adds a Get method handler to the path with any specified opts.
+	// Valid function signatures:
+	//
+	//	func()
+	//	func() error
+	//	func(*apis.Context)
+	//	func(*apis.Context) error
+	//	func(*apis.Context) *apis.Context
+	//	func(*apis.Context) (*apis.Context, error)
+	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
+	//	func(*apis.Context, Handler[apis.Context]) error
+	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
+	//	Middleware[apis.Context]
+	//	Handler[apis.Context]
 	Get(path string, handler interface{}, opts ...MethodOption)
-	Put(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Patch(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Post(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Delete(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
-	Options(path string, handler Middleware[httpx.Ctx], opts ...MethodOption)
+	// Put adds a Put method handler to the path with any specified opts.
+	// Valid function signatures:
+	//
+	//	func()
+	//	func() error
+	//	func(*apis.Context)
+	//	func(*apis.Context) error
+	//	func(*apis.Context) *apis.Context
+	//	func(*apis.Context) (*apis.Context, error)
+	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
+	//	func(*apis.Context, Handler[apis.Context]) error
+	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
+	//	Middleware[apis.Context]
+	//	Handler[apis.Context]
+	Put(path string, handler interface{}, opts ...MethodOption)
+	// Patch adds a Patch method handler to the path with any specified opts.
+	// Valid function signatures:
+	//
+	//	func()
+	//	func() error
+	//	func(*apis.Context)
+	//	func(*apis.Context) error
+	//	func(*apis.Context) *apis.Context
+	//	func(*apis.Context) (*apis.Context, error)
+	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
+	//	func(*apis.Context, Handler[apis.Context]) error
+	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
+	//	Middleware[apis.Context]
+	//	Handler[apis.Context]
+	Patch(path string, handler interface{}, opts ...MethodOption)
+	// Post adds a Post method handler to the path with any specified opts.
+	// Valid function signatures:
+	//
+	//	func()
+	//	func() error
+	//	func(*apis.Context)
+	//	func(*apis.Context) error
+	//	func(*apis.Context) *apis.Context
+	//	func(*apis.Context) (*apis.Context, error)
+	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
+	//	func(*apis.Context, Handler[apis.Context]) error
+	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
+	//	Middleware[apis.Context]
+	//	Handler[apis.Context]
+	Post(path string, handler interface{}, opts ...MethodOption)
+	// Delete adds a Delete method handler to the path with any specified opts.
+	// Valid function signatures:
+	//
+	//	func()
+	//	func() error
+	//	func(*apis.Context)
+	//	func(*apis.Context) error
+	//	func(*apis.Context) *apis.Context
+	//	func(*apis.Context) (*apis.Context, error)
+	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
+	//	func(*apis.Context, Handler[apis.Context]) error
+	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
+	//	Middleware[apis.Context]
+	//	Handler[apis.Context]
+	Delete(path string, handler interface{}, opts ...MethodOption)
+	// Options adds a Options method handler to the path with any specified opts.
+	// Valid function signatures:
+	//
+	//	func()
+	//	func() error
+	//	func(*apis.Context)
+	//	func(*apis.Context) error
+	//	func(*apis.Context) *apis.Context
+	//	func(*apis.Context) (*apis.Context, error)
+	//	func(*apis.Context, Handler[apis.Context]) *apis.Context
+	//	func(*apis.Context, Handler[apis.Context]) error
+	//	func(*apis.Context, Handler[apis.Context]) (*apis.Context, error)
+	//	Middleware[apis.Context]
+	//	Handler[apis.Context]
+	Options(path string, handler interface{}, opts ...MethodOption)
 	NewRoute(path string, middleware ...Middleware[httpx.Ctx]) Route
 }
 
@@ -231,12 +320,7 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 func (a *api) Get(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
-	mw, err := interfaceToMiddleware[httpx.Ctx](handler)
-	if err != nil {
-		panic(err)
-	}
-
-	r.Get(mw, opts...)
+	r.Get(handler, opts...)
 	a.routes[match] = r
 }
 
