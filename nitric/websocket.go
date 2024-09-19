@@ -41,7 +41,7 @@ type Websocket interface {
 	//	func(*websocket.Ctx, Handler[websocket.Ctx]) (*websocket.Ctx, error)
 	//	Middleware[websocket.Ctx]
 	//	Handler[websocket.Ctx]
-	On(eventType websockets.EventType, mwares ...Middleware[websockets.Ctx])
+	On(eventType websockets.EventType, mwares ...interface{})
 	// Send a message to a specific connection
 	Send(ctx context.Context, connectionId string, message []byte) error
 	// Close a specific connection
@@ -88,7 +88,7 @@ func (w *websocket) Name() string {
 	return w.name
 }
 
-func (w *websocket) On(eventType websockets.EventType, middleware ...Middleware[websockets.Ctx]) {
+func (w *websocket) On(eventType websockets.EventType, middleware ...interface{}) {
 	var _eventType websocketsv1.WebsocketEventType
 	switch eventType {
 	case websockets.EventType_Disconnect:
@@ -103,7 +103,13 @@ func (w *websocket) On(eventType websockets.EventType, middleware ...Middleware[
 		SocketName: w.name,
 		EventType:  _eventType,
 	}
-	composeHandler := Compose(middleware...)
+
+	middlewares, err := interfacesToMiddleware[websockets.Ctx](middleware)
+	if err != nil {
+		panic(err)
+	}
+
+	composeHandler := Compose(middlewares...)
 
 	opts := &websocketWorkerOpts{
 		RegistrationRequest: registrationRequest,
