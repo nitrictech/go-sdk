@@ -17,11 +17,12 @@ package keyvalue
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	"github.com/nitrictech/protoutils"
-	"google.golang.org/grpc"
 
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/kvstore/v1"
 )

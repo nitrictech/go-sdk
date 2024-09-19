@@ -52,12 +52,6 @@ type SubscribableTopic interface {
 	Subscribe(...interface{})
 }
 
-type topic struct {
-	topics.TopicClientIface
-
-	manager *manager
-}
-
 type subscribableTopic struct {
 	name         string
 	manager      *manager

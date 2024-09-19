@@ -18,12 +18,13 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/durationpb"
+
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // Cloud storage bucket resource for large file storage.
@@ -126,7 +127,7 @@ func WithPresignUrlExpiry(expiry time.Duration) PresignUrlOption {
 func getPresignUrlOpts(mode Mode, opts ...PresignUrlOption) *presignUrlOptions {
 	defaultOpts := &presignUrlOptions{
 		mode:   mode,
-		expiry: time.Duration(time.Minute * 5),
+		expiry: time.Minute * 5,
 	}
 
 	for _, opt := range opts {

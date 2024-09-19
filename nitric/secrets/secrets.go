@@ -17,11 +17,12 @@ package secrets
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/secrets/v1"
-	"google.golang.org/grpc"
 )
 
 type SecretValue []byte

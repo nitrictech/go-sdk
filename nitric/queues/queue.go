@@ -17,11 +17,12 @@ package queues
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/queues/v1"
-	"google.golang.org/grpc"
 )
 
 // QueueClientIface is a resource for async enqueueing/dequeueing of messages.
