@@ -45,7 +45,7 @@ type oidcSecurityDefinition struct {
 	Issuer    string
 	Audiences []string
 
-	manager Manager
+	manager *manager
 }
 
 func NewOidcSecurityDefinition(apiName string, options OidcOptions) (OidcSecurityDefinition, error) {

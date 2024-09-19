@@ -21,7 +21,7 @@ package nitric
 // 	. "github.com/onsi/ginkgo"
 // 	. "github.com/onsi/gomega"
 
-// 	apierrors "github.com/nitrictech/go-sdk/api/errors"
+// 	apierrors "github.com/nitrictech/go-sdk/nitric/errors"
 // )
 
 // var _ = Describe("manager", func() {

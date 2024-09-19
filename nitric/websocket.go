@@ -18,15 +18,33 @@ import (
 	"context"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/api/websockets"
+	"github.com/nitrictech/go-sdk/nitric/websockets"
 	resourcesv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	websocketsv1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
+// Websocket - Nitric Websocket API Resource
 type Websocket interface {
+	// Name - Get the name of the Websocket API
 	Name() string
+	// On registers a handler for a specific event type on the websocket
+	// Valid function signatures for middleware are:
+	//
+	//	func()
+	//	func() error
+	//	func(*websocket.Ctx)
+	//	func(*websocket.Ctx) error
+	//	func(*websocket.Ctx) *websocket.Ctx
+	//	func(*websocket.Ctx) (*websocket.Ctx, error)
+	//	func(*websocket.Ctx, Handler[websocket.Ctx]) *websocket.Ctx
+	//	func(*websocket.Ctx, Handler[websocket.Ctx]) error
+	//	func(*websocket.Ctx, Handler[websocket.Ctx]) (*websocket.Ctx, error)
+	//	Middleware[websocket.Ctx]
+	//	Handler[websocket.Ctx]
 	On(eventType websockets.EventType, mwares ...Middleware[websockets.Ctx])
+	// Send a message to a specific connection
 	Send(ctx context.Context, connectionId string, message []byte) error
+	// Close a specific connection
 	Close(ctx context.Context, connectionId string) error
 }
 
@@ -34,11 +52,11 @@ type websocket struct {
 	Websocket
 
 	name    string
-	manager Manager
+	manager *manager
 	client  websocketsv1.WebsocketClient
 }
 
-// NewCollection register this collection as a required resource for the calling function/container.
+// NewWebsocket - Create a new Websocket API resource
 func NewWebsocket(name string) (Websocket, error) {
 	registerResult := <-defaultManager.registerResource(&resourcesv1.ResourceDeclareRequest{
 		Id: &resourcesv1.ResourceIdentifier{
@@ -52,12 +70,12 @@ func NewWebsocket(name string) (Websocket, error) {
 
 	actions := []resourcesv1.Action{resourcesv1.Action_WebsocketManage}
 
-	m, err := defaultManager.registerPolicy(registerResult.Identifier, actions...)
+	err := defaultManager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	wClient := websocketsv1.NewWebsocketClient(m.conn)
+	wClient := websocketsv1.NewWebsocketClient(defaultManager.conn)
 
 	return &websocket{
 		manager: defaultManager,
@@ -70,20 +88,6 @@ func (w *websocket) Name() string {
 	return w.name
 }
 
-// On registers a handler for a specific event type on the websocket
-// Valid function signatures for middleware are:
-//
-//	func()
-//	func() error
-//	func(*websockets.Ctx)
-//	func(*websockets.Ctx) error
-//	func(*websockets.Ctx) *websockets.Ctx
-//	func(*websockets.Ctx) (*websockets.Ctx, error)
-//	func(*websockets.Ctx, Handler[websockets.Ctx]) *websockets.Ctx
-//	func(*websockets.Ctx, Handler[websockets.Ctx]) error
-//	func(*websockets.Ctx, Handler[websockets.Ctx]) (*websockets.Ctx, error)
-//	Middleware[websockets.Ctx]
-//	Handler[websockets.Ctx]
 func (w *websocket) On(eventType websockets.EventType, middleware ...Middleware[websockets.Ctx]) {
 	var _eventType websocketsv1.WebsocketEventType
 	switch eventType {

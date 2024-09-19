@@ -17,7 +17,7 @@ package nitric
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/topics"
+	"github.com/nitrictech/go-sdk/nitric/topics"
 
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	topicspb "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
@@ -27,16 +27,13 @@ import (
 type TopicPermission string
 
 const (
-	// TopicPublishing is required to call Publish on a topic.
+	// TopicPublish is required to call Publish on a topic.
 	TopicPublish TopicPermission = "publish"
 )
 
-type Topic interface {
-	topics.Topic
-}
-
 type SubscribableTopic interface {
-	Allow(TopicPermission, ...TopicPermission) (Topic, error)
+	// Allow requests the given permissions to the topic.
+	Allow(TopicPermission, ...TopicPermission) (*topics.TopicClient, error)
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
 	// Valid function signatures for middleware are:
@@ -56,14 +53,14 @@ type SubscribableTopic interface {
 }
 
 type topic struct {
-	topics.Topic
+	topics.TopicClientIface
 
-	manager Manager
+	manager *manager
 }
 
 type subscribableTopic struct {
 	name         string
-	manager      Manager
+	manager      *manager
 	registerChan <-chan RegisterResult
 }
 
@@ -87,7 +84,7 @@ func NewTopic(name string) SubscribableTopic {
 	return topic
 }
 
-func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...TopicPermission) (Topic, error) {
+func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...TopicPermission) (*topics.TopicClient, error) {
 	allPerms := append([]TopicPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -105,23 +102,12 @@ func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...Top
 		return nil, registerResult.Err
 	}
 
-	m, err := t.manager.registerPolicy(registerResult.Identifier, actions...)
+	err := t.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.topics == nil {
-		evts, err := topics.New()
-		if err != nil {
-			return nil, err
-		}
-		m.topics = evts
-	}
-
-	return &topic{
-		Topic:   m.topics.Topic(t.name),
-		manager: m,
-	}, nil
+	return topics.NewTopicClient(t.name)
 }
 
 func (t *subscribableTopic) Subscribe(middleware ...interface{}) {

@@ -25,24 +25,10 @@ import (
 	multierror "github.com/missionMeteora/toolkit/errors"
 	"google.golang.org/grpc"
 
-	apierrors "github.com/nitrictech/go-sdk/api/errors"
-	"github.com/nitrictech/go-sdk/api/keyvalue"
-	"github.com/nitrictech/go-sdk/api/queues"
-	"github.com/nitrictech/go-sdk/api/secrets"
-	"github.com/nitrictech/go-sdk/api/storage"
-	"github.com/nitrictech/go-sdk/api/topics"
 	"github.com/nitrictech/go-sdk/constants"
+	apierrors "github.com/nitrictech/go-sdk/nitric/errors"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
-
-// Manager is the top level object that resources are created on.
-type Manager interface {
-	Run() error
-	addWorker(name string, s streamWorker)
-	resourceServiceClient() (v1.ResourcesClient, error)
-	registerResource(request *v1.ResourceDeclareRequest) <-chan RegisterResult
-	registerPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) (*manager, error)
-}
 
 type RegisterResult struct {
 	Identifier *v1.ResourceIdentifier
@@ -54,12 +40,7 @@ type manager struct {
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
-	rsc      v1.ResourcesClient
-	topics   topics.Topics
-	storage  storage.Storage
-	secrets  secrets.Secrets
-	queues   queues.Queues
-	kvstores keyvalue.KeyValue
+	rsc v1.ResourcesClient
 }
 
 var defaultManager = New()
@@ -67,7 +48,7 @@ var defaultManager = New()
 // New is used to create the top level resource manager.
 // Note: this is not required if you are using
 // resources.NewApi() and the like. These use a default manager instance.
-func New() Manager {
+func New() *manager {
 	return &manager{
 		workers: map[string]streamWorker{},
 	}
@@ -127,26 +108,26 @@ func (m *manager) registerResource(request *v1.ResourceDeclareRequest) <-chan Re
 	return registerResourceChan
 }
 
-func (m *manager) registerPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) (*manager, error) {
+func (m *manager) registerPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) error {
 	rsc, err := m.resourceServiceClient()
 	if err != nil {
-		return m, err
+		return err
 	}
 
 	_, err = rsc.Declare(context.Background(), functionResourceDeclareRequest(res, actions))
 	if err != nil {
-		return m, err
+		return err
 	}
 
-	return m, nil
+	return nil
 }
 
-// Run will run the function and callback the required handlers when these events are received.
+// Run will run the service and callback the required handlers when events are received.
 func Run() error {
-	return defaultManager.Run()
+	return defaultManager.run()
 }
 
-func (m *manager) Run() error {
+func (m *manager) run() error {
 	wg := sync.WaitGroup{}
 	errList := &multierror.ErrorList{}
 
@@ -156,7 +137,7 @@ func (m *manager) Run() error {
 			defer wg.Done()
 
 			if err := s.Start(context.TODO()); err != nil {
-				if isBuildEnvirnonment() && isEOF(err) {
+				if isBuildEnvironment() && isEOF(err) {
 					// ignore the EOF error when running code-as-config.
 					return
 				}
@@ -171,8 +152,8 @@ func (m *manager) Run() error {
 	return errList.Err()
 }
 
-// IsBuildEnvirnonment will return true if the code is running during config discovery.
-func isBuildEnvirnonment() bool {
+// IsBuildEnvironment will return true if the code is running during config discovery.
+func isBuildEnvironment() bool {
 	return strings.ToLower(os.Getenv("NITRIC_ENVIRONMENT")) == "build"
 }
 

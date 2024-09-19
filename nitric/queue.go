@@ -17,7 +17,7 @@ package nitric
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/queues"
+	"github.com/nitrictech/go-sdk/nitric/queues"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -31,15 +31,17 @@ const (
 var QueueEverything []QueuePermission = []QueuePermission{QueueEnqueue, QueueDequeue}
 
 type Queue interface {
-	Allow(QueuePermission, ...QueuePermission) (queues.Queue, error)
+	// Allow requests the given permissions to the queue.
+	Allow(QueuePermission, ...QueuePermission) (*queues.QueueClient, error)
 }
 
 type queue struct {
 	name         string
-	manager      Manager
+	manager      *manager
 	registerChan <-chan RegisterResult
 }
 
+// NewQueue - Create a new Queue resource
 func NewQueue(name string) *queue {
 	queue := &queue{
 		name:         name,
@@ -60,8 +62,7 @@ func NewQueue(name string) *queue {
 	return queue
 }
 
-// NewQueue registers this queue as a required resource for the calling function/container.
-func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (queues.Queue, error) {
+func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (*queues.QueueClient, error) {
 	allPerms := append([]QueuePermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -81,17 +82,10 @@ func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission
 		return nil, registerResult.Err
 	}
 
-	m, err := q.manager.registerPolicy(registerResult.Identifier, actions...)
+	err := q.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.queues == nil {
-		m.queues, err = queues.New()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return m.queues.Queue(q.name), nil
+	return queues.NewQueueClient(q.name)
 }

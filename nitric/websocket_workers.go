@@ -21,10 +21,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/nitrictech/go-sdk/api/errors"
-	"github.com/nitrictech/go-sdk/api/errors/codes"
-	"github.com/nitrictech/go-sdk/api/websockets"
 	"github.com/nitrictech/go-sdk/constants"
+	"github.com/nitrictech/go-sdk/nitric/errors"
+	"github.com/nitrictech/go-sdk/nitric/errors/codes"
+	"github.com/nitrictech/go-sdk/nitric/websockets"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 

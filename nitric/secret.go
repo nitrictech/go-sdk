@@ -17,7 +17,7 @@ package nitric
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/secrets"
+	"github.com/nitrictech/go-sdk/nitric/secrets"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -31,15 +31,17 @@ const (
 var SecretEverything []SecretPermission = []SecretPermission{SecretAccess, SecretPut}
 
 type Secret interface {
-	Allow(SecretPermission, ...SecretPermission) (secrets.SecretRef, error)
+	// Allow requests the given permissions to the secret.
+	Allow(SecretPermission, ...SecretPermission) (*secrets.SecretClient, error)
 }
 
 type secret struct {
 	name         string
-	manager      Manager
+	manager      *manager
 	registerChan <-chan RegisterResult
 }
 
+// NewSecret - Create a new Secret resource
 func NewSecret(name string) *secret {
 	secret := &secret{
 		name:    name,
@@ -59,7 +61,7 @@ func NewSecret(name string) *secret {
 	return secret
 }
 
-func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) (secrets.SecretRef, error) {
+func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) (*secrets.SecretClient, error) {
 	allPerms := append([]SecretPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -79,17 +81,10 @@ func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermiss
 		return nil, registerResult.Err
 	}
 
-	m, err := s.manager.registerPolicy(registerResult.Identifier, actions...)
+	err := s.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.secrets == nil {
-		m.secrets, err = secrets.New()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return m.secrets.Secret(s.name), nil
+	return secrets.NewSecretClient(s.name)
 }

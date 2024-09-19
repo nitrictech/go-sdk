@@ -22,10 +22,10 @@ import (
 
 	errorsstd "errors"
 
-	"github.com/nitrictech/go-sdk/api/errors"
-	"github.com/nitrictech/go-sdk/api/errors/codes"
-	"github.com/nitrictech/go-sdk/api/topics"
 	"github.com/nitrictech/go-sdk/constants"
+	"github.com/nitrictech/go-sdk/nitric/errors"
+	"github.com/nitrictech/go-sdk/nitric/errors/codes"
+	"github.com/nitrictech/go-sdk/nitric/topics"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 

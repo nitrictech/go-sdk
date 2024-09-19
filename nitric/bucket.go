@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/api/storage"
+	"github.com/nitrictech/go-sdk/nitric/storage"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	storagepb "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
@@ -27,12 +27,13 @@ type BucketPermission string
 
 type bucket struct {
 	name         string
-	manager      Manager
+	manager      *manager
 	registerChan <-chan RegisterResult
 }
 
 type Bucket interface {
-	Allow(BucketPermission, ...BucketPermission) (storage.Bucket, error)
+	// Allow requests the given permissions to the bucket.
+	Allow(BucketPermission, ...BucketPermission) (*storage.Bucket, error)
 
 	// On registers a handler for a specific event type on the bucket.
 	// Valid function signatures for middleware are:
@@ -59,8 +60,7 @@ const (
 
 var BucketEverything []BucketPermission = []BucketPermission{BucketRead, BucketWrite, BucketDelete}
 
-// NewBucket register this bucket as a required resource for the calling function/container and
-// register the permissions required by the currently scoped function for this resource.
+// NewBucket - Create a new Bucket resource
 func NewBucket(name string) Bucket {
 	bucket := &bucket{
 		name:    name,
@@ -80,7 +80,7 @@ func NewBucket(name string) Bucket {
 	return bucket
 }
 
-func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (storage.Bucket, error) {
+func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (*storage.Bucket, error) {
 	allPerms := append([]BucketPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -102,19 +102,12 @@ func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermiss
 		return nil, registerResult.Err
 	}
 
-	m, err := b.manager.registerPolicy(registerResult.Identifier, actions...)
+	err := b.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.storage == nil {
-		m.storage, err = storage.New()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return m.storage.Bucket(b.name), nil
+	return storage.NewBucket(b.name)
 }
 
 func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter string, middleware ...interface{}) {

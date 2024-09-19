@@ -21,10 +21,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	httpx "github.com/nitrictech/go-sdk/api/apis"
-	"github.com/nitrictech/go-sdk/api/errors"
-	"github.com/nitrictech/go-sdk/api/errors/codes"
 	"github.com/nitrictech/go-sdk/constants"
+	httpx "github.com/nitrictech/go-sdk/nitric/apis"
+	"github.com/nitrictech/go-sdk/nitric/errors"
+	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 )
 

@@ -17,7 +17,7 @@ package nitric
 import (
 	"strings"
 
-	"github.com/nitrictech/go-sdk/api/schedules"
+	"github.com/nitrictech/go-sdk/nitric/schedules"
 	schedulespb "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
@@ -57,12 +57,12 @@ type Schedule interface {
 
 type schedule struct {
 	name    string
-	manager Manager
+	manager *manager
 }
 
 var _ Schedule = (*schedule)(nil)
 
-// NewSchedule provides a new schedule, which can be configured with a rate/cron and a callback to run on the schedule.
+// NewSchedule - Create a new Schedule resource
 func NewSchedule(name string) Schedule {
 	return &schedule{
 		name:    name,

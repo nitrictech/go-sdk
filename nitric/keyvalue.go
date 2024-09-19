@@ -17,7 +17,7 @@ package nitric
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/api/keyvalue"
+	"github.com/nitrictech/go-sdk/nitric/keyvalue"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -32,15 +32,17 @@ const (
 var KvStoreEverything []KvStorePermission = []KvStorePermission{KvStoreSet, KvStoreGet, KvStoreDelete}
 
 type KvStore interface {
-	Allow(KvStorePermission, ...KvStorePermission) (keyvalue.Store, error)
+	// Allow requests the given permissions to the key/value store.
+	Allow(KvStorePermission, ...KvStorePermission) (keyvalue.KvStoreClientIface, error)
 }
 
 type kvstore struct {
 	name         string
-	manager      Manager
+	manager      *manager
 	registerChan <-chan RegisterResult
 }
 
+// NewKv - Create a new Key/Value store resource
 func NewKv(name string) *kvstore {
 	kvstore := &kvstore{
 		name:         name,
@@ -61,8 +63,7 @@ func NewKv(name string) *kvstore {
 	return kvstore
 }
 
-// NewQueue registers this queue as a required resource for the calling function/container.
-func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) (keyvalue.Store, error) {
+func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) (keyvalue.KvStoreClientIface, error) {
 	allPerms := append([]KvStorePermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -85,17 +86,10 @@ func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePerm
 		return nil, registerResult.Err
 	}
 
-	m, err := k.manager.registerPolicy(registerResult.Identifier, actions...)
+	err := k.manager.registerPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.kvstores == nil {
-		m.kvstores, err = keyvalue.New()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return m.kvstores.Store(k.name), nil
+	return keyvalue.NewKvStoreClient(k.name)
 }

@@ -15,7 +15,7 @@
 package nitric
 
 import (
-	"github.com/nitrictech/go-sdk/api/apis"
+	"github.com/nitrictech/go-sdk/nitric/apis"
 )
 
 type (
@@ -74,7 +74,6 @@ func WithSecurity(oidcOptions OidcOptions) ApiOption {
 	}
 }
 
-// WithPath - Prefixes API with the given path
 func WithPath(path string) ApiOption {
 	return func(api *api) {
 		api.path = path

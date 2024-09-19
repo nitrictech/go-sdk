@@ -19,7 +19,7 @@ import (
 	"path"
 	"strings"
 
-	httpx "github.com/nitrictech/go-sdk/api/apis"
+	httpx "github.com/nitrictech/go-sdk/nitric/apis"
 
 	apispb "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
@@ -27,13 +27,21 @@ import (
 
 // Route providers convenience functions to register a handler in a single method.
 type Route interface {
+	// All adds a handler for all HTTP methods to the route.
 	All(handler interface{}, opts ...MethodOption)
+	// Get adds a Get method handler to the route.
 	Get(handler interface{}, opts ...MethodOption)
+	// Put adds a Put method handler to the route.
 	Patch(handler interface{}, opts ...MethodOption)
+	// Patch adds a Patch method handler to the route.
 	Put(handler interface{}, opts ...MethodOption)
+	// Post adds a Post method handler to the route.
 	Post(handler interface{}, opts ...MethodOption)
+	// Delete adds a Delete method handler to the route.
 	Delete(handler interface{}, opts ...MethodOption)
+	// Options adds an Options method handler to the route.
 	Options(handler interface{}, opts ...MethodOption)
+	// ApiName returns the name of the API this route belongs to.
 	ApiName() string
 }
 
@@ -41,7 +49,7 @@ type route struct {
 	path       string
 	api        *api
 	middleware Middleware[httpx.Ctx]
-	manager    Manager
+	manager    *manager
 }
 
 func composeRouteMiddleware(apiMiddleware Middleware[httpx.Ctx], routeMiddleware []Middleware[httpx.Ctx]) Middleware[httpx.Ctx] {
@@ -247,6 +255,7 @@ type Api interface {
 	//	Middleware[apis.Ctx]
 	//	Handler[apis.Ctx]
 	Options(path string, handler interface{}, opts ...MethodOption)
+	// NewRoute creates a new Route object for the given path.
 	NewRoute(path string, middleware ...Middleware[httpx.Ctx]) Route
 }
 
@@ -258,7 +267,7 @@ type ApiDetails struct {
 type api struct {
 	name          string
 	routes        map[string]Route
-	manager       Manager
+	manager       *manager
 	securityRules map[string]interface{}
 	security      []OidcOptions
 	path          string
