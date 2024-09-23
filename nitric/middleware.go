@@ -68,7 +68,7 @@ func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
 		handlerType = func(ctx *T, next Handler[T]) (*T, error) {
 			err := typ()
 			if err != nil {
-				return nil, err
+				return ctx, err
 			}
 			return next(ctx)
 		}
@@ -81,7 +81,7 @@ func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
 		handlerType = handlerToMware(func(ctx *T) (*T, error) {
 			err := typ(ctx)
 			if err != nil {
-				return nil, err
+				return ctx, err
 			}
 			return ctx, nil
 		})
@@ -99,7 +99,7 @@ func interfaceToMiddleware[T any](mw interface{}) (Middleware[T], error) {
 		handlerType = Middleware[T](func(ctx *T, next Handler[T]) (*T, error) {
 			err := typ(ctx, next)
 			if err != nil {
-				return nil, err
+				return ctx, err
 			}
 			return next(ctx)
 		})
