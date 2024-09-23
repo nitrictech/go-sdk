@@ -47,9 +47,9 @@ func OidcRule(name string, issuer string, audiences []string) SecurityOption {
 func WithMiddleware(middleware ...Middleware[apis.Ctx]) ApiOption {
 	return func(api *api) {
 		if api.middleware != nil {
-			api.middleware = Compose(api.middleware, Compose(middleware...))
+			api.middleware = ComposeMiddleware(api.middleware, ComposeMiddleware(middleware...))
 		} else {
-			api.middleware = Compose(middleware...)
+			api.middleware = ComposeMiddleware(middleware...)
 		}
 	}
 }

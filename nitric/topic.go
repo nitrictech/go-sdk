@@ -114,7 +114,7 @@ func (t *subscribableTopic) Subscribe(middleware ...interface{}) {
 		panic(err)
 	}
 
-	composeHandler := Compose(middlewares...)
+	composeHandler := ComposeMiddleware(middlewares...)
 
 	opts := &subscriptionWorkerOpts{
 		RegistrationRequest: registrationRequest,

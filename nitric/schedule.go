@@ -87,7 +87,7 @@ func (s *schedule) Cron(cron string, middleware ...interface{}) {
 		panic(err)
 	}
 
-	composeHandler := Compose(middlewares...)
+	composeHandler := ComposeMiddleware(middlewares...)
 
 	opts := &scheduleWorkerOpts{
 		RegistrationRequest: registrationRequest,
@@ -118,7 +118,7 @@ func (s *schedule) Every(rate string, middleware ...interface{}) {
 		panic(err)
 	}
 
-	composeHandler := Compose(middlewares...)
+	composeHandler := ComposeMiddleware(middlewares...)
 
 	opts := &scheduleWorkerOpts{
 		RegistrationRequest: registrationRequest,

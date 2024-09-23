@@ -130,7 +130,7 @@ func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter
 		panic(err)
 	}
 
-	composedHandler := Compose(middlewares...)
+	composedHandler := ComposeMiddleware(middlewares...)
 
 	opts := &bucketEventWorkerOpts{
 		RegistrationRequest: registrationRequest,

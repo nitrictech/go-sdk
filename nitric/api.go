@@ -55,7 +55,7 @@ type route struct {
 func composeRouteMiddleware(apiMiddleware Middleware[httpx.Ctx], routeMiddleware []Middleware[httpx.Ctx]) Middleware[httpx.Ctx] {
 	allMiddleware := append([]Middleware[httpx.Ctx]{apiMiddleware}, routeMiddleware...)
 
-	return Compose(allMiddleware...)
+	return ComposeMiddleware(allMiddleware...)
 }
 
 func (a *api) NewRoute(match string, middleware ...Middleware[httpx.Ctx]) Route {
@@ -94,7 +94,7 @@ func (r *route) AddMethodHandler(methods []string, middleware interface{}, opts 
 		panic(err)
 	}
 
-	composedHandler := Compose(r.middleware, mw)
+	composedHandler := ComposeMiddleware(r.middleware, mw)
 
 	apiOpts := &apispb.ApiWorkerOptions{
 		SecurityDisabled: mo.securityDisabled,

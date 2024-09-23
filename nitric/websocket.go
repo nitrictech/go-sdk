@@ -109,7 +109,7 @@ func (w *websocket) On(eventType websockets.EventType, middleware ...interface{}
 		panic(err)
 	}
 
-	composeHandler := Compose(middlewares...)
+	composeHandler := ComposeMiddleware(middlewares...)
 
 	opts := &websocketWorkerOpts{
 		RegistrationRequest: registrationRequest,

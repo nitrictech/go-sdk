@@ -151,8 +151,18 @@ func (h *middlewareChain[T]) invoke(ctx *T, next Handler[T]) (*T, error) {
 	return h.chain[0].invoke(ctx)
 }
 
-// Compose - Takes a collection of middleware and composes it into a single middleware function
-func Compose[T any](funcs ...Middleware[T]) Middleware[T] {
+func Compose[T any](funcs ...interface{}) Middleware[T] {
+	mwares, err := interfacesToMiddleware[T](funcs)
+	if err != nil {
+		return func(ctx *T, next Handler[T]) (*T, error) {
+			return nil, err
+		}
+	}
+	return ComposeMiddleware(mwares...)
+}
+
+// ComposeMiddleware - Takes a collection of middleware and composes it into a single middleware function
+func ComposeMiddleware[T any](funcs ...Middleware[T]) Middleware[T] {
 	mwareChain := &middlewareChain[T]{
 		chain: []*chainedMiddleware[T]{},
 	}
