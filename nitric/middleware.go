@@ -161,18 +161,22 @@ func Compose[T any](funcs ...interface{}) Middleware[T] {
 
 // ComposeMiddleware - Takes a collection of middleware and composes it into a single middleware function
 func ComposeMiddleware[T any](funcs ...Middleware[T]) Middleware[T] {
+	// remove empty funcs
+	filteredFuncs := []Middleware[T]{}
+	for _, f := range funcs {
+		if f != nil {
+			filteredFuncs = append(filteredFuncs, f)
+		}
+	}
+
 	mwareChain := &middlewareChain[T]{
-		chain: make([]*chainedMiddleware[T], len(funcs)),
+		chain: make([]*chainedMiddleware[T], len(filteredFuncs)),
 	}
 
 	var nextFunc Handler[T] = nil
-	for i := len(funcs) - 1; i >= 0; i = i - 1 {
-		if funcs[i] == nil {
-			continue
-		}
-
+	for i := len(filteredFuncs) - 1; i >= 0; i = i - 1 {
 		cm := &chainedMiddleware[T]{
-			fun:      funcs[i],
+			fun:      filteredFuncs[i],
 			nextFunc: nextFunc,
 		}
 		nextFunc = cm.invoke
