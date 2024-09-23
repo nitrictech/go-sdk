@@ -169,6 +169,10 @@ func ComposeMiddleware[T any](funcs ...Middleware[T]) Middleware[T] {
 		}
 	}
 
+	if len(filteredFuncs) == 0 {
+		return nil
+	}
+
 	mwareChain := &middlewareChain[T]{
 		chain: make([]*chainedMiddleware[T], len(filteredFuncs)),
 	}
