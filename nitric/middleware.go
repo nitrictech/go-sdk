@@ -154,9 +154,7 @@ func (h *middlewareChain[T]) invoke(ctx *T, next Handler[T]) (*T, error) {
 func Compose[T any](funcs ...interface{}) Middleware[T] {
 	mwares, err := interfacesToMiddleware[T](funcs)
 	if err != nil {
-		return func(ctx *T, next Handler[T]) (*T, error) {
-			return nil, err
-		}
+		panic(err)
 	}
 	return ComposeMiddleware(mwares...)
 }
@@ -164,7 +162,7 @@ func Compose[T any](funcs ...interface{}) Middleware[T] {
 // ComposeMiddleware - Takes a collection of middleware and composes it into a single middleware function
 func ComposeMiddleware[T any](funcs ...Middleware[T]) Middleware[T] {
 	mwareChain := &middlewareChain[T]{
-		chain: []*chainedMiddleware[T]{},
+		chain: make([]*chainedMiddleware[T], len(funcs)),
 	}
 
 	var nextFunc Handler[T] = nil
@@ -178,7 +176,7 @@ func ComposeMiddleware[T any](funcs ...Middleware[T]) Middleware[T] {
 			nextFunc: nextFunc,
 		}
 		nextFunc = cm.invoke
-		mwareChain.chain = append(mwareChain.chain, cm)
+		mwareChain.chain[i] = cm
 	}
 
 	return mwareChain.invoke
