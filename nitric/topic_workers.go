@@ -93,7 +93,7 @@ func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewSubscriptionWorker: Unable to reach StorageListenerClient",
+			"NewSubscriptionWorker: Unable to reach SubscriberClient",
 			err,
 		))
 	}

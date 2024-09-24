@@ -58,7 +58,7 @@ type subscribableTopic struct {
 	registerChan <-chan RegisterResult
 }
 
-// NewTopic creates a new Topic with the give permissions.
+// NewTopic creates a new Topic with the give name.
 func NewTopic(name string) SubscribableTopic {
 	topic := &subscribableTopic{
 		name:    name,
@@ -114,11 +114,11 @@ func (t *subscribableTopic) Subscribe(middleware ...interface{}) {
 		panic(err)
 	}
 
-	composeHandler := ComposeMiddleware(middlewares...)
+	composedHandler := ComposeMiddleware(middlewares...)
 
 	opts := &subscriptionWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware:          composeHandler,
+		Middleware:          composedHandler,
 	}
 
 	worker := newSubscriptionWorker(opts)

@@ -28,7 +28,7 @@ import (
 	"github.com/nitrictech/protoutils"
 )
 
-var _ = Describe("File", func() {
+var _ = Describe("Topic", func() {
 	var (
 		ctrl      *gomock.Controller
 		mockTopic *mock_v1.MockTopicsClient

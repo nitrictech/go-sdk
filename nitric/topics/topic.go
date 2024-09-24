@@ -56,7 +56,6 @@ func WithDelay(duration time.Duration) func(*v1.TopicPublishRequest) {
 }
 
 func (s *TopicClient) Publish(ctx context.Context, message map[string]interface{}, opts ...PublishOption) error {
-	// Convert payload to Protobuf Struct
 	payloadStruct, err := protoutils.NewStruct(message)
 	if err != nil {
 		return errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
@@ -89,14 +88,14 @@ func NewTopicClient(name string) (*TopicClient, error) {
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,
-			"topic.NewTopic: Unable to reach Nitric server",
+			"topics.NewTopicClient: Unable to reach Nitric server",
 			err,
 		)
 	}
 
 	topicClient := v1.NewTopicsClient(conn)
 	if err != nil {
-		return nil, errors.NewWithCause(codes.Internal, "NewTopic", err)
+		return nil, errors.NewWithCause(codes.Internal, "NewTopicClient", err)
 	}
 
 	return &TopicClient{
