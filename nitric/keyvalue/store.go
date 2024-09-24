@@ -165,7 +165,7 @@ func NewKvStoreClient(name string) (*KvStoreClient, error) {
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,
-			"unable to reach nitric server",
+			"NewKvStoreClient: unable to reach nitric server",
 			err,
 		)
 	}

@@ -112,7 +112,7 @@ func NewQueueClient(name string) (*QueueClient, error) {
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,
-			"unable to reach nitric server",
+			"NewQueueClient: unable to reach nitric server",
 			err,
 		)
 	}

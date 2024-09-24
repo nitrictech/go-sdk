@@ -31,7 +31,7 @@ var _ = Describe("Bucket", func() {
 	var (
 		ctrl        *gomock.Controller
 		mockStorage *mock_v1.MockStorageClient
-		bucket      *Bucket
+		bucket      *BucketClient
 		bucketName  string
 		ctx         context.Context
 	)
@@ -42,7 +42,7 @@ var _ = Describe("Bucket", func() {
 
 		bucketName = "test-bucket"
 
-		bucket = &Bucket{
+		bucket = &BucketClient{
 			name:          bucketName,
 			storageClient: mockStorage,
 		}

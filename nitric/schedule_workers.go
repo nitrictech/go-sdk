@@ -92,7 +92,7 @@ func newScheduleWorker(opts *scheduleWorkerOpts) *scheduleWorker {
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewIntervalWorker: Unable to reach StorageListenerClient",
+			"NewScheduleWorker: Unable to reach SchedulesClient",
 			err,
 		))
 	}

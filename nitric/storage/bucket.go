@@ -28,7 +28,7 @@ import (
 )
 
 // Cloud storage bucket resource for large file storage.
-type BucketIface interface {
+type BucketClientIface interface {
 	// Name - Get the name of the bucket
 	Name() string
 	// ListFiles - List the files in the bucket
@@ -45,14 +45,14 @@ type BucketIface interface {
 	DownloadUrl(ctx context.Context, key string, opts ...PresignUrlOption) (string, error)
 }
 
-var _ BucketIface = (*Bucket)(nil)
+var _ BucketClientIface = (*BucketClient)(nil)
 
-type Bucket struct {
+type BucketClient struct {
 	storageClient v1.StorageClient
 	name          string
 }
 
-func (o *Bucket) Read(ctx context.Context, key string) ([]byte, error) {
+func (o *BucketClient) Read(ctx context.Context, key string) ([]byte, error) {
 	r, err := o.storageClient.Read(ctx, &v1.StorageReadRequest{
 		BucketName: o.name,
 		Key:        key,
@@ -64,7 +64,7 @@ func (o *Bucket) Read(ctx context.Context, key string) ([]byte, error) {
 	return r.GetBody(), nil
 }
 
-func (o *Bucket) Write(ctx context.Context, key string, content []byte) error {
+func (o *BucketClient) Write(ctx context.Context, key string, content []byte) error {
 	if _, err := o.storageClient.Write(ctx, &v1.StorageWriteRequest{
 		BucketName: o.name,
 		Key:        key,
@@ -76,7 +76,7 @@ func (o *Bucket) Write(ctx context.Context, key string, content []byte) error {
 	return nil
 }
 
-func (o *Bucket) Delete(ctx context.Context, key string) error {
+func (o *BucketClient) Delete(ctx context.Context, key string) error {
 	if _, err := o.storageClient.Delete(ctx, &v1.StorageDeleteRequest{
 		BucketName: o.name,
 		Key:        key,
@@ -87,7 +87,7 @@ func (o *Bucket) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
-func (b *Bucket) ListFiles(ctx context.Context) ([]string, error) {
+func (b *BucketClient) ListFiles(ctx context.Context) ([]string, error) {
 	resp, err := b.storageClient.ListBlobs(ctx, &v1.StorageListBlobsRequest{
 		BucketName: b.name,
 	})
@@ -137,19 +137,19 @@ func getPresignUrlOpts(mode Mode, opts ...PresignUrlOption) *presignUrlOptions {
 	return defaultOpts
 }
 
-func (o *Bucket) UploadUrl(ctx context.Context, key string, opts ...PresignUrlOption) (string, error) {
+func (o *BucketClient) UploadUrl(ctx context.Context, key string, opts ...PresignUrlOption) (string, error) {
 	optsWithDefaults := getPresignUrlOpts(ModeWrite, opts...)
 
 	return o.signUrl(ctx, key, optsWithDefaults)
 }
 
-func (o *Bucket) DownloadUrl(ctx context.Context, key string, opts ...PresignUrlOption) (string, error) {
+func (o *BucketClient) DownloadUrl(ctx context.Context, key string, opts ...PresignUrlOption) (string, error) {
 	optsWithDefaults := getPresignUrlOpts(ModeRead, opts...)
 
 	return o.signUrl(ctx, key, optsWithDefaults)
 }
 
-func (o *Bucket) signUrl(ctx context.Context, key string, opts *presignUrlOptions) (string, error) {
+func (o *BucketClient) signUrl(ctx context.Context, key string, opts *presignUrlOptions) (string, error) {
 	op := v1.StoragePreSignUrlRequest_READ
 
 	if opts.mode == ModeWrite {
@@ -169,23 +169,23 @@ func (o *Bucket) signUrl(ctx context.Context, key string, opts *presignUrlOption
 	return r.Url, nil
 }
 
-func (b *Bucket) Name() string {
+func (b *BucketClient) Name() string {
 	return b.name
 }
 
-func NewBucket(name string) (*Bucket, error) {
+func NewBucketClient(name string) (*BucketClient, error) {
 	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,
-			"unable to reach nitric server",
+			"NewBucketClient: unable to reach nitric server",
 			err,
 		)
 	}
 
 	storageClient := v1.NewStorageClient(conn)
 
-	return &Bucket{
+	return &BucketClient{
 		name:          name,
 		storageClient: storageClient,
 	}, nil

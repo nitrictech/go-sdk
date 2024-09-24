@@ -33,7 +33,7 @@ type bucket struct {
 
 type Bucket interface {
 	// Allow requests the given permissions to the bucket.
-	Allow(BucketPermission, ...BucketPermission) (*storage.Bucket, error)
+	Allow(BucketPermission, ...BucketPermission) (*storage.BucketClient, error)
 
 	// On registers a handler for a specific event type on the bucket.
 	// Valid function signatures for middleware are:
@@ -80,7 +80,7 @@ func NewBucket(name string) Bucket {
 	return bucket
 }
 
-func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (*storage.Bucket, error) {
+func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (*storage.BucketClient, error) {
 	allPerms := append([]BucketPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -107,7 +107,7 @@ func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermiss
 		return nil, err
 	}
 
-	return storage.NewBucket(b.name)
+	return storage.NewBucketClient(b.name)
 }
 
 func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter string, middleware ...interface{}) {

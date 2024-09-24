@@ -88,15 +88,12 @@ func NewTopicClient(name string) (*TopicClient, error) {
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,
-			"topics.NewTopicClient: Unable to reach Nitric server",
+			"NewTopicClient: unable to reach nitric server",
 			err,
 		)
 	}
 
 	topicClient := v1.NewTopicsClient(conn)
-	if err != nil {
-		return nil, errors.NewWithCause(codes.Internal, "NewTopicClient", err)
-	}
 
 	return &TopicClient{
 		name:        name,

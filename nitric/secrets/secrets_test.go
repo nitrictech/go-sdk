@@ -27,7 +27,7 @@ import (
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/secrets/v1"
 )
 
-var _ = Describe("secretRefImpl", func() {
+var _ = Describe("Secret", func() {
 	var (
 		ctrl   *gomock.Controller
 		mockSC *mock_v1.MockSecretManagerClient

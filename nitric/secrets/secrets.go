@@ -99,7 +99,7 @@ func NewSecretClient(name string) (*SecretClient, error) {
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,
-			"unable to reach nitric server",
+			"NewSecretClient: unable to reach nitric server",
 			err,
 		)
 	}

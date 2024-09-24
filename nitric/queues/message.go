@@ -69,7 +69,7 @@ func messageToWire(message map[string]interface{}) (*v1.QueueMessage, error) {
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Internal,
-			"messageToWire: failed to serialize payload: %s",
+			"messageToWire: failed to serialize message: %s",
 			err,
 		)
 	}

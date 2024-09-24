@@ -92,7 +92,7 @@ func newWebsocketWorker(opts *websocketWorkerOpts) *websocketWorker {
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewWebsocketWorker: Unable to reach StorageListenerClient",
+			"NewWebsocketWorker: Unable to reach WebsocketHandlerClient",
 			err,
 		))
 	}
