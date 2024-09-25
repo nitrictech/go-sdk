@@ -134,6 +134,14 @@ func (c *chainedMiddleware[T]) invoke(ctx *T) (*T, error) {
 		c.nextFunc = dummyHandler[T]
 	}
 
+	outCtx, err := c.fun(ctx, c.nextFunc)
+
+	// The returned context should never be nil, since it's used to create the response.
+	// If it is, return the current context and the error
+	if outCtx == nil {
+		return ctx, err
+	}
+
 	return c.fun(ctx, c.nextFunc)
 }
 
