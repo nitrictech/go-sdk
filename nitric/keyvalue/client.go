@@ -17,9 +17,7 @@ package keyvalue
 import (
 	"context"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	"github.com/nitrictech/protoutils"
@@ -161,7 +159,7 @@ func (s *KvStoreClient) Keys(ctx context.Context, opts ...ScanKeysOption) (*KeyS
 }
 
 func NewKvStoreClient(name string) (*KvStoreClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,

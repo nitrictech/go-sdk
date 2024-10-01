@@ -17,9 +17,7 @@ package queues
 import (
 	"context"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/queues/v1"
@@ -108,7 +106,7 @@ func (q *QueueClient) Enqueue(ctx context.Context, messages []map[string]interfa
 }
 
 func NewQueueClient(name string) (*QueueClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,

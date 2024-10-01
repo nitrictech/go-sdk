@@ -19,9 +19,7 @@ import (
 	errorsstd "errors"
 	"io"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	"github.com/nitrictech/go-sdk/nitric/handlers"
@@ -88,7 +86,7 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 }
 
 func newBucketEventWorker(opts *bucketEventWorkerOpts) *bucketEventWorker {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,

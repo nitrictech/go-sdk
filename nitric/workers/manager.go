@@ -23,9 +23,8 @@ import (
 	"sync"
 
 	multierror "github.com/missionMeteora/toolkit/errors"
-	"google.golang.org/grpc"
 
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	apierrors "github.com/nitrictech/go-sdk/nitric/errors"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
@@ -36,9 +35,7 @@ type RegisterResult struct {
 }
 
 type Manager struct {
-	workers   map[string]StreamWorker
-	conn      grpc.ClientConnInterface
-	connMutex sync.Mutex
+	workers map[string]StreamWorker
 
 	rsc v1.ResourcesClient
 }
@@ -62,23 +59,8 @@ func (m *Manager) AddWorker(name string, s StreamWorker) {
 	m.workers[name] = s
 }
 
-func (m *Manager) GetConnection() (grpc.ClientConnInterface, error) {
-	m.connMutex.Lock()
-	defer m.connMutex.Unlock()
-
-	if m.conn == nil {
-		conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
-		if err != nil {
-			return nil, err
-		}
-		m.conn = conn
-	}
-
-	return m.conn, nil
-}
-
 func (m *Manager) resourceServiceClient() (v1.ResourcesClient, error) {
-	conn, err := m.GetConnection()
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		return nil, err
 	}

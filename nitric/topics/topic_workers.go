@@ -18,11 +18,9 @@ import (
 	"context"
 	"io"
 
-	"google.golang.org/grpc"
-
 	errorsstd "errors"
 
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	"github.com/nitrictech/go-sdk/nitric/handlers"
@@ -89,7 +87,7 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 }
 
 func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,

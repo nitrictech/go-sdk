@@ -18,10 +18,9 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
@@ -84,7 +83,7 @@ func (s *TopicClient) Publish(ctx context.Context, message map[string]interface{
 }
 
 func NewTopicClient(name string) (*TopicClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,

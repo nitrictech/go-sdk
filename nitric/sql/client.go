@@ -17,9 +17,7 @@ package sql
 import (
 	"context"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 
@@ -54,7 +52,7 @@ func (s *SqlClient) ConnectionString(ctx context.Context) (string, error) {
 }
 
 func NewSqlClient(name string) (*SqlClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,

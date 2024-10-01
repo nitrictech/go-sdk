@@ -19,12 +19,10 @@ import (
 	errorsstd "errors"
 	"io"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/nitric/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
@@ -87,21 +85,23 @@ func (w *websocketWorker) Start(ctx context.Context) error {
 	}
 }
 
-func newWebsocketWorker(opts *websocketWorkerOpts) *websocketWorker {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
-	if err != nil {
-		panic(errors.NewWithCause(
-			codes.Unavailable,
-			"NewWebsocketWorker: Unable to reach WebsocketHandlerClient",
-			err,
-		))
-	}
+func newWebsocketWorker(opts *websocketWorkerOpts) func(m *workers.Manager) *websocketWorker {
+	return func(m *workers.Manager) *websocketWorker {
+		conn, err := m.GetConnection()
+		if err != nil {
+			panic(errors.NewWithCause(
+				codes.Unavailable,
+				"NewWebsocketWorker: Unable to reach WebsocketHandlerClient",
+				err,
+			))
+		}
 
-	client := v1.NewWebsocketHandlerClient(conn)
+		client := v1.NewWebsocketHandlerClient(conn)
 
-	return &websocketWorker{
-		client:              client,
-		registrationRequest: opts.RegistrationRequest,
-		handler:             opts.Handler,
+		return &websocketWorker{
+			client:              client,
+			registrationRequest: opts.RegistrationRequest,
+			handler:             opts.Handler,
+		}
 	}
 }
