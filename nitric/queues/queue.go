@@ -15,112 +15,77 @@
 package queues
 
 import (
-	"context"
+	"fmt"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/nitric/errors"
-	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/queues/v1"
+	"github.com/nitrictech/go-sdk/nitric/workers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
-// QueueClientIface is a resource for async enqueueing/dequeueing of messages.
-type QueueClientIface interface {
-	// Name - The name of the queue
-	Name() string
-	// Enqueue - Push a number of messages to a queue
-	Enqueue(context.Context, []map[string]interface{}) ([]*FailedMessage, error)
-	// Dequeue - Retrieve messages from a queue to a maximum of the given depth
-	Dequeue(context.Context, int) ([]ReceivedMessage, error)
+type QueuePermission string
+
+const (
+	QueueEnqueue QueuePermission = "enqueue"
+	QueueDequeue QueuePermission = "dequeue"
+)
+
+var QueueEverything []QueuePermission = []QueuePermission{QueueEnqueue, QueueDequeue}
+
+type Queue interface {
+	// Allow requests the given permissions to the queue.
+	Allow(QueuePermission, ...QueuePermission) (*QueueClient, error)
 }
 
-type QueueClient struct {
-	name        string
-	queueClient v1.QueuesClient
+type queue struct {
+	name         string
+	manager      *workers.Manager
+	registerChan <-chan workers.RegisterResult
 }
 
-func (q *QueueClient) Name() string {
-	return q.name
-}
-
-func (q *QueueClient) Dequeue(ctx context.Context, depth int) ([]ReceivedMessage, error) {
-	if depth < 1 {
-		return nil, errors.New(codes.InvalidArgument, "Queue.Dequeue: depth cannot be less than 1")
+// NewQueue - Create a new Queue resource
+func NewQueue(name string) *queue {
+	queue := &queue{
+		name:         name,
+		manager:      workers.GetDefaultManager(),
+		registerChan: make(chan workers.RegisterResult),
 	}
 
-	r, err := q.queueClient.Dequeue(ctx, &v1.QueueDequeueRequest{
-		QueueName: q.name,
-		Depth:     int32(depth),
+	queue.registerChan = queue.manager.RegisterResource(&v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_Queue,
+			Name: name,
+		},
+		Config: &v1.ResourceDeclareRequest_Queue{
+			Queue: &v1.QueueResource{},
+		},
 	})
-	if err != nil {
-		return nil, errors.FromGrpcError(err)
-	}
 
-	rts := make([]ReceivedMessage, len(r.GetMessages()))
-
-	for i, message := range r.GetMessages() {
-		rts[i] = &leasedMessage{
-			queueName:   q.name,
-			queueClient: q.queueClient,
-			leaseId:     message.GetLeaseId(),
-			message:     wireToMessage(message.GetMessage()),
-		}
-	}
-
-	return rts, nil
+	return queue
 }
 
-func (q *QueueClient) Enqueue(ctx context.Context, messages []map[string]interface{}) ([]*FailedMessage, error) {
-	// Convert SDK Message objects to gRPC Message objects
-	wireMessages := make([]*v1.QueueMessage, len(messages))
-	for i, message := range messages {
-		wireMessage, err := messageToWire(message)
-		if err != nil {
-			return nil, errors.NewWithCause(
-				codes.Internal,
-				"Queue.Enqueue: Unable to enqueue messages",
-				err,
-			)
-		}
-		wireMessages[i] = wireMessage
-	}
+func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (*QueueClient, error) {
+	allPerms := append([]QueuePermission{permission}, permissions...)
 
-	// Push the messages to the queue
-	res, err := q.queueClient.Enqueue(ctx, &v1.QueueEnqueueRequest{
-		QueueName: q.name,
-		Messages:  wireMessages,
-	})
-	if err != nil {
-		return nil, errors.FromGrpcError(err)
-	}
-
-	// Convert the gRPC Failed Messages to SDK Failed Message objects
-	failedMessages := make([]*FailedMessage, len(res.GetFailedMessages()))
-	for i, failedMessage := range res.GetFailedMessages() {
-		failedMessages[i] = &FailedMessage{
-			Message: wireToMessage(failedMessage.GetMessage()),
-			Reason:  failedMessage.GetDetails(),
+	actions := []v1.Action{}
+	for _, perm := range allPerms {
+		switch perm {
+		case QueueDequeue:
+			actions = append(actions, v1.Action_QueueDequeue)
+		case QueueEnqueue:
+			actions = append(actions, v1.Action_QueueEnqueue)
+		default:
+			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
 		}
 	}
 
-	return failedMessages, nil
-}
-
-func NewQueueClient(name string) (*QueueClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
-	if err != nil {
-		return nil, errors.NewWithCause(
-			codes.Unavailable,
-			"NewQueueClient: unable to reach nitric server",
-			err,
-		)
+	registerResult := <-q.registerChan
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
 	}
 
-	queueClient := v1.NewQueuesClient(conn)
+	err := q.manager.RegisterPolicy(registerResult.Identifier, actions...)
+	if err != nil {
+		return nil, err
+	}
 
-	return &QueueClient{
-		name:        name,
-		queueClient: queueClient,
-	}, nil
+	return NewQueueClient(q.name)
 }

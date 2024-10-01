@@ -17,9 +17,7 @@ package secrets
 import (
 	"context"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/secrets/v1"
@@ -95,7 +93,7 @@ func (s *SecretClient) AccessVersion(ctx context.Context, version string) (Secre
 }
 
 func NewSecretClient(name string) (*SecretClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		return nil, errors.NewWithCause(
 			codes.Unavailable,

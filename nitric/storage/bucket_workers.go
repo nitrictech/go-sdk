@@ -12,30 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package storage
 
 import (
 	"context"
 	errorsstd "errors"
 	"io"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	"github.com/nitrictech/go-sdk/nitric/storage"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
 type bucketEventWorker struct {
 	client              v1.StorageListenerClient
 	registrationRequest *v1.RegistrationRequest
-	handler             Handler[storage.Ctx]
+	handler             handlers.Handler[Ctx]
 }
 type bucketEventWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Handler             Handler[storage.Ctx]
+	Handler             handlers.Handler[Ctx]
 }
 
 // Start implements Worker.
@@ -57,7 +55,7 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 		return err
 	}
 	for {
-		var ctx *storage.Ctx
+		var ctx *Ctx
 
 		resp, err := stream.Recv()
 
@@ -71,7 +69,7 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
 			// There is no need to respond to the registration response
 		} else if err == nil && resp.GetBlobEventRequest() != nil {
-			ctx = storage.NewCtx(resp)
+			ctx = NewCtx(resp)
 			err = b.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
@@ -88,7 +86,7 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 }
 
 func newBucketEventWorker(opts *bucketEventWorkerOpts) *bucketEventWorker {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,

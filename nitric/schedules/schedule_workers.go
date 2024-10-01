@@ -12,44 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package schedules
 
 import (
 	"context"
 	errorsstd "errors"
 	"io"
 
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
-	httpx "github.com/nitrictech/go-sdk/nitric/apis"
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
-type apiWorker struct {
-	client              v1.ApiClient
-	Handler             Handler[httpx.Ctx]
+type scheduleWorker struct {
+	client              v1.SchedulesClient
 	registrationRequest *v1.RegistrationRequest
+	handler             handlers.Handler[Ctx]
 }
-
-type apiWorkerOpts struct {
+type scheduleWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Handler             Handler[httpx.Ctx]
+	Handler             handlers.Handler[Ctx]
 }
-
-var _ streamWorker = (*apiWorker)(nil)
 
 // Start implements Worker.
-func (a *apiWorker) Start(ctx context.Context) error {
+func (i *scheduleWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: a.registrationRequest,
+			RegistrationRequest: i.registrationRequest,
 		},
 	}
 
-	stream, err := a.client.Serve(ctx)
+	// Create the request stream and send the initial request
+	stream, err := i.client.Schedule(ctx)
 	if err != nil {
 		return err
 	}
@@ -58,9 +54,8 @@ func (a *apiWorker) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	for {
-		var ctx *httpx.Ctx
+		var ctx *Ctx
 
 		resp, err := stream.Recv()
 
@@ -73,10 +68,9 @@ func (a *apiWorker) Start(ctx context.Context) error {
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
 			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetHttpRequest() != nil {
-			ctx = httpx.NewCtx(resp)
-
-			err = a.Handler(ctx)
+		} else if err == nil && resp.GetIntervalRequest() != nil {
+			ctx = NewCtx(resp)
+			err = i.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -91,21 +85,21 @@ func (a *apiWorker) Start(ctx context.Context) error {
 	}
 }
 
-func newApiWorker(opts *apiWorkerOpts) *apiWorker {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+func newScheduleWorker(opts *scheduleWorkerOpts) *scheduleWorker {
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewApiWorker: Unable to reach ApiClient",
+			"NewScheduleWorker: Unable to reach SchedulesClient",
 			err,
 		))
 	}
 
-	client := v1.NewApiClient(conn)
+	client := v1.NewSchedulesClient(conn)
 
-	return &apiWorker{
+	return &scheduleWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
-		Handler:             opts.Handler,
+		handler:             opts.Handler,
 	}
 }

@@ -1,10 +1,10 @@
-// Copyright 2023 Nitric Technologies Pty Ltd.
+// Copyright 2021 Nitric Technologies Pty Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//      http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,58 +15,45 @@
 package sql
 
 import (
-	"context"
-
-	"google.golang.org/grpc"
-
-	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/nitric/errors"
-	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/sql/v1"
+	"github.com/nitrictech/go-sdk/nitric/workers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
-type SqlClientIface interface {
-	// Name - The name of the store
-	Name() string
-	// Get a value from the store
-	ConnectionString(context.Context) (string, error)
+type sqlDatabaseOption func(*v1.SqlDatabaseResource)
+
+func WithMigrationsPath(path string) sqlDatabaseOption {
+	return func(r *v1.SqlDatabaseResource) {
+		r.Migrations = &v1.SqlDatabaseMigrations{
+			Migrations: &v1.SqlDatabaseMigrations_MigrationsPath{
+				MigrationsPath: path,
+			},
+		}
+	}
 }
 
-type SqlClient struct {
-	name      string
-	sqlClient v1.SqlClient
-}
+// NewSqlDatabase - Create a new Sql Database resource
+func NewSqlDatabase(name string, opts ...sqlDatabaseOption) (*SqlClient, error) {
+	resourceConfig := &v1.ResourceDeclareRequest_SqlDatabase{
+		SqlDatabase: &v1.SqlDatabaseResource{},
+	}
 
-func (s *SqlClient) Name() string {
-	return s.name
-}
+	for _, opt := range opts {
+		opt(resourceConfig.SqlDatabase)
+	}
 
-func (s *SqlClient) ConnectionString(ctx context.Context) (string, error) {
-	resp, err := s.sqlClient.ConnectionString(ctx, &v1.SqlConnectionStringRequest{
-		DatabaseName: s.name,
+	registerChan := workers.GetDefaultManager().RegisterResource(&v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_SqlDatabase,
+			Name: name,
+		},
+		Config: resourceConfig,
 	})
-	if err != nil {
-		return "", err
-	}
 
-	return resp.ConnectionString, nil
-}
+	// Make sure that registerChan is read
+	// Currently sql databases do not have allow methods so there is no reason to block on this
+	go func() {
+		<-registerChan
+	}()
 
-func NewSqlClient(name string) (*SqlClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
-	if err != nil {
-		return nil, errors.NewWithCause(
-			codes.Unavailable,
-			"unable to reach nitric server",
-			err,
-		)
-	}
-
-	client := v1.NewSqlClient(conn)
-
-	return &SqlClient{
-		name:      name,
-		sqlClient: client,
-	}, nil
+	return NewSqlClient(name)
 }

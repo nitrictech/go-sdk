@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package schedules
 
 import (
 	"strings"
 
-	"github.com/nitrictech/go-sdk/nitric/schedules"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/nitric/workers"
 	schedulespb "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
@@ -45,7 +46,7 @@ type Schedule interface {
 
 type schedule struct {
 	name    string
-	manager *manager
+	manager *workers.Manager
 }
 
 var _ Schedule = (*schedule)(nil)
@@ -54,7 +55,7 @@ var _ Schedule = (*schedule)(nil)
 func NewSchedule(name string) Schedule {
 	return &schedule{
 		name:    name,
-		manager: defaultManager,
+		manager: workers.GetDefaultManager(),
 	}
 }
 
@@ -70,7 +71,7 @@ func (s *schedule) Cron(cron string, handler interface{}) {
 		},
 	}
 
-	typedHandler, err := interfaceToHandler[schedules.Ctx](handler)
+	typedHandler, err := handlers.HandlerFromInterface[Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +82,7 @@ func (s *schedule) Cron(cron string, handler interface{}) {
 	}
 
 	worker := newScheduleWorker(opts)
-	s.manager.addWorker("IntervalWorkerCron:"+strings.Join([]string{
+	s.manager.AddWorker("IntervalWorkerCron:"+strings.Join([]string{
 		s.name,
 		cron,
 	}, "-"), worker)
@@ -99,7 +100,7 @@ func (s *schedule) Every(rate string, handler interface{}) {
 		},
 	}
 
-	typedHandler, err := interfaceToHandler[schedules.Ctx](handler)
+	typedHandler, err := handlers.HandlerFromInterface[Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +111,7 @@ func (s *schedule) Every(rate string, handler interface{}) {
 	}
 
 	worker := newScheduleWorker(opts)
-	s.manager.addWorker("IntervalWorkerEvery:"+strings.Join([]string{
+	s.manager.AddWorker("IntervalWorkerEvery:"+strings.Join([]string{
 		s.name,
 		rate,
 	}, "-"), worker)

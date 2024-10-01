@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package apis
 
 import (
 	"net/http"
 	"path"
 	"strings"
 
-	httpx "github.com/nitrictech/go-sdk/nitric/apis"
+	. "github.com/nitrictech/go-sdk/nitric/handlers"
+	resources "github.com/nitrictech/go-sdk/nitric/resource"
+	"github.com/nitrictech/go-sdk/nitric/workers"
+	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 
 	apispb "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
-	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
 // Route providers convenience functions to register a handler in a single method.
@@ -45,13 +47,16 @@ type Route interface {
 	ApiName() string
 }
 
+type ApiMiddleware = Middleware[Ctx]
+
 type route struct {
-	path    string
-	api     *api
-	manager *manager
+	path       string
+	api        *api
+	manager    *workers.Manager
+	middleware ApiMiddleware
 }
 
-func (a *api) NewRoute(match string) Route {
+func (a *api) NewRoute(match string, opts ...RouteOption) Route {
 	r, ok := a.routes[match]
 	if !ok {
 		r = &route{
@@ -59,6 +64,10 @@ func (a *api) NewRoute(match string) Route {
 			path:    path.Join(a.path, match),
 			api:     a,
 		}
+	}
+
+	for _, o := range opts {
+		o(r.(*route))
 	}
 
 	return r
@@ -81,7 +90,7 @@ func (r *route) AddMethodHandler(methods []string, handler interface{}, opts ...
 		o(mo)
 	}
 
-	typedHandler, err := interfaceToHandler[httpx.Ctx](handler)
+	typedHandler, err := HandlerFromInterface[Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +102,7 @@ func (r *route) AddMethodHandler(methods []string, handler interface{}, opts ...
 
 	if mo.security != nil && !mo.securityDisabled {
 		for _, oidcOption := range mo.security {
-			err := attachOidc(r.api.name, oidcOption)
+			err := attachOidc(r.api.name, oidcOption, r.manager)
 			if err != nil {
 				return err
 			}
@@ -111,12 +120,20 @@ func (r *route) AddMethodHandler(methods []string, handler interface{}, opts ...
 		Options: apiOpts,
 	}
 
+	if r.middleware != nil {
+		typedHandler = r.middleware(typedHandler)
+	}
+
+	if r.api.middleware != nil {
+		typedHandler = r.api.middleware(typedHandler)
+	}
+
 	wkr := newApiWorker(&apiWorkerOpts{
 		RegistrationRequest: registrationRequest,
 		Handler:             typedHandler,
 	})
 
-	r.manager.addWorker("route:"+bName, wkr)
+	r.manager.AddWorker("route:"+bName, wkr)
 
 	return nil
 }
@@ -210,71 +227,22 @@ type Api interface {
 	//	Handler[apis.Ctx]
 	Options(path string, handler interface{}, opts ...MethodOption)
 	// NewRoute creates a new Route object for the given path.
-	NewRoute(path string) Route
+	NewRoute(path string, opts ...RouteOption) Route
 }
 
 type ApiDetails struct {
-	Details
+	resources.Details
 	URL string
 }
 
 type api struct {
 	name          string
 	routes        map[string]Route
-	manager       *manager
+	manager       *workers.Manager
 	securityRules map[string]interface{}
 	security      []OidcOptions
 	path          string
-}
-
-// NewApi Registers a new API Resource.
-//
-// The returned API object can be used to register Routes and Methods, with Handlers.
-func NewApi(name string, opts ...ApiOption) (Api, error) {
-	a := &api{
-		name:    name,
-		routes:  map[string]Route{},
-		manager: defaultManager,
-	}
-
-	// Apply options
-	for _, o := range opts {
-		o(a)
-	}
-
-	apiResource := &resourcev1.ApiResource{}
-
-	// Attaching OIDC Options to API
-	if a.security != nil {
-		for _, oidcOption := range a.security {
-			err := attachOidc(a.name, oidcOption)
-			if err != nil {
-				return nil, err
-			}
-
-			if apiResource.GetSecurity() == nil {
-				apiResource.Security = make(map[string]*resourcev1.ApiScopes)
-			}
-			apiResource.Security[oidcOption.Name] = &resourcev1.ApiScopes{
-				Scopes: oidcOption.Scopes,
-			}
-		}
-	}
-	// declare resource
-	result := <-defaultManager.registerResource(&resourcev1.ResourceDeclareRequest{
-		Id: &resourcev1.ResourceIdentifier{
-			Name: name,
-			Type: resourcev1.ResourceType_Api,
-		},
-		Config: &resourcev1.ResourceDeclareRequest_Api{
-			Api: apiResource,
-		},
-	})
-	if result.Err != nil {
-		return nil, result.Err
-	}
-
-	return a, nil
+	middleware    ApiMiddleware
 }
 
 // Get adds a Get method handler to the path with any specified opts.
@@ -329,4 +297,54 @@ func (a *api) Options(match string, handler interface{}, opts ...MethodOption) {
 
 	r.Options(handler, opts...)
 	a.routes[match] = r
+}
+
+// NewApi Registers a new API Resource.
+//
+// The returned API object can be used to register Routes and Methods, with Handlers.
+func NewApi(name string, opts ...ApiOption) (Api, error) {
+	a := &api{
+		name:    name,
+		routes:  map[string]Route{},
+		manager: workers.GetDefaultManager(),
+	}
+
+	// Apply options
+	for _, o := range opts {
+		o(a)
+	}
+
+	apiResource := &resourcev1.ApiResource{}
+
+	// Attaching OIDC Options to API
+	if a.security != nil {
+		for _, oidcOption := range a.security {
+			err := attachOidc(a.name, oidcOption, a.manager)
+			if err != nil {
+				return nil, err
+			}
+
+			if apiResource.GetSecurity() == nil {
+				apiResource.Security = make(map[string]*resourcev1.ApiScopes)
+			}
+			apiResource.Security[oidcOption.Name] = &resourcev1.ApiScopes{
+				Scopes: oidcOption.Scopes,
+			}
+		}
+	}
+	// declare resource
+	result := <-a.manager.RegisterResource(&resourcev1.ResourceDeclareRequest{
+		Id: &resourcev1.ResourceIdentifier{
+			Name: name,
+			Type: resourcev1.ResourceType_Api,
+		},
+		Config: &resourcev1.ResourceDeclareRequest_Api{
+			Api: apiResource,
+		},
+	})
+	if result.Err != nil {
+		return nil, result.Err
+	}
+
+	return a, nil
 }

@@ -15,88 +15,104 @@
 package topics
 
 import (
-	"context"
-	"time"
+	"fmt"
 
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/durationpb"
-
-	"github.com/nitrictech/go-sdk/constants"
-	"github.com/nitrictech/go-sdk/nitric/errors"
-	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
-	"github.com/nitrictech/protoutils"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/nitric/workers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
+	topicspb "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
-type PublishOption = func(*v1.TopicPublishRequest)
+// TopicPermission defines the available permissions on a topic
+type TopicPermission string
 
-// TopicClientIface for pub/sub async messaging.
-type TopicClientIface interface {
-	// Name returns the Topic name.
-	Name() string
+const (
+	// TopicPublish is required to call Publish on a topic.
+	TopicPublish TopicPermission = "publish"
+)
 
-	// Publish will publish the provided events on the topic.
-	Publish(context.Context, map[string]interface{}, ...PublishOption) error
+type SubscribableTopic interface {
+	// Allow requests the given permissions to the topic.
+	Allow(TopicPermission, ...TopicPermission) (*TopicClient, error)
+
+	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
+	// Valid function signatures for handler are:
+	//
+	//	func()
+	//	func() error
+	//	func(*topics.Ctx)
+	//	func(*topics.Ctx) error
+	//	Handler[topics.Ctx]
+	Subscribe(interface{})
 }
 
-type TopicClient struct {
-	name        string
-	topicClient v1.TopicsClient
+type subscribableTopic struct {
+	name         string
+	manager      *workers.Manager
+	registerChan <-chan workers.RegisterResult
 }
 
-func (s *TopicClient) Name() string {
-	return s.name
-}
-
-// WithDelay - Delay event publishing by the given duration
-func WithDelay(duration time.Duration) func(*v1.TopicPublishRequest) {
-	return func(epr *v1.TopicPublishRequest) {
-		epr.Delay = durationpb.New(duration)
+// NewTopic creates a new Topic with the give name.
+func NewTopic(name string) SubscribableTopic {
+	topic := &subscribableTopic{
+		name:    name,
+		manager: workers.GetDefaultManager(),
 	}
-}
 
-func (s *TopicClient) Publish(ctx context.Context, message map[string]interface{}, opts ...PublishOption) error {
-	payloadStruct, err := protoutils.NewStruct(message)
-	if err != nil {
-		return errors.NewWithCause(codes.InvalidArgument, "Topic.Publish", err)
-	}
-
-	event := &v1.TopicPublishRequest{
-		TopicName: s.name,
-		Message: &v1.TopicMessage{
-			Content: &v1.TopicMessage_StructPayload{
-				StructPayload: payloadStruct,
-			},
+	topic.registerChan = topic.manager.RegisterResource(&v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_Topic,
+			Name: name,
 		},
-	}
+		Config: &v1.ResourceDeclareRequest_Topic{
+			Topic: &v1.TopicResource{},
+		},
+	})
 
-	// Apply options to the event payload
-	for _, opt := range opts {
-		opt(event)
-	}
-
-	_, err = s.topicClient.Publish(ctx, event)
-	if err != nil {
-		return errors.FromGrpcError(err)
-	}
-
-	return nil
+	return topic
 }
 
-func NewTopicClient(name string) (*TopicClient, error) {
-	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
-	if err != nil {
-		return nil, errors.NewWithCause(
-			codes.Unavailable,
-			"NewTopicClient: unable to reach nitric server",
-			err,
-		)
+func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...TopicPermission) (*TopicClient, error) {
+	allPerms := append([]TopicPermission{permission}, permissions...)
+
+	actions := []v1.Action{}
+	for _, perm := range allPerms {
+		switch perm {
+		case TopicPublish:
+			actions = append(actions, v1.Action_TopicPublish)
+		default:
+			return nil, fmt.Errorf("TopicPermission %s unknown", perm)
+		}
 	}
 
-	topicClient := v1.NewTopicsClient(conn)
+	registerResult := <-t.registerChan
+	if registerResult.Err != nil {
+		return nil, registerResult.Err
+	}
 
-	return &TopicClient{
-		name:        name,
-		topicClient: topicClient,
-	}, nil
+	err := t.manager.RegisterPolicy(registerResult.Identifier, actions...)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewTopicClient(t.name)
+}
+
+func (t *subscribableTopic) Subscribe(handler interface{}) {
+	registrationRequest := &topicspb.RegistrationRequest{
+		TopicName: t.name,
+	}
+
+	typedHandler, err := handlers.HandlerFromInterface[Ctx](handler)
+	if err != nil {
+		panic(err)
+	}
+
+	opts := &subscriptionWorkerOpts{
+		RegistrationRequest: registrationRequest,
+		Handler:             typedHandler,
+	}
+
+	worker := newSubscriptionWorker(opts)
+	t.manager.AddWorker("SubscriptionWorker:"+t.name, worker)
 }
