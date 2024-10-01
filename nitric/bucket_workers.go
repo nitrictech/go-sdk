@@ -31,11 +31,11 @@ import (
 type bucketEventWorker struct {
 	client              v1.StorageListenerClient
 	registrationRequest *v1.RegistrationRequest
-	middleware          Middleware[storage.Ctx]
+	handler             Handler[storage.Ctx]
 }
 type bucketEventWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          Middleware[storage.Ctx]
+	Handler             Handler[storage.Ctx]
 }
 
 // Start implements Worker.
@@ -69,10 +69,10 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Do nothing
+			// There is no need to respond to the registration response
 		} else if err == nil && resp.GetBlobEventRequest() != nil {
 			ctx = storage.NewCtx(resp)
-			ctx, err = b.middleware(ctx, dummyHandler)
+			err = b.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -102,6 +102,6 @@ func newBucketEventWorker(opts *bucketEventWorkerOpts) *bucketEventWorker {
 	return &bucketEventWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
-		middleware:          opts.Middleware,
+		handler:             opts.Handler,
 	}
 }

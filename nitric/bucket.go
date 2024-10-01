@@ -36,20 +36,14 @@ type Bucket interface {
 	Allow(BucketPermission, ...BucketPermission) (*storage.BucketClient, error)
 
 	// On registers a handler for a specific event type on the bucket.
-	// Valid function signatures for middleware are:
+	// Valid function signatures for handler are:
 	//
 	//	func()
 	//	func() error
 	//	func(*storage.Ctx)
 	//	func(*storage.Ctx) error
-	//	func(*storage.Ctx) *storage.Ctx
-	//	func(*storage.Ctx) (*storage.Ctx, error)
-	//	func(*storage.Ctx, Handler[storage.Ctx]) *storage.Ctx
-	//	func(*storage.Ctx, Handler[storage.Ctx]) error
-	//	func(*storage.Ctx, Handler[storage.Ctx]) (*storage.Ctx, error)
-	//	Middleware[storage.Ctx]
 	//	Handler[storage.Ctx]
-	On(storage.EventType, string, ...interface{})
+	On(eventType storage.EventType, notificationPrefixFilter string, handler interface{})
 }
 
 const (
@@ -110,9 +104,9 @@ func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermiss
 	return storage.NewBucketClient(b.name)
 }
 
-func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter string, middleware ...interface{}) {
+func (b *bucket) On(eventType storage.EventType, notificationPrefixFilter string, handler interface{}) {
 	var blobEventType storagepb.BlobEventType
-	switch notificationType {
+	switch eventType {
 	case storage.WriteNotification:
 		blobEventType = storagepb.BlobEventType_Created
 	case storage.DeleteNotification:
@@ -125,21 +119,19 @@ func (b *bucket) On(notificationType storage.EventType, notificationPrefixFilter
 		KeyPrefixFilter: notificationPrefixFilter,
 	}
 
-	middlewares, err := interfacesToMiddleware[storage.Ctx](middleware)
+	typedHandler, err := interfaceToHandler[storage.Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
 
-	composedHandler := ComposeMiddleware(middlewares...)
-
 	opts := &bucketEventWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware:          composedHandler,
+		Handler:             typedHandler,
 	}
 
 	worker := newBucketEventWorker(opts)
 
 	b.manager.addWorker("bucketNotification:"+strings.Join([]string{
-		b.name, notificationPrefixFilter, string(notificationType),
+		b.name, notificationPrefixFilter, string(eventType),
 	}, "-"), worker)
 }

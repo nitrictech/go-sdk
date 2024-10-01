@@ -36,20 +36,14 @@ type SubscribableTopic interface {
 	Allow(TopicPermission, ...TopicPermission) (*topics.TopicClient, error)
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
-	// Valid function signatures for middleware are:
+	// Valid function signatures for handler are:
 	//
 	//	func()
 	//	func() error
 	//	func(*topics.Ctx)
 	//	func(*topics.Ctx) error
-	//	func(*topics.Ctx) *topics.Ctx
-	//	func(*topics.Ctx) (*topics.Ctx, error)
-	//	func(*topics.Ctx, Handler[topics.Ctx]) *topics.Ctx
-	//	func(*topics.Ctx, Handler[topics.Ctx]) error
-	//	func(*topics.Ctx, Handler[topics.Ctx]) (*topics.Ctx, error)
-	//	Middleware[topics.Ctx]
 	//	Handler[topics.Ctx]
-	Subscribe(...interface{})
+	Subscribe(interface{})
 }
 
 type subscribableTopic struct {
@@ -104,21 +98,19 @@ func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...Top
 	return topics.NewTopicClient(t.name)
 }
 
-func (t *subscribableTopic) Subscribe(middleware ...interface{}) {
+func (t *subscribableTopic) Subscribe(handler interface{}) {
 	registrationRequest := &topicspb.RegistrationRequest{
 		TopicName: t.name,
 	}
 
-	middlewares, err := interfacesToMiddleware[topics.Ctx](middleware)
+	typedHandler, err := interfaceToHandler[topics.Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
 
-	composedHandler := ComposeMiddleware(middlewares...)
-
 	opts := &subscriptionWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware:          composedHandler,
+		Handler:             typedHandler,
 	}
 
 	worker := newSubscriptionWorker(opts)

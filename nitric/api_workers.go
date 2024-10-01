@@ -30,13 +30,13 @@ import (
 
 type apiWorker struct {
 	client              v1.ApiClient
-	middleware          Middleware[httpx.Ctx]
+	Handler             Handler[httpx.Ctx]
 	registrationRequest *v1.RegistrationRequest
 }
 
 type apiWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          Middleware[httpx.Ctx]
+	Handler             Handler[httpx.Ctx]
 }
 
 var _ streamWorker = (*apiWorker)(nil)
@@ -72,11 +72,11 @@ func (a *apiWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Do nothing
+			// There is no need to respond to the registration response
 		} else if err == nil && resp.GetHttpRequest() != nil {
 			ctx = httpx.NewCtx(resp)
 
-			ctx, err = a.middleware(ctx, dummyHandler)
+			err = a.Handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -106,6 +106,6 @@ func newApiWorker(opts *apiWorkerOpts) *apiWorker {
 	return &apiWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
-		middleware:          opts.Middleware,
+		Handler:             opts.Handler,
 	}
 }

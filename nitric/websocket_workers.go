@@ -31,11 +31,11 @@ import (
 type websocketWorker struct {
 	client              v1.WebsocketHandlerClient
 	registrationRequest *v1.RegistrationRequest
-	middleware          Middleware[websockets.Ctx]
+	handler             Handler[websockets.Ctx]
 }
 type websocketWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          Middleware[websockets.Ctx]
+	Handler             Handler[websockets.Ctx]
 }
 
 // Start implements Worker.
@@ -69,10 +69,10 @@ func (w *websocketWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Do nothing
+			// There is no need to respond to the registration response
 		} else if err == nil && resp.GetWebsocketEventRequest() != nil {
 			ctx = websockets.NewCtx(resp)
-			ctx, err = w.middleware(ctx, dummyHandler)
+			err = w.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -102,6 +102,6 @@ func newWebsocketWorker(opts *websocketWorkerOpts) *websocketWorker {
 	return &websocketWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
-		middleware:          opts.Middleware,
+		handler:             opts.Handler,
 	}
 }

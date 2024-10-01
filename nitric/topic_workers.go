@@ -32,11 +32,11 @@ import (
 type subscriptionWorker struct {
 	client              v1.SubscriberClient
 	registrationRequest *v1.RegistrationRequest
-	middleware          Middleware[topics.Ctx]
+	handler             Handler[topics.Ctx]
 }
 type subscriptionWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          Middleware[topics.Ctx]
+	Handler             Handler[topics.Ctx]
 }
 
 // Start implements Worker.
@@ -70,10 +70,10 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Do nothing
+			// There is no need to respond to the registration response
 		} else if err == nil && resp.GetMessageRequest() != nil {
 			ctx = topics.NewCtx(resp)
-			ctx, err = s.middleware(ctx, dummyHandler)
+			err = s.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -103,6 +103,6 @@ func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
 	return &subscriptionWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
-		middleware:          opts.Middleware,
+		handler:             opts.Handler,
 	}
 }

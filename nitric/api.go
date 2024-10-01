@@ -46,26 +46,19 @@ type Route interface {
 }
 
 type route struct {
-	path       string
-	api        *api
-	middleware Middleware[httpx.Ctx]
-	manager    *manager
+	path    string
+	api     *api
+	handler Handler[httpx.Ctx]
+	manager *manager
 }
 
-func composeRouteMiddleware(apiMiddleware Middleware[httpx.Ctx], routeMiddleware []Middleware[httpx.Ctx]) Middleware[httpx.Ctx] {
-	allMiddleware := append([]Middleware[httpx.Ctx]{apiMiddleware}, routeMiddleware...)
-
-	return ComposeMiddleware(allMiddleware...)
-}
-
-func (a *api) NewRoute(match string, middleware ...Middleware[httpx.Ctx]) Route {
+func (a *api) NewRoute(match string) Route {
 	r, ok := a.routes[match]
 	if !ok {
 		r = &route{
-			manager:    a.manager,
-			path:       path.Join(a.path, match),
-			api:        a,
-			middleware: composeRouteMiddleware(a.middleware, middleware),
+			manager: a.manager,
+			path:    path.Join(a.path, match),
+			api:     a,
 		}
 	}
 
@@ -76,7 +69,7 @@ func (r *route) ApiName() string {
 	return r.api.name
 }
 
-func (r *route) AddMethodHandler(methods []string, middleware interface{}, opts ...MethodOption) error {
+func (r *route) AddMethodHandler(methods []string, handler interface{}, opts ...MethodOption) error {
 	bName := path.Join(r.api.name, r.path, strings.Join(methods, "-"))
 
 	// default methodOptions will contain OidcOptions passed to API instance and securityDisabled to false
@@ -89,12 +82,10 @@ func (r *route) AddMethodHandler(methods []string, middleware interface{}, opts 
 		o(mo)
 	}
 
-	mw, err := interfaceToMiddleware[httpx.Ctx](middleware)
+	typedHandler, err := interfaceToHandler[httpx.Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
-
-	composedHandler := ComposeMiddleware(r.middleware, mw)
 
 	apiOpts := &apispb.ApiWorkerOptions{
 		SecurityDisabled: mo.securityDisabled,
@@ -123,7 +114,7 @@ func (r *route) AddMethodHandler(methods []string, middleware interface{}, opts 
 
 	wkr := newApiWorker(&apiWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware:          composedHandler,
+		Handler:             typedHandler,
 	})
 
 	r.manager.addWorker("route:"+bName, wkr)
@@ -163,7 +154,7 @@ func (r *route) Options(handler interface{}, opts ...MethodOption) {
 // path is the route path matcher e.g. '/home'. Supports path params via colon prefix e.g. '/customers/:customerId'
 // handler the handler to register for callbacks.
 //
-// Note: to chain middleware use handler.ComposeHttpMiddlware()
+// Note: to chain handler use handler.ComposeHttpMiddlware()
 type Api interface {
 	// Get adds a Get method handler to the path with any specified opts.
 	// Valid function signatures:
@@ -172,12 +163,6 @@ type Api interface {
 	//	func() error
 	//	func(*apis.Ctx)
 	//	func(*apis.Ctx) error
-	//	func(*apis.Ctx) *apis.Ctx
-	//	func(*apis.Ctx) (*apis.Ctx, error)
-	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
-	//	func(*apis.Ctx, Handler[apis.Ctx]) error
-	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
-	//	Middleware[apis.Ctx]
 	//	Handler[apis.Ctx]
 	Get(path string, handler interface{}, opts ...MethodOption)
 	// Put adds a Put method handler to the path with any specified opts.
@@ -187,12 +172,6 @@ type Api interface {
 	//	func() error
 	//	func(*apis.Ctx)
 	//	func(*apis.Ctx) error
-	//	func(*apis.Ctx) *apis.Ctx
-	//	func(*apis.Ctx) (*apis.Ctx, error)
-	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
-	//	func(*apis.Ctx, Handler[apis.Ctx]) error
-	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
-	//	Middleware[apis.Ctx]
 	//	Handler[apis.Ctx]
 	Put(path string, handler interface{}, opts ...MethodOption)
 	// Patch adds a Patch method handler to the path with any specified opts.
@@ -202,12 +181,6 @@ type Api interface {
 	//	func() error
 	//	func(*apis.Ctx)
 	//	func(*apis.Ctx) error
-	//	func(*apis.Ctx) *apis.Ctx
-	//	func(*apis.Ctx) (*apis.Ctx, error)
-	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
-	//	func(*apis.Ctx, Handler[apis.Ctx]) error
-	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
-	//	Middleware[apis.Ctx]
 	//	Handler[apis.Ctx]
 	Patch(path string, handler interface{}, opts ...MethodOption)
 	// Post adds a Post method handler to the path with any specified opts.
@@ -217,12 +190,6 @@ type Api interface {
 	//	func() error
 	//	func(*apis.Ctx)
 	//	func(*apis.Ctx) error
-	//	func(*apis.Ctx) *apis.Ctx
-	//	func(*apis.Ctx) (*apis.Ctx, error)
-	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
-	//	func(*apis.Ctx, Handler[apis.Ctx]) error
-	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
-	//	Middleware[apis.Ctx]
 	//	Handler[apis.Ctx]
 	Post(path string, handler interface{}, opts ...MethodOption)
 	// Delete adds a Delete method handler to the path with any specified opts.
@@ -232,12 +199,6 @@ type Api interface {
 	//	func() error
 	//	func(*apis.Ctx)
 	//	func(*apis.Ctx) error
-	//	func(*apis.Ctx) *apis.Ctx
-	//	func(*apis.Ctx) (*apis.Ctx, error)
-	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
-	//	func(*apis.Ctx, Handler[apis.Ctx]) error
-	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
-	//	Middleware[apis.Ctx]
 	//	Handler[apis.Ctx]
 	Delete(path string, handler interface{}, opts ...MethodOption)
 	// Options adds a Options method handler to the path with any specified opts.
@@ -247,16 +208,10 @@ type Api interface {
 	//	func() error
 	//	func(*apis.Ctx)
 	//	func(*apis.Ctx) error
-	//	func(*apis.Ctx) *apis.Ctx
-	//	func(*apis.Ctx) (*apis.Ctx, error)
-	//	func(*apis.Ctx, Handler[apis.Ctx]) *apis.Ctx
-	//	func(*apis.Ctx, Handler[apis.Ctx]) error
-	//	func(*apis.Ctx, Handler[apis.Ctx]) (*apis.Ctx, error)
-	//	Middleware[apis.Ctx]
 	//	Handler[apis.Ctx]
 	Options(path string, handler interface{}, opts ...MethodOption)
 	// NewRoute creates a new Route object for the given path.
-	NewRoute(path string, middleware ...Middleware[httpx.Ctx]) Route
+	NewRoute(path string) Route
 }
 
 type ApiDetails struct {
@@ -271,7 +226,7 @@ type api struct {
 	securityRules map[string]interface{}
 	security      []OidcOptions
 	path          string
-	middleware    Middleware[httpx.Ctx]
+	handler       Handler[httpx.Ctx]
 }
 
 // NewApi Registers a new API Resource.
@@ -325,7 +280,7 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 }
 
 // Get adds a Get method handler to the path with any specified opts.
-// Note: to chain middleware use handler.ComposeHttpMiddlware()
+// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Get(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -334,7 +289,7 @@ func (a *api) Get(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Post adds a Post method handler to the path with any specified opts.
-// Note: to chain middleware use handler.ComposeHttpMiddlware()
+// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Post(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -343,7 +298,7 @@ func (a *api) Post(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Patch adds a Patch method handler to the path with any specified opts.
-// Note: to chain middleware use handler.ComposeHttpMiddlware()
+// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Patch(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -352,7 +307,7 @@ func (a *api) Patch(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Put adds a Put method handler to the path with any specified opts.
-// Note: to chain middleware use handler.ComposeHttpMiddlware()
+// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Put(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -361,7 +316,7 @@ func (a *api) Put(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Delete adds a Delete method handler to the path with any specified opts.
-// Note: to chain middleware use handler.ComposeHttpMiddlware()
+// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Delete(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -370,7 +325,7 @@ func (a *api) Delete(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Options adds an Options method handler to the path with any specified opts.
-// Note: to chain middleware use handler.ComposeHttpMiddlware()
+// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Options(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 

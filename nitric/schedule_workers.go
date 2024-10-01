@@ -31,11 +31,11 @@ import (
 type scheduleWorker struct {
 	client              v1.SchedulesClient
 	registrationRequest *v1.RegistrationRequest
-	middleware          Middleware[schedules.Ctx]
+	handler             Handler[schedules.Ctx]
 }
 type scheduleWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Middleware          Middleware[schedules.Ctx]
+	Handler             Handler[schedules.Ctx]
 }
 
 // Start implements Worker.
@@ -69,10 +69,10 @@ func (i *scheduleWorker) Start(ctx context.Context) error {
 
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// Do nothing
+			// There is no need to respond to the registration response
 		} else if err == nil && resp.GetIntervalRequest() != nil {
 			ctx = schedules.NewCtx(resp)
-			ctx, err = i.middleware(ctx, dummyHandler)
+			err = i.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -102,6 +102,6 @@ func newScheduleWorker(opts *scheduleWorkerOpts) *scheduleWorker {
 	return &scheduleWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
-		middleware:          opts.Middleware,
+		handler:             opts.Handler,
 	}
 }

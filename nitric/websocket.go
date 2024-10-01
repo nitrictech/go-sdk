@@ -28,20 +28,14 @@ type Websocket interface {
 	// Name - Get the name of the Websocket API
 	Name() string
 	// On registers a handler for a specific event type on the websocket
-	// Valid function signatures for middleware are:
+	// Valid function signatures for handler are:
 	//
 	//	func()
 	//	func() error
 	//	func(*websocket.Ctx)
 	//	func(*websocket.Ctx) error
-	//	func(*websocket.Ctx) *websocket.Ctx
-	//	func(*websocket.Ctx) (*websocket.Ctx, error)
-	//	func(*websocket.Ctx, Handler[websocket.Ctx]) *websocket.Ctx
-	//	func(*websocket.Ctx, Handler[websocket.Ctx]) error
-	//	func(*websocket.Ctx, Handler[websocket.Ctx]) (*websocket.Ctx, error)
-	//	Middleware[websocket.Ctx]
 	//	Handler[websocket.Ctx]
-	On(eventType websockets.EventType, mwares ...interface{})
+	On(eventType websockets.EventType, handler interface{})
 	// Send a message to a specific connection
 	Send(ctx context.Context, connectionId string, message []byte) error
 	// Close a specific connection
@@ -88,7 +82,7 @@ func (w *websocket) Name() string {
 	return w.name
 }
 
-func (w *websocket) On(eventType websockets.EventType, middleware ...interface{}) {
+func (w *websocket) On(eventType websockets.EventType, handler interface{}) {
 	var _eventType websocketsv1.WebsocketEventType
 	switch eventType {
 	case websockets.EventType_Disconnect:
@@ -104,16 +98,14 @@ func (w *websocket) On(eventType websockets.EventType, middleware ...interface{}
 		EventType:  _eventType,
 	}
 
-	middlewares, err := interfacesToMiddleware[websockets.Ctx](middleware)
+	typedHandler, err := interfaceToHandler[websockets.Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
 
-	composeHandler := ComposeMiddleware(middlewares...)
-
 	opts := &websocketWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware:          composeHandler,
+		Handler:             typedHandler,
 	}
 
 	worker := newWebsocketWorker(opts)

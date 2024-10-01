@@ -22,37 +22,25 @@ import (
 )
 
 type Schedule interface {
-	// Run middleware at a certain interval defined by the cronExpression.
-	// Valid function signatures for middleware are:
+	// Run a function at a certain interval defined by the cronExpression.
+	// Valid function signatures for handler are:
 	//
 	//	func()
 	//	func() error
 	//	func(*schedules.Ctx)
 	//	func(*schedules.Ctx) error
-	//	func(*schedules.Ctx) *schedules.Ctx
-	//	func(*schedules.Ctx) (*schedules.Ctx, error)
-	//	func(*schedules.Ctx, Handler[schedules.Ctx]) *schedules.Ctx
-	//	func(*schedules.Ctx, Handler[schedules.Ctx]) error
-	//	func(*schedules.Ctx, Handler[schedules.Ctx]) (*schedules.Ctx, error)
-	//	Middleware[schedules.Ctx]
 	//	Handler[schedules.Ctx]
-	Cron(cron string, middleware ...interface{})
+	Cron(cron string, handler interface{})
 
-	// Run middleware at a certain interval defined by the rate. The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
-	// Valid function signatures for middleware are:
+	// Run a function at a certain interval defined by the rate. The rate is e.g. '7 days'. All rates accept a number and a frequency. Valid frequencies are 'days', 'hours' or 'minutes'.
+	// Valid function signatures for handler are:
 	//
 	//	func()
 	//	func() error
 	//	func(*schedules.Ctx)
 	//	func(*schedules.Ctx) error
-	//	func(*schedules.Ctx) *schedules.Ctx
-	//	func(*schedules.Ctx) (*schedules.Ctx, error)
-	//	func(*schedules.Ctx, Handler[schedules.Ctx]) *schedules.Ctx
-	//	func(*schedules.Ctx, Handler[schedules.Ctx]) error
-	//	func(*schedules.Ctx, Handler[schedules.Ctx]) (*schedules.Ctx, error)
-	//	Middleware[schedules.Ctx]
 	//	Handler[schedules.Ctx]
-	Every(rate string, middleware ...interface{})
+	Every(rate string, handler interface{})
 }
 
 type schedule struct {
@@ -70,7 +58,7 @@ func NewSchedule(name string) Schedule {
 	}
 }
 
-func (s *schedule) Cron(cron string, middleware ...interface{}) {
+func (s *schedule) Cron(cron string, handler interface{}) {
 	scheduleCron := &schedulespb.ScheduleCron{
 		Expression: cron,
 	}
@@ -82,16 +70,14 @@ func (s *schedule) Cron(cron string, middleware ...interface{}) {
 		},
 	}
 
-	middlewares, err := interfacesToMiddleware[schedules.Ctx](middleware)
+	typedHandler, err := interfaceToHandler[schedules.Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
 
-	composeHandler := ComposeMiddleware(middlewares...)
-
 	opts := &scheduleWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware:          composeHandler,
+		Handler:             typedHandler,
 	}
 
 	worker := newScheduleWorker(opts)
@@ -101,7 +87,7 @@ func (s *schedule) Cron(cron string, middleware ...interface{}) {
 	}, "-"), worker)
 }
 
-func (s *schedule) Every(rate string, middleware ...interface{}) {
+func (s *schedule) Every(rate string, handler interface{}) {
 	scheduleEvery := &schedulespb.ScheduleEvery{
 		Rate: rate,
 	}
@@ -113,16 +99,14 @@ func (s *schedule) Every(rate string, middleware ...interface{}) {
 		},
 	}
 
-	middlewares, err := interfacesToMiddleware[schedules.Ctx](middleware)
+	typedHandler, err := interfaceToHandler[schedules.Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
 
-	composeHandler := ComposeMiddleware(middlewares...)
-
 	opts := &scheduleWorkerOpts{
 		RegistrationRequest: registrationRequest,
-		Middleware:          composeHandler,
+		Handler:             typedHandler,
 	}
 
 	worker := newScheduleWorker(opts)
