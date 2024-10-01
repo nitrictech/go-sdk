@@ -18,6 +18,7 @@ import (
 	"context"
 	"strings"
 
+	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/nitric/handlers"
 	"github.com/nitrictech/go-sdk/nitric/workers"
 	resourcesv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
@@ -72,7 +73,7 @@ func NewWebsocket(name string) (Websocket, error) {
 		return nil, err
 	}
 
-	conn, err := manager.GetConnection()
+	conn, err := grpcx.GetConnection()
 	if err != nil {
 		return nil, err
 	}
