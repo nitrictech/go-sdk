@@ -12,43 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package schedules
 
 import (
 	"context"
+	errorsstd "errors"
 	"io"
 
 	"google.golang.org/grpc"
 
-	errorsstd "errors"
-
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	"github.com/nitrictech/go-sdk/nitric/topics"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 
-type subscriptionWorker struct {
-	client              v1.SubscriberClient
+type scheduleWorker struct {
+	client              v1.SchedulesClient
 	registrationRequest *v1.RegistrationRequest
-	handler             Handler[topics.Ctx]
+	handler             handlers.Handler[Ctx]
 }
-type subscriptionWorkerOpts struct {
+type scheduleWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Handler             Handler[topics.Ctx]
+	Handler             handlers.Handler[Ctx]
 }
 
 // Start implements Worker.
-func (s *subscriptionWorker) Start(ctx context.Context) error {
+func (i *scheduleWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: s.registrationRequest,
+			RegistrationRequest: i.registrationRequest,
 		},
 	}
 
 	// Create the request stream and send the initial request
-	stream, err := s.client.Subscribe(ctx)
+	stream, err := i.client.Schedule(ctx)
 	if err != nil {
 		return err
 	}
@@ -58,7 +57,7 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 		return err
 	}
 	for {
-		var ctx *topics.Ctx
+		var ctx *Ctx
 
 		resp, err := stream.Recv()
 
@@ -71,9 +70,9 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
 			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetMessageRequest() != nil {
-			ctx = topics.NewCtx(resp)
-			err = s.handler(ctx)
+		} else if err == nil && resp.GetIntervalRequest() != nil {
+			ctx = NewCtx(resp)
+			err = i.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -88,19 +87,19 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 	}
 }
 
-func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
+func newScheduleWorker(opts *scheduleWorkerOpts) *scheduleWorker {
 	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewSubscriptionWorker: Unable to reach SubscriberClient",
+			"NewScheduleWorker: Unable to reach SchedulesClient",
 			err,
 		))
 	}
 
-	client := v1.NewSubscriberClient(conn)
+	client := v1.NewSchedulesClient(conn)
 
-	return &subscriptionWorker{
+	return &scheduleWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
 		handler:             opts.Handler,

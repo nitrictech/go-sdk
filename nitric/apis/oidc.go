@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package apis
 
 import (
+	"github.com/nitrictech/go-sdk/nitric/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -25,8 +26,8 @@ type OidcOptions struct {
 	Scopes    []string
 }
 
-func attachOidc(apiName string, options OidcOptions) error {
-	_, err := NewOidcSecurityDefinition(apiName, options)
+func attachOidc(apiName string, options OidcOptions, manager *workers.Manager) error {
+	_, err := newOidcSecurityDefinition(apiName, options, manager)
 	if err != nil {
 		return err
 	}
@@ -45,20 +46,20 @@ type oidcSecurityDefinition struct {
 	Issuer    string
 	Audiences []string
 
-	manager *manager
+	manager *workers.Manager
 }
 
-func NewOidcSecurityDefinition(apiName string, options OidcOptions) (OidcSecurityDefinition, error) {
+func newOidcSecurityDefinition(apiName string, options OidcOptions, manager *workers.Manager) (OidcSecurityDefinition, error) {
 	o := &oidcSecurityDefinition{
 		ApiName:   apiName,
 		RuleName:  options.Name,
 		Issuer:    options.Issuer,
 		Audiences: options.Audiences,
-		manager:   defaultManager,
+		manager:   manager,
 	}
 
 	// declare resource
-	registerResult := <-defaultManager.registerResource(&v1.ResourceDeclareRequest{
+	registerResult := <-manager.RegisterResource(&v1.ResourceDeclareRequest{
 		Id: &v1.ResourceIdentifier{
 			Name: options.Name,
 			Type: v1.ResourceType_ApiSecurityDefinition,

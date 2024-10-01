@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package handlers
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -26,10 +26,10 @@ var _ = Describe("handler", func() {
 	// func(*T) error
 	// func(*T, Handler[T]) error
 	// Handler[T]
-	Context("interfaceToHandler", func() {
+	Context("HandlerFromInterface", func() {
 		When("interface{} is func()", func() {
 			It("should return a valid handler", func() {
-				handler, err := interfaceToHandler[any](func() {})
+				handler, err := HandlerFromInterface[any](func() {})
 
 				Expect(err).To(BeNil())
 				Expect(handler).ToNot(BeNil())
@@ -38,7 +38,7 @@ var _ = Describe("handler", func() {
 
 		When("interface{} is func() error", func() {
 			It("should return a valid handler", func() {
-				handler, err := interfaceToHandler[any](func() error { return nil })
+				handler, err := HandlerFromInterface[any](func() error { return nil })
 
 				Expect(err).To(BeNil())
 				Expect(handler).ToNot(BeNil())
@@ -47,7 +47,7 @@ var _ = Describe("handler", func() {
 
 		When("interface{} is func(*T)", func() {
 			It("should return a valid handler", func() {
-				handler, err := interfaceToHandler[string](func(*string) {})
+				handler, err := HandlerFromInterface[string](func(*string) {})
 
 				Expect(err).To(BeNil())
 				Expect(handler).ToNot(BeNil())
@@ -56,7 +56,7 @@ var _ = Describe("handler", func() {
 
 		When("interface{} is func(*T) error", func() {
 			It("should return a valid handler", func() {
-				handler, err := interfaceToHandler[string](func(*string) error { return nil })
+				handler, err := HandlerFromInterface[string](func(*string) error { return nil })
 
 				Expect(err).To(BeNil())
 				Expect(handler).ToNot(BeNil())
@@ -65,7 +65,7 @@ var _ = Describe("handler", func() {
 
 		When("interface{} is not a valid type", func() {
 			It("should return an error", func() {
-				handler, err := interfaceToHandler[string](func() (error, error) { return nil, nil })
+				handler, err := HandlerFromInterface[string](func() (error, error) { return nil, nil })
 
 				Expect(err).ToNot(BeNil())
 				Expect(handler).To(BeNil())

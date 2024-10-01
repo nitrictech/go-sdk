@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package workers
 
 import (
 	"context"
@@ -35,8 +35,8 @@ type RegisterResult struct {
 	Err        error
 }
 
-type manager struct {
-	workers   map[string]streamWorker
+type Manager struct {
+	workers   map[string]StreamWorker
 	conn      grpc.ClientConnInterface
 	connMutex sync.Mutex
 
@@ -45,20 +45,24 @@ type manager struct {
 
 var defaultManager = New()
 
+func GetDefaultManager() *Manager {
+	return defaultManager
+}
+
 // New is used to create the top level resource manager.
 // Note: this is not required if you are using
 // resources.NewApi() and the like. These use a default manager instance.
-func New() *manager {
-	return &manager{
-		workers: map[string]streamWorker{},
+func New() *Manager {
+	return &Manager{
+		workers: map[string]StreamWorker{},
 	}
 }
 
-func (m *manager) addWorker(name string, s streamWorker) {
+func (m *Manager) AddWorker(name string, s StreamWorker) {
 	m.workers[name] = s
 }
 
-func (m *manager) resourceServiceClient() (v1.ResourcesClient, error) {
+func (m *Manager) GetConnection() (grpc.ClientConnInterface, error) {
 	m.connMutex.Lock()
 	defer m.connMutex.Unlock()
 
@@ -69,13 +73,23 @@ func (m *manager) resourceServiceClient() (v1.ResourcesClient, error) {
 		}
 		m.conn = conn
 	}
+
+	return m.conn, nil
+}
+
+func (m *Manager) resourceServiceClient() (v1.ResourcesClient, error) {
+	conn, err := m.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
 	if m.rsc == nil {
-		m.rsc = v1.NewResourcesClient(m.conn)
+		m.rsc = v1.NewResourcesClient(conn)
 	}
 	return m.rsc, nil
 }
 
-func (m *manager) registerResource(request *v1.ResourceDeclareRequest) <-chan RegisterResult {
+func (m *Manager) RegisterResource(request *v1.ResourceDeclareRequest) <-chan RegisterResult {
 	registerResourceChan := make(chan RegisterResult)
 
 	go func() {
@@ -108,7 +122,26 @@ func (m *manager) registerResource(request *v1.ResourceDeclareRequest) <-chan Re
 	return registerResourceChan
 }
 
-func (m *manager) registerPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) error {
+func functionResourceDeclareRequest(subject *v1.ResourceIdentifier, actions []v1.Action) *v1.ResourceDeclareRequest {
+	return &v1.ResourceDeclareRequest{
+		Id: &v1.ResourceIdentifier{
+			Type: v1.ResourceType_Policy,
+		},
+		Config: &v1.ResourceDeclareRequest_Policy{
+			Policy: &v1.PolicyResource{
+				Principals: []*v1.ResourceIdentifier{
+					{
+						Type: v1.ResourceType_Service,
+					},
+				},
+				Actions:   actions,
+				Resources: []*v1.ResourceIdentifier{subject},
+			},
+		},
+	}
+}
+
+func (m *Manager) RegisterPolicy(res *v1.ResourceIdentifier, actions ...v1.Action) error {
 	rsc, err := m.resourceServiceClient()
 	if err != nil {
 		return err
@@ -127,13 +160,13 @@ func Run() error {
 	return defaultManager.run()
 }
 
-func (m *manager) run() error {
+func (m *Manager) run() error {
 	wg := sync.WaitGroup{}
 	errList := &multierror.ErrorList{}
 
 	for _, worker := range m.workers {
 		wg.Add(1)
-		go func(s streamWorker) {
+		go func(s StreamWorker) {
 			defer wg.Done()
 
 			if err := s.Start(context.TODO()); err != nil {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package websockets
 
 import (
 	"context"
@@ -24,30 +24,30 @@ import (
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	"github.com/nitrictech/go-sdk/nitric/schedules"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
 
-type scheduleWorker struct {
-	client              v1.SchedulesClient
+type websocketWorker struct {
+	client              v1.WebsocketHandlerClient
 	registrationRequest *v1.RegistrationRequest
-	handler             Handler[schedules.Ctx]
+	handler             handlers.Handler[Ctx]
 }
-type scheduleWorkerOpts struct {
+type websocketWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
-	Handler             Handler[schedules.Ctx]
+	Handler             handlers.Handler[Ctx]
 }
 
 // Start implements Worker.
-func (i *scheduleWorker) Start(ctx context.Context) error {
+func (w *websocketWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: i.registrationRequest,
+			RegistrationRequest: w.registrationRequest,
 		},
 	}
 
 	// Create the request stream and send the initial request
-	stream, err := i.client.Schedule(ctx)
+	stream, err := w.client.HandleEvents(ctx)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (i *scheduleWorker) Start(ctx context.Context) error {
 		return err
 	}
 	for {
-		var ctx *schedules.Ctx
+		var ctx *Ctx
 
 		resp, err := stream.Recv()
 
@@ -70,9 +70,9 @@ func (i *scheduleWorker) Start(ctx context.Context) error {
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
 			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetIntervalRequest() != nil {
-			ctx = schedules.NewCtx(resp)
-			err = i.handler(ctx)
+		} else if err == nil && resp.GetWebsocketEventRequest() != nil {
+			ctx = NewCtx(resp)
+			err = w.handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -87,19 +87,19 @@ func (i *scheduleWorker) Start(ctx context.Context) error {
 	}
 }
 
-func newScheduleWorker(opts *scheduleWorkerOpts) *scheduleWorker {
+func newWebsocketWorker(opts *websocketWorkerOpts) *websocketWorker {
 	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewScheduleWorker: Unable to reach SchedulesClient",
+			"NewWebsocketWorker: Unable to reach WebsocketHandlerClient",
 			err,
 		))
 	}
 
-	client := v1.NewSchedulesClient(conn)
+	client := v1.NewWebsocketHandlerClient(conn)
 
-	return &scheduleWorker{
+	return &websocketWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
 		handler:             opts.Handler,

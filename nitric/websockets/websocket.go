@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package websockets
 
 import (
 	"context"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/nitric/websockets"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/nitric/workers"
 	resourcesv1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	websocketsv1 "github.com/nitrictech/nitric/core/pkg/proto/websockets/v1"
 )
@@ -35,7 +36,7 @@ type Websocket interface {
 	//	func(*websocket.Ctx)
 	//	func(*websocket.Ctx) error
 	//	Handler[websocket.Ctx]
-	On(eventType websockets.EventType, handler interface{})
+	On(eventType EventType, handler interface{})
 	// Send a message to a specific connection
 	Send(ctx context.Context, connectionId string, message []byte) error
 	// Close a specific connection
@@ -46,13 +47,15 @@ type websocket struct {
 	Websocket
 
 	name    string
-	manager *manager
+	manager *workers.Manager
 	client  websocketsv1.WebsocketClient
 }
 
 // NewWebsocket - Create a new Websocket API resource
 func NewWebsocket(name string) (Websocket, error) {
-	registerResult := <-defaultManager.registerResource(&resourcesv1.ResourceDeclareRequest{
+	manager := workers.GetDefaultManager()
+
+	registerResult := <-manager.RegisterResource(&resourcesv1.ResourceDeclareRequest{
 		Id: &resourcesv1.ResourceIdentifier{
 			Type: resourcesv1.ResourceType_Websocket,
 			Name: name,
@@ -64,15 +67,20 @@ func NewWebsocket(name string) (Websocket, error) {
 
 	actions := []resourcesv1.Action{resourcesv1.Action_WebsocketManage}
 
-	err := defaultManager.registerPolicy(registerResult.Identifier, actions...)
+	err := manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	wClient := websocketsv1.NewWebsocketClient(defaultManager.conn)
+	conn, err := manager.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	wClient := websocketsv1.NewWebsocketClient(conn)
 
 	return &websocket{
-		manager: defaultManager,
+		manager: manager,
 		client:  wClient,
 		name:    name,
 	}, nil
@@ -82,12 +90,12 @@ func (w *websocket) Name() string {
 	return w.name
 }
 
-func (w *websocket) On(eventType websockets.EventType, handler interface{}) {
+func (w *websocket) On(eventType EventType, handler interface{}) {
 	var _eventType websocketsv1.WebsocketEventType
 	switch eventType {
-	case websockets.EventType_Disconnect:
+	case EventType_Disconnect:
 		_eventType = websocketsv1.WebsocketEventType_Disconnect
-	case websockets.EventType_Message:
+	case EventType_Message:
 		_eventType = websocketsv1.WebsocketEventType_Message
 	default:
 		_eventType = websocketsv1.WebsocketEventType_Connect
@@ -98,7 +106,7 @@ func (w *websocket) On(eventType websockets.EventType, handler interface{}) {
 		EventType:  _eventType,
 	}
 
-	typedHandler, err := interfaceToHandler[websockets.Ctx](handler)
+	typedHandler, err := handlers.HandlerFromInterface[Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
@@ -109,7 +117,7 @@ func (w *websocket) On(eventType websockets.EventType, handler interface{}) {
 	}
 
 	worker := newWebsocketWorker(opts)
-	w.manager.addWorker("WebsocketWorker:"+strings.Join([]string{
+	w.manager.AddWorker("WebsocketWorker:"+strings.Join([]string{
 		w.name,
 		string(eventType),
 	}, "-"), worker)

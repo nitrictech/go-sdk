@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package keyvalue
 
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/nitric/keyvalue"
+	"github.com/nitrictech/go-sdk/nitric/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -33,24 +33,24 @@ var KvStoreEverything []KvStorePermission = []KvStorePermission{KvStoreSet, KvSt
 
 type KvStore interface {
 	// Allow requests the given permissions to the key/value store.
-	Allow(KvStorePermission, ...KvStorePermission) (keyvalue.KvStoreClientIface, error)
+	Allow(KvStorePermission, ...KvStorePermission) (KvStoreClientIface, error)
 }
 
 type kvstore struct {
 	name         string
-	manager      *manager
-	registerChan <-chan RegisterResult
+	manager      *workers.Manager
+	registerChan <-chan workers.RegisterResult
 }
 
 // NewKv - Create a new Key/Value store resource
 func NewKv(name string) *kvstore {
 	kvstore := &kvstore{
 		name:         name,
-		manager:      defaultManager,
-		registerChan: make(chan RegisterResult),
+		manager:      workers.GetDefaultManager(),
+		registerChan: make(chan workers.RegisterResult),
 	}
 
-	kvstore.registerChan = defaultManager.registerResource(&v1.ResourceDeclareRequest{
+	kvstore.registerChan = kvstore.manager.RegisterResource(&v1.ResourceDeclareRequest{
 		Id: &v1.ResourceIdentifier{
 			Type: v1.ResourceType_KeyValueStore,
 			Name: name,
@@ -63,7 +63,7 @@ func NewKv(name string) *kvstore {
 	return kvstore
 }
 
-func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) (keyvalue.KvStoreClientIface, error) {
+func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) (KvStoreClientIface, error) {
 	allPerms := append([]KvStorePermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -86,10 +86,10 @@ func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePerm
 		return nil, registerResult.Err
 	}
 
-	err := k.manager.registerPolicy(registerResult.Identifier, actions...)
+	err := k.manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	return keyvalue.NewKvStoreClient(k.name)
+	return NewKvStoreClient(k.name)
 }

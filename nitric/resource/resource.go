@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package resources
 
-import "context"
-
-type streamWorker interface {
-	Start(context.Context) error
+type Details struct {
+	// The identifier of the resource
+	ID string
+	// The provider this resource is deployed with (e.g. aws)
+	Provider string
+	// The service this resource is deployed on (e.g. ApiGateway)
+	Service string
 }

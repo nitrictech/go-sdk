@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package apis
 
 import (
 	"context"
@@ -24,30 +24,33 @@ import (
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	"github.com/nitrictech/go-sdk/nitric/storage"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/nitric/workers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
 )
 
-type bucketEventWorker struct {
-	client              v1.StorageListenerClient
+type apiWorker struct {
+	client              v1.ApiClient
+	Handler             handlers.Handler[Ctx]
 	registrationRequest *v1.RegistrationRequest
-	handler             Handler[storage.Ctx]
-}
-type bucketEventWorkerOpts struct {
-	RegistrationRequest *v1.RegistrationRequest
-	Handler             Handler[storage.Ctx]
 }
 
+type apiWorkerOpts struct {
+	RegistrationRequest *v1.RegistrationRequest
+	Handler             handlers.Handler[Ctx]
+}
+
+var _ workers.StreamWorker = (*apiWorker)(nil)
+
 // Start implements Worker.
-func (b *bucketEventWorker) Start(ctx context.Context) error {
+func (a *apiWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: b.registrationRequest,
+			RegistrationRequest: a.registrationRequest,
 		},
 	}
 
-	// Create the request stream and send the initial request
-	stream, err := b.client.Listen(ctx)
+	stream, err := a.client.Serve(ctx)
 	if err != nil {
 		return err
 	}
@@ -56,8 +59,9 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
 	for {
-		var ctx *storage.Ctx
+		var ctx *Ctx
 
 		resp, err := stream.Recv()
 
@@ -70,9 +74,10 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 			return nil
 		} else if err == nil && resp.GetRegistrationResponse() != nil {
 			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetBlobEventRequest() != nil {
-			ctx = storage.NewCtx(resp)
-			err = b.handler(ctx)
+		} else if err == nil && resp.GetHttpRequest() != nil {
+			ctx = NewCtx(resp)
+
+			err = a.Handler(ctx)
 			if err != nil {
 				ctx.WithError(err)
 			}
@@ -87,21 +92,21 @@ func (b *bucketEventWorker) Start(ctx context.Context) error {
 	}
 }
 
-func newBucketEventWorker(opts *bucketEventWorkerOpts) *bucketEventWorker {
+func newApiWorker(opts *apiWorkerOpts) *apiWorker {
 	conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewBlobEventWorker: Unable to reach StorageListenerClient",
+			"NewApiWorker: Unable to reach ApiClient",
 			err,
 		))
 	}
 
-	client := v1.NewStorageListenerClient(conn)
+	client := v1.NewApiClient(conn)
 
-	return &bucketEventWorker{
+	return &apiWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
-		handler:             opts.Handler,
+		Handler:             opts.Handler,
 	}
 }

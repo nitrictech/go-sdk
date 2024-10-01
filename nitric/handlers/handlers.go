@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package handlers
 
 import "fmt"
 
 type (
-	Handler[T any] func(context *T) error
+	Handler[T any]    func(context *T) error
+	Middleware[T any] func(Handler[T]) Handler[T]
 )
 
-// interfaceToHandler - Converts a function to a Handler
+// fromInterface - Converts a function to a Handler
 // Valid function types are:
 // func()
 // func() error
@@ -30,7 +31,7 @@ type (
 // func(*T) (*T, error)
 // Handler[T]
 // If the function is not a valid type, an error is returned
-func interfaceToHandler[T any](handler interface{}) (Handler[T], error) {
+func HandlerFromInterface[T any](handler interface{}) (Handler[T], error) {
 	var typedHandler Handler[T]
 	switch handlerType := handler.(type) {
 	case func():

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nitric
+package secrets
 
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/nitric/secrets"
+	"github.com/nitrictech/go-sdk/nitric/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 )
 
@@ -32,23 +32,23 @@ var SecretEverything []SecretPermission = []SecretPermission{SecretAccess, Secre
 
 type Secret interface {
 	// Allow requests the given permissions to the secret.
-	Allow(SecretPermission, ...SecretPermission) (*secrets.SecretClient, error)
+	Allow(SecretPermission, ...SecretPermission) (*SecretClient, error)
 }
 
 type secret struct {
 	name         string
-	manager      *manager
-	registerChan <-chan RegisterResult
+	manager      *workers.Manager
+	registerChan <-chan workers.RegisterResult
 }
 
 // NewSecret - Create a new Secret resource
 func NewSecret(name string) *secret {
 	secret := &secret{
 		name:    name,
-		manager: defaultManager,
+		manager: workers.GetDefaultManager(),
 	}
 
-	secret.registerChan = defaultManager.registerResource(&v1.ResourceDeclareRequest{
+	secret.registerChan = secret.manager.RegisterResource(&v1.ResourceDeclareRequest{
 		Id: &v1.ResourceIdentifier{
 			Type: v1.ResourceType_Secret,
 			Name: name,
@@ -61,7 +61,7 @@ func NewSecret(name string) *secret {
 	return secret
 }
 
-func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) (*secrets.SecretClient, error) {
+func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) (*SecretClient, error) {
 	allPerms := append([]SecretPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -81,10 +81,10 @@ func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermiss
 		return nil, registerResult.Err
 	}
 
-	err := s.manager.registerPolicy(registerResult.Identifier, actions...)
+	err := s.manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
 		return nil, err
 	}
 
-	return secrets.NewSecretClient(s.name)
+	return NewSecretClient(s.name)
 }
