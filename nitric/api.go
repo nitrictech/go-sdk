@@ -48,7 +48,6 @@ type Route interface {
 type route struct {
 	path    string
 	api     *api
-	handler Handler[httpx.Ctx]
 	manager *manager
 }
 
@@ -226,7 +225,6 @@ type api struct {
 	securityRules map[string]interface{}
 	security      []OidcOptions
 	path          string
-	handler       Handler[httpx.Ctx]
 }
 
 // NewApi Registers a new API Resource.
