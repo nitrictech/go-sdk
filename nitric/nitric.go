@@ -24,6 +24,7 @@ import (
 	"github.com/nitrictech/go-sdk/nitric/storage"
 	"github.com/nitrictech/go-sdk/nitric/topics"
 	"github.com/nitrictech/go-sdk/nitric/websockets"
+	"github.com/nitrictech/go-sdk/nitric/workers"
 )
 
 var NewApi = apis.NewApi
@@ -35,3 +36,7 @@ var NewSqlDatabase = sql.NewSqlDatabase
 var NewBucket = storage.NewBucket
 var NewTopic = topics.NewTopic
 var NewWebsocket = websockets.NewWebsocket
+
+func Run() error {
+	return workers.GetDefaultManager().Run()
+}

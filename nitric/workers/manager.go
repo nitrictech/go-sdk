@@ -137,12 +137,7 @@ func (m *Manager) RegisterPolicy(res *v1.ResourceIdentifier, actions ...v1.Actio
 	return nil
 }
 
-// Run will run the service and callback the required handlers when events are received.
-func Run() error {
-	return defaultManager.run()
-}
-
-func (m *Manager) run() error {
+func (m *Manager) Run() error {
 	wg := sync.WaitGroup{}
 	errList := &multierror.ErrorList{}
 
