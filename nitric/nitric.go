@@ -39,6 +39,9 @@ var (
 	NewWebsocket   = websockets.NewWebsocket
 )
 
-func Run() error {
-	return workers.GetDefaultManager().Run()
+func Run() {
+	err := workers.GetDefaultManager().Run()
+	if err != nil {
+		panic(err)
+	}
 }
