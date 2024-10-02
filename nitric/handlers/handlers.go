@@ -27,8 +27,6 @@ type (
 // func() error
 // func(*T)
 // func(*T) error
-// func(*T) *T
-// func(*T) (*T, error)
 // Handler[T]
 // If the function is not a valid type, an error is returned
 func HandlerFromInterface[T any](handler interface{}) (Handler[T], error) {
@@ -49,7 +47,7 @@ func HandlerFromInterface[T any](handler interface{}) (Handler[T], error) {
 			return nil
 		}
 	case func(*T) error:
-		handlerType = Handler[T](handlerType)
+		typedHandler = Handler[T](handlerType)
 	case Handler[T]:
 		typedHandler = handlerType
 
