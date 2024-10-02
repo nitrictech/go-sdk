@@ -14,12 +14,14 @@
 
 package apis
 
+import "net/textproto"
+
 type Request interface {
 	Method() string
 	Path() string
 	Data() []byte
 	Query() map[string][]string
-	Headers() map[string][]string
+	Headers() textproto.MIMEHeader
 	PathParams() map[string]string
 }
 
@@ -28,7 +30,7 @@ type HttpRequest struct {
 	path       string
 	data       []byte
 	query      map[string][]string
-	headers    map[string][]string
+	headers    textproto.MIMEHeader
 	pathParams map[string]string
 }
 
@@ -48,7 +50,7 @@ func (h *HttpRequest) Query() map[string][]string {
 	return h.query
 }
 
-func (h *HttpRequest) Headers() map[string][]string {
+func (h *HttpRequest) Headers() textproto.MIMEHeader {
 	return h.headers
 }
 

@@ -14,7 +14,11 @@
 
 package apis
 
-import apispb "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
+import (
+	"net/textproto"
+
+	apispb "github.com/nitrictech/nitric/core/pkg/proto/apis/v1"
+)
 
 type Ctx struct {
 	id       string
@@ -46,7 +50,7 @@ func (c *Ctx) ToClientMessage() *apispb.ClientMessage {
 func NewCtx(msg *apispb.ServerMessage) *Ctx {
 	req := msg.GetHttpRequest()
 
-	headers := make(map[string][]string)
+	headers := make(textproto.MIMEHeader)
 	for k, v := range req.Headers {
 		headers[k] = v.GetValue()
 	}
