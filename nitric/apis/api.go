@@ -169,8 +169,6 @@ func (r *route) Options(handler interface{}, opts ...MethodOption) {
 // Api Resource represents an HTTP API, capable of routing and securing incoming HTTP requests to handlers.
 // path is the route path matcher e.g. '/home'. Supports path params via colon prefix e.g. '/customers/:customerId'
 // handler the handler to register for callbacks.
-//
-// Note: to chain handler use handler.ComposeHttpMiddlware()
 type Api interface {
 	// Get adds a Get method handler to the path with any specified opts.
 	// Valid function signatures:
@@ -246,7 +244,6 @@ type api struct {
 }
 
 // Get adds a Get method handler to the path with any specified opts.
-// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Get(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -255,7 +252,6 @@ func (a *api) Get(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Post adds a Post method handler to the path with any specified opts.
-// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Post(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -264,7 +260,6 @@ func (a *api) Post(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Patch adds a Patch method handler to the path with any specified opts.
-// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Patch(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -273,7 +268,6 @@ func (a *api) Patch(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Put adds a Put method handler to the path with any specified opts.
-// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Put(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -282,7 +276,6 @@ func (a *api) Put(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Delete adds a Delete method handler to the path with any specified opts.
-// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Delete(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
@@ -291,7 +284,6 @@ func (a *api) Delete(match string, handler interface{}, opts ...MethodOption) {
 }
 
 // Options adds an Options method handler to the path with any specified opts.
-// Note: to chain handler use handler.ComposeHttpMiddlware()
 func (a *api) Options(match string, handler interface{}, opts ...MethodOption) {
 	r := a.NewRoute(match)
 
