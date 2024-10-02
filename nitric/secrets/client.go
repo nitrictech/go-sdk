@@ -33,11 +33,11 @@ type SecretClientIface interface {
 	// Name - Return the name of this secret
 	Name() string
 	// Put - Store a new value in this secret, returning a reference to the new version created
-	Put(context.Context, []byte) (string, error)
+	Put(ctx context.Context, value []byte) (string, error)
 	// Access - Access the latest version of this secret
-	Access(context.Context) (SecretValue, error)
+	Access(ctx context.Context) (SecretValue, error)
 	// AccessVersion - Access a specific version of the secret
-	AccessVersion(context.Context, string) (SecretValue, error)
+	AccessVersion(ctx context.Context, version string) (SecretValue, error)
 }
 
 var _ SecretClientIface = (*SecretClient)(nil)
@@ -54,12 +54,12 @@ func (s *SecretClient) Name() string {
 }
 
 // Put - Store a new value in this secret, returning a reference to the new version created
-func (s *SecretClient) Put(ctx context.Context, sec []byte) (string, error) {
+func (s *SecretClient) Put(ctx context.Context, value []byte) (string, error) {
 	resp, err := s.secretClient.Put(ctx, &v1.SecretPutRequest{
 		Secret: &v1.Secret{
 			Name: s.name,
 		},
-		Value: sec,
+		Value: value,
 	})
 	if err != nil {
 		return "", errors.FromGrpcError(err)

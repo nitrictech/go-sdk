@@ -35,7 +35,7 @@ type TopicClientIface interface {
 	Name() string
 
 	// Publish will publish the provided events on the topic.
-	Publish(context.Context, map[string]interface{}, ...PublishOption) error
+	Publish(ctx context.Context, message map[string]interface{}, options ...PublishOption) error
 }
 
 type TopicClient struct {

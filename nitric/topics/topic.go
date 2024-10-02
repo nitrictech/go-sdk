@@ -33,7 +33,7 @@ const (
 
 type SubscribableTopic interface {
 	// Allow requests the given permissions to the topic.
-	Allow(TopicPermission, ...TopicPermission) *TopicClient
+	Allow(permission TopicPermission, permissions ...TopicPermission) *TopicClient
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
 	// Valid function signatures for handler are:
@@ -43,7 +43,7 @@ type SubscribableTopic interface {
 	//	func(*topics.Ctx)
 	//	func(*topics.Ctx) error
 	//	Handler[topics.Ctx]
-	Subscribe(interface{})
+	Subscribe(handler interface{})
 }
 
 type subscribableTopic struct {

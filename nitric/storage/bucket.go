@@ -34,7 +34,7 @@ type bucket struct {
 
 type Bucket interface {
 	// Allow requests the given permissions to the bucket.
-	Allow(BucketPermission, ...BucketPermission) *BucketClient
+	Allow(permission BucketPermission, permissions ...BucketPermission) *BucketClient
 
 	// On registers a handler for a specific event type on the bucket.
 	// Valid function signatures for handler are:

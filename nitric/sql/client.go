@@ -28,7 +28,7 @@ type SqlClientIface interface {
 	// Name - The name of the store
 	Name() string
 	// Get a value from the store
-	ConnectionString(context.Context) (string, error)
+	ConnectionString(ctx context.Context) (string, error)
 }
 
 type SqlClient struct {

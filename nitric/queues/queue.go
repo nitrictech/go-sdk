@@ -32,7 +32,7 @@ var QueueEverything []QueuePermission = []QueuePermission{QueueEnqueue, QueueDeq
 
 type Queue interface {
 	// Allow requests the given permissions to the queue.
-	Allow(QueuePermission, ...QueuePermission) *QueueClient
+	Allow(permission QueuePermission, permissions ...QueuePermission) *QueueClient
 }
 
 type queue struct {

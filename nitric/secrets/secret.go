@@ -32,7 +32,7 @@ var SecretEverything []SecretPermission = []SecretPermission{SecretAccess, Secre
 
 type Secret interface {
 	// Allow requests the given permissions to the secret.
-	Allow(SecretPermission, ...SecretPermission) *SecretClient
+	Allow(permission SecretPermission, permissions ...SecretPermission) *SecretClient
 }
 
 type secret struct {

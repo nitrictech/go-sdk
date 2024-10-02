@@ -54,13 +54,13 @@ type KvStoreClientIface interface {
 	// Name - The name of the store
 	Name() string
 	// Get a value from the store
-	Get(context.Context, string) (map[string]interface{}, error)
+	Get(ctx context.Context, key string) (map[string]interface{}, error)
 	// Set a value in the store
-	Set(context.Context, string, map[string]interface{}) error
+	Set(ctx context.Context, key string, value map[string]interface{}) error
 	// Delete a value from the store
-	Delete(context.Context, string) error
+	Delete(ctx context.Context, key string) error
 	// Return an async iterable of keys in the store
-	Keys(context.Context, ...ScanKeysOption) (*KeyStream, error)
+	Keys(ctx context.Context, options ...ScanKeysOption) (*KeyStream, error)
 }
 
 type KvStoreClient struct {

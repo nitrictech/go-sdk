@@ -28,9 +28,9 @@ type QueueClientIface interface {
 	// Name - The name of the queue
 	Name() string
 	// Enqueue - Push a number of messages to a queue
-	Enqueue(context.Context, []map[string]interface{}) ([]*FailedMessage, error)
+	Enqueue(ctx context.Context, messages []map[string]interface{}) ([]*FailedMessage, error)
 	// Dequeue - Retrieve messages from a queue to a maximum of the given depth
-	Dequeue(context.Context, int) ([]ReceivedMessage, error)
+	Dequeue(ctx context.Context, depth int) ([]ReceivedMessage, error)
 }
 
 type QueueClient struct {

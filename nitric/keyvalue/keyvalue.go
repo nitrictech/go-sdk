@@ -33,7 +33,7 @@ var KvStoreEverything []KvStorePermission = []KvStorePermission{KvStoreSet, KvSt
 
 type KvStore interface {
 	// Allow requests the given permissions to the key/value store.
-	Allow(KvStorePermission, ...KvStorePermission) KvStoreClientIface
+	Allow(permission KvStorePermission, permissions ...KvStorePermission) KvStoreClientIface
 }
 
 type kvstore struct {
