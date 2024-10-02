@@ -15,9 +15,9 @@
 package apis
 
 type (
-	ApiOption    = func(api *api)
-	RouteOption  = func(route Route)
-	MethodOption = func(mo *methodOptions)
+	ApiOption    func(api *api)
+	RouteOption  func(route Route)
+	MethodOption func(mo *methodOptions)
 )
 
 type JwtSecurityRule struct {
@@ -30,7 +30,7 @@ type methodOptions struct {
 	securityDisabled bool
 }
 
-func WithMiddleware(middleware ApiMiddleware) ApiOption {
+func WithMiddleware(middleware Middleware) ApiOption {
 	return func(api *api) {
 		api.middleware = middleware
 	}

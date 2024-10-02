@@ -19,7 +19,7 @@ import (
 	"path"
 	"strings"
 
-	. "github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/nitric/handlers"
 	resources "github.com/nitrictech/go-sdk/nitric/resource"
 	"github.com/nitrictech/go-sdk/nitric/workers"
 	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
@@ -47,13 +47,13 @@ type Route interface {
 	ApiName() string
 }
 
-type ApiMiddleware = Middleware[Ctx]
+type Middleware = handlers.Middleware[Ctx]
 
 type route struct {
 	path       string
 	api        *api
 	manager    *workers.Manager
-	middleware ApiMiddleware
+	middleware Middleware
 }
 
 func (a *api) NewRoute(match string, opts ...RouteOption) Route {
@@ -90,7 +90,7 @@ func (r *route) AddMethodHandler(methods []string, handler interface{}, opts ...
 		o(mo)
 	}
 
-	typedHandler, err := HandlerFromInterface[Ctx](handler)
+	typedHandler, err := handlers.HandlerFromInterface[Ctx](handler)
 	if err != nil {
 		panic(err)
 	}
@@ -242,7 +242,7 @@ type api struct {
 	securityRules map[string]interface{}
 	security      []OidcOptions
 	path          string
-	middleware    ApiMiddleware
+	middleware    Middleware
 }
 
 // Get adds a Get method handler to the path with any specified opts.

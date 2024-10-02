@@ -27,7 +27,7 @@ import (
 	"github.com/nitrictech/protoutils"
 )
 
-type PublishOption = func(*v1.TopicPublishRequest)
+type PublishOption func(*v1.TopicPublishRequest)
 
 // TopicClientIface for pub/sub async messaging.
 type TopicClientIface interface {

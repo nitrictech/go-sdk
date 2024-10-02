@@ -50,7 +50,6 @@ func HandlerFromInterface[T any](handler interface{}) (Handler[T], error) {
 		typedHandler = Handler[T](handlerType)
 	case Handler[T]:
 		typedHandler = handlerType
-
 	default:
 		return nil, fmt.Errorf("invalid handler type: %T", handler)
 	}

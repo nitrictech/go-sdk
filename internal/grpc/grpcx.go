@@ -17,8 +17,9 @@ package grpcx
 import (
 	"sync"
 
-	"github.com/nitrictech/go-sdk/constants"
 	"google.golang.org/grpc"
+
+	"github.com/nitrictech/go-sdk/constants"
 )
 
 type grpcManager struct {

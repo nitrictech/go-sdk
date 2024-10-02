@@ -27,15 +27,17 @@ import (
 	"github.com/nitrictech/go-sdk/nitric/workers"
 )
 
-var NewApi = apis.NewApi
-var NewKv = keyvalue.NewKv
-var NewQueue = queues.NewQueue
-var NewSchedule = schedules.NewSchedule
-var NewSecret = secrets.NewSecret
-var NewSqlDatabase = sql.NewSqlDatabase
-var NewBucket = storage.NewBucket
-var NewTopic = topics.NewTopic
-var NewWebsocket = websockets.NewWebsocket
+var (
+	NewApi         = apis.NewApi
+	NewKv          = keyvalue.NewKv
+	NewQueue       = queues.NewQueue
+	NewSchedule    = schedules.NewSchedule
+	NewSecret      = secrets.NewSecret
+	NewSqlDatabase = sql.NewSqlDatabase
+	NewBucket      = storage.NewBucket
+	NewTopic       = topics.NewTopic
+	NewWebsocket   = websockets.NewWebsocket
+)
 
 func Run() error {
 	return workers.GetDefaultManager().Run()
