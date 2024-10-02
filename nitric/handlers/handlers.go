@@ -48,6 +48,8 @@ func HandlerFromInterface[T any](handler interface{}) (Handler[T], error) {
 			handlerType(ctx)
 			return nil
 		}
+	case func(*T) error:
+		handlerType = Handler[T](handlerType)
 	case Handler[T]:
 		typedHandler = handlerType
 
