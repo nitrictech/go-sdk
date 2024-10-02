@@ -33,7 +33,7 @@ const (
 
 type SubscribableTopic interface {
 	// Allow requests the given permissions to the topic.
-	Allow(TopicPermission, ...TopicPermission) (*TopicClient, error)
+	Allow(TopicPermission, ...TopicPermission) *TopicClient
 
 	// Subscribe will register and start a subscription handler that will be called for all events from this topic.
 	// Valid function signatures for handler are:
@@ -72,7 +72,7 @@ func NewTopic(name string) SubscribableTopic {
 	return topic
 }
 
-func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...TopicPermission) (*TopicClient, error) {
+func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...TopicPermission) *TopicClient {
 	allPerms := append([]TopicPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -81,21 +81,26 @@ func (t *subscribableTopic) Allow(permission TopicPermission, permissions ...Top
 		case TopicPublish:
 			actions = append(actions, v1.Action_TopicPublish)
 		default:
-			return nil, fmt.Errorf("TopicPermission %s unknown", perm)
+			panic(fmt.Sprintf("TopicPermission %s unknown", perm))
 		}
 	}
 
 	registerResult := <-t.registerChan
 	if registerResult.Err != nil {
-		return nil, registerResult.Err
+		panic(registerResult.Err)
 	}
 
 	err := t.manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return NewTopicClient(t.name)
+	client, err := NewTopicClient(t.name)
+	if err != nil {
+		panic(err)
+	}
+
+	return client
 }
 
 func (t *subscribableTopic) Subscribe(handler interface{}) {

@@ -33,7 +33,7 @@ var KvStoreEverything []KvStorePermission = []KvStorePermission{KvStoreSet, KvSt
 
 type KvStore interface {
 	// Allow requests the given permissions to the key/value store.
-	Allow(KvStorePermission, ...KvStorePermission) (KvStoreClientIface, error)
+	Allow(KvStorePermission, ...KvStorePermission) KvStoreClientIface
 }
 
 type kvstore struct {
@@ -63,7 +63,7 @@ func NewKv(name string) *kvstore {
 	return kvstore
 }
 
-func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) (KvStoreClientIface, error) {
+func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePermission) KvStoreClientIface {
 	allPerms := append([]KvStorePermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -76,20 +76,25 @@ func (k *kvstore) Allow(permission KvStorePermission, permissions ...KvStorePerm
 		case KvStoreDelete:
 			actions = append(actions, v1.Action_KeyValueStoreDelete)
 		default:
-			return nil, fmt.Errorf("KvStorePermission %s unknown", perm)
+			panic(fmt.Sprintf("KvStorePermission %s unknown", perm))
 		}
 	}
 
 	registerResult := <-k.registerChan
 
 	if registerResult.Err != nil {
-		return nil, registerResult.Err
+		panic(registerResult.Err)
 	}
 
 	err := k.manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return NewKvStoreClient(k.name)
+	client, err := NewKvStoreClient(k.name)
+	if err != nil {
+		panic(err)
+	}
+
+	return client
 }

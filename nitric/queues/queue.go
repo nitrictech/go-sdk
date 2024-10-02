@@ -32,7 +32,7 @@ var QueueEverything []QueuePermission = []QueuePermission{QueueEnqueue, QueueDeq
 
 type Queue interface {
 	// Allow requests the given permissions to the queue.
-	Allow(QueuePermission, ...QueuePermission) (*QueueClient, error)
+	Allow(QueuePermission, ...QueuePermission) *QueueClient
 }
 
 type queue struct {
@@ -62,7 +62,7 @@ func NewQueue(name string) *queue {
 	return queue
 }
 
-func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) (*QueueClient, error) {
+func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission) *QueueClient {
 	allPerms := append([]QueuePermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -73,19 +73,24 @@ func (q *queue) Allow(permission QueuePermission, permissions ...QueuePermission
 		case QueueEnqueue:
 			actions = append(actions, v1.Action_QueueEnqueue)
 		default:
-			return nil, fmt.Errorf("QueuePermission %s unknown", perm)
+			panic(fmt.Sprintf("QueuePermission %s unknown", perm))
 		}
 	}
 
 	registerResult := <-q.registerChan
 	if registerResult.Err != nil {
-		return nil, registerResult.Err
+		panic(registerResult.Err)
 	}
 
 	err := q.manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return NewQueueClient(q.name)
+	client, err := NewQueueClient(q.name)
+	if err != nil {
+		panic(err)
+	}
+
+	return client
 }

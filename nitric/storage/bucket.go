@@ -34,7 +34,7 @@ type bucket struct {
 
 type Bucket interface {
 	// Allow requests the given permissions to the bucket.
-	Allow(BucketPermission, ...BucketPermission) (*BucketClient, error)
+	Allow(BucketPermission, ...BucketPermission) *BucketClient
 
 	// On registers a handler for a specific event type on the bucket.
 	// Valid function signatures for handler are:
@@ -75,7 +75,7 @@ func NewBucket(name string) Bucket {
 	return bucket
 }
 
-func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) (*BucketClient, error) {
+func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermission) *BucketClient {
 	allPerms := append([]BucketPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -88,21 +88,26 @@ func (b *bucket) Allow(permission BucketPermission, permissions ...BucketPermiss
 		case BucketDelete:
 			actions = append(actions, v1.Action_BucketFileDelete)
 		default:
-			return nil, fmt.Errorf("bucketPermission %s unknown", perm)
+			panic(fmt.Sprintf("bucketPermission %s unknown", perm))
 		}
 	}
 
 	registerResult := <-b.registerChan
 	if registerResult.Err != nil {
-		return nil, registerResult.Err
+		panic(registerResult.Err)
 	}
 
 	err := b.manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return NewBucketClient(b.name)
+	client, err := NewBucketClient(b.name)
+	if err != nil {
+		panic(err)
+	}
+
+	return client
 }
 
 func (b *bucket) On(eventType EventType, notificationPrefixFilter string, handler interface{}) {

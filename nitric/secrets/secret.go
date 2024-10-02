@@ -32,7 +32,7 @@ var SecretEverything []SecretPermission = []SecretPermission{SecretAccess, Secre
 
 type Secret interface {
 	// Allow requests the given permissions to the secret.
-	Allow(SecretPermission, ...SecretPermission) (*SecretClient, error)
+	Allow(SecretPermission, ...SecretPermission) *SecretClient
 }
 
 type secret struct {
@@ -61,7 +61,7 @@ func NewSecret(name string) *secret {
 	return secret
 }
 
-func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) (*SecretClient, error) {
+func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermission) *SecretClient {
 	allPerms := append([]SecretPermission{permission}, permissions...)
 
 	actions := []v1.Action{}
@@ -72,19 +72,24 @@ func (s *secret) Allow(permission SecretPermission, permissions ...SecretPermiss
 		case SecretPut:
 			actions = append(actions, v1.Action_SecretPut)
 		default:
-			return nil, fmt.Errorf("secretPermission %s unknown", perm)
+			panic(fmt.Sprintf("secretPermission %s unknown", perm))
 		}
 	}
 
 	registerResult := <-s.registerChan
 	if registerResult.Err != nil {
-		return nil, registerResult.Err
+		panic(registerResult.Err)
 	}
 
 	err := s.manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return NewSecretClient(s.name)
+	client, err := NewSecretClient(s.name)
+	if err != nil {
+		panic(err)
+	}
+
+	return client
 }
