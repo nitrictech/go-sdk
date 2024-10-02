@@ -53,7 +53,7 @@ type websocket struct {
 }
 
 // NewWebsocket - Create a new Websocket API resource
-func NewWebsocket(name string) (Websocket, error) {
+func NewWebsocket(name string) Websocket {
 	manager := workers.GetDefaultManager()
 
 	registerResult := <-manager.RegisterResource(&resourcesv1.ResourceDeclareRequest{
@@ -63,19 +63,19 @@ func NewWebsocket(name string) (Websocket, error) {
 		},
 	})
 	if registerResult.Err != nil {
-		return nil, registerResult.Err
+		panic(registerResult.Err)
 	}
 
 	actions := []resourcesv1.Action{resourcesv1.Action_WebsocketManage}
 
 	err := manager.RegisterPolicy(registerResult.Identifier, actions...)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	conn, err := grpcx.GetConnection()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	wClient := websocketsv1.NewWebsocketClient(conn)
@@ -84,7 +84,7 @@ func NewWebsocket(name string) (Websocket, error) {
 		manager: manager,
 		client:  wClient,
 		name:    name,
-	}, nil
+	}
 }
 
 func (w *websocket) Name() string {

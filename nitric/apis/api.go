@@ -295,7 +295,7 @@ func (a *api) Options(match string, handler interface{}, opts ...MethodOption) {
 // NewApi Registers a new API Resource.
 //
 // The returned API object can be used to register Routes and Methods, with Handlers.
-func NewApi(name string, opts ...ApiOption) (Api, error) {
+func NewApi(name string, opts ...ApiOption) Api {
 	a := &api{
 		name:    name,
 		routes:  map[string]Route{},
@@ -314,7 +314,7 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 		for _, oidcOption := range a.security {
 			err := attachOidc(a.name, oidcOption, a.manager)
 			if err != nil {
-				return nil, err
+				panic(err)
 			}
 
 			if apiResource.GetSecurity() == nil {
@@ -336,8 +336,8 @@ func NewApi(name string, opts ...ApiOption) (Api, error) {
 		},
 	})
 	if result.Err != nil {
-		return nil, result.Err
+		panic(result.Err)
 	}
 
-	return a, nil
+	return a
 }

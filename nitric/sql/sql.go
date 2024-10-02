@@ -32,7 +32,7 @@ func WithMigrationsPath(path string) sqlDatabaseOption {
 }
 
 // NewSqlDatabase - Create a new Sql Database resource
-func NewSqlDatabase(name string, opts ...sqlDatabaseOption) (*SqlClient, error) {
+func NewSqlDatabase(name string, opts ...sqlDatabaseOption) *SqlClient {
 	resourceConfig := &v1.ResourceDeclareRequest_SqlDatabase{
 		SqlDatabase: &v1.SqlDatabaseResource{},
 	}
@@ -55,5 +55,10 @@ func NewSqlDatabase(name string, opts ...sqlDatabaseOption) (*SqlClient, error) 
 		<-registerChan
 	}()
 
-	return NewSqlClient(name)
+	client, err := NewSqlClient(name)
+	if err != nil {
+		panic(err)
+	}
+
+	return client
 }
