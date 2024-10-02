@@ -20,9 +20,9 @@ import (
 	"io"
 
 	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
+	"github.com/nitrictech/go-sdk/internal/handlers"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	"github.com/nitrictech/go-sdk/nitric/handlers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )
 

@@ -17,7 +17,7 @@ package topics
 import (
 	"fmt"
 
-	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/internal/handlers"
 	"github.com/nitrictech/go-sdk/nitric/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
 	topicspb "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"

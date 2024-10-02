@@ -17,7 +17,7 @@ package schedules
 import (
 	"strings"
 
-	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/internal/handlers"
 	"github.com/nitrictech/go-sdk/nitric/workers"
 	schedulespb "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
 )

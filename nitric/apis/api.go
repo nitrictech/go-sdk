@@ -19,7 +19,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/nitrictech/go-sdk/nitric/handlers"
+	"github.com/nitrictech/go-sdk/internal/handlers"
 	resources "github.com/nitrictech/go-sdk/nitric/resource"
 	"github.com/nitrictech/go-sdk/nitric/workers"
 	resourcev1 "github.com/nitrictech/nitric/core/pkg/proto/resources/v1"
@@ -47,6 +47,7 @@ type Route interface {
 	ApiName() string
 }
 
+type Handler = handlers.Handler[Ctx]
 type Middleware = handlers.Middleware[Ctx]
 
 type route struct {
