@@ -47,8 +47,10 @@ type Route interface {
 	ApiName() string
 }
 
-type Handler = handlers.Handler[Ctx]
-type Middleware = handlers.Middleware[Ctx]
+type (
+	Handler    = handlers.Handler[Ctx]
+	Middleware = handlers.Middleware[Ctx]
+)
 
 type route struct {
 	path       string
