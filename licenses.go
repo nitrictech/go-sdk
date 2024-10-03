@@ -18,13 +18,16 @@ package main
 // This main package is a workaround for binary license scanning that forces transitive dependencies in
 // Code we're distributing to be analyzed
 import (
-	_ "github.com/nitrictech/go-sdk/api/keyvalue"
-	_ "github.com/nitrictech/go-sdk/api/queues"
-	_ "github.com/nitrictech/go-sdk/api/secrets"
-	_ "github.com/nitrictech/go-sdk/api/storage"
-	_ "github.com/nitrictech/go-sdk/api/topics"
 	_ "github.com/nitrictech/go-sdk/nitric"
-	_ "github.com/nitrictech/go-sdk/workers"
+	_ "github.com/nitrictech/go-sdk/nitric/apis"
+	_ "github.com/nitrictech/go-sdk/nitric/errors"
+	_ "github.com/nitrictech/go-sdk/nitric/keyvalue"
+	_ "github.com/nitrictech/go-sdk/nitric/queues"
+	_ "github.com/nitrictech/go-sdk/nitric/schedules"
+	_ "github.com/nitrictech/go-sdk/nitric/secrets"
+	_ "github.com/nitrictech/go-sdk/nitric/storage"
+	_ "github.com/nitrictech/go-sdk/nitric/topics"
+	_ "github.com/nitrictech/go-sdk/nitric/websockets"
 )
 
 func main() {}

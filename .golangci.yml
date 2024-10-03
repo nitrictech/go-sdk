@@ -1,8 +1,5 @@
 run:
   timeout: "5m"
-  skip-files:
-    - tools/tools.go
-    - doc.go
 
 linters:
   disable-all: true
@@ -23,6 +20,9 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-files:
+    - tools/tools.go
+    - doc.go
   exclude-rules:
     - path: _test\.go
       linters:

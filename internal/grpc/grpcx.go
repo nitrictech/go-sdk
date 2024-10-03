@@ -12,17 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build tools
-// +build tools
-
-package tools
+package grpcx
 
 import (
-	_ "github.com/golang/mock/mockgen"
-	_ "github.com/golang/protobuf/protoc-gen-go"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	_ "github.com/google/addlicense"
-	_ "github.com/onsi/ginkgo/ginkgo"
-	_ "github.com/uw-labs/lichen"
-	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
+	"sync"
+
+	"google.golang.org/grpc"
+
+	"github.com/nitrictech/go-sdk/constants"
 )
+
+type grpcManager struct {
+	conn      grpc.ClientConnInterface
+	connMutex sync.Mutex
+}
+
+var m = grpcManager{
+	conn:      nil,
+	connMutex: sync.Mutex{},
+}
+
+func GetConnection() (grpc.ClientConnInterface, error) {
+	m.connMutex.Lock()
+	defer m.connMutex.Unlock()
+
+	if m.conn == nil {
+		conn, err := grpc.NewClient(constants.NitricAddress(), constants.DefaultOptions()...)
+		if err != nil {
+			return nil, err
+		}
+		m.conn = conn
+	}
+
+	return m.conn, nil
+}
