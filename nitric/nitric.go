@@ -16,6 +16,7 @@ package nitric
 
 import (
 	"github.com/nitrictech/go-sdk/nitric/apis"
+	"github.com/nitrictech/go-sdk/nitric/batch"
 	"github.com/nitrictech/go-sdk/nitric/keyvalue"
 	"github.com/nitrictech/go-sdk/nitric/queues"
 	"github.com/nitrictech/go-sdk/nitric/schedules"
@@ -37,6 +38,7 @@ var (
 	NewBucket      = storage.NewBucket
 	NewTopic       = topics.NewTopic
 	NewWebsocket   = websockets.NewWebsocket
+	NewJob         = batch.NewJob
 )
 
 func Run() {

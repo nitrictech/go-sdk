@@ -48,6 +48,7 @@ generate:
 	go run github.com/golang/mock/mockgen github.com/nitrictech/nitric/core/pkg/proto/storage/v1 StorageClient > mocks/storage.go
 	go run github.com/golang/mock/mockgen github.com/nitrictech/nitric/core/pkg/proto/secrets/v1 SecretManagerClient > mocks/secrets.go
 	go run github.com/golang/mock/mockgen github.com/nitrictech/nitric/core/pkg/proto/topics/v1 TopicsClient > mocks/topics.go
+	go run github.com/golang/mock/mockgen github.com/nitrictech/nitric/core/pkg/proto/batch/v1 BatchClient > mocks/batch.go
 	go run github.com/golang/mock/mockgen -package mock_v1 google.golang.org/grpc ClientConnInterface > mocks/grpc_clientconn.go
 
 # Runs tests for coverage upload to codecov.io
