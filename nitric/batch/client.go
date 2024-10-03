@@ -17,12 +17,13 @@ package batch
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/nitrictech/go-sdk/constants"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/batch/v1"
 	"github.com/nitrictech/protoutils"
-	"google.golang.org/grpc"
 )
 
 // Batch
