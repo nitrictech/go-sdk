@@ -16,7 +16,6 @@ package topics
 
 import (
 	"context"
-	"io"
 
 	errorsstd "errors"
 
@@ -24,6 +23,7 @@ import (
 	"github.com/nitrictech/go-sdk/internal/handlers"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
+	"github.com/nitrictech/go-sdk/nitric/workers"
 	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
@@ -45,45 +45,30 @@ func (s *subscriptionWorker) Start(ctx context.Context) error {
 		},
 	}
 
-	// Create the request stream and send the initial request
-	stream, err := s.client.Subscribe(ctx)
-	if err != nil {
-		return err
+	createStream := func(ctx context.Context) (workers.Stream[v1.ClientMessage, v1.RegistrationResponse, *v1.ServerMessage], error) {
+		return s.client.Subscribe(ctx)
 	}
 
-	err = stream.Send(initReq)
-	if err != nil {
-		return err
-	}
-	for {
-		var ctx *Ctx
+	handleSrvMsg := func(msg *v1.ServerMessage) (*v1.ClientMessage, error) {
+		if msg.GetMessageRequest() != nil {
+			handlerCtx := NewCtx(msg)
 
-		resp, err := stream.Recv()
-
-		if errorsstd.Is(err, io.EOF) {
-			err = stream.CloseSend()
+			err := s.handler(handlerCtx)
 			if err != nil {
-				return err
+				handlerCtx.WithError(err)
 			}
 
-			return nil
-		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetMessageRequest() != nil {
-			ctx = NewCtx(resp)
-			err = s.handler(ctx)
-			if err != nil {
-				ctx.WithError(err)
-			}
-
-			err = stream.Send(ctx.ToClientMessage())
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
+			return handlerCtx.ToClientMessage(), nil
 		}
+
+		return nil, errors.NewWithCause(
+			codes.Internal,
+			"SubscriptionWorker: Unhandled server message",
+			errorsstd.New("unhandled server message"),
+		)
 	}
+
+	return workers.HandleStream(ctx, createStream, initReq, handleSrvMsg)
 }
 
 func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
