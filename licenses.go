@@ -20,6 +20,7 @@ package main
 import (
 	_ "github.com/nitrictech/go-sdk/nitric"
 	_ "github.com/nitrictech/go-sdk/nitric/apis"
+	_ "github.com/nitrictech/go-sdk/nitric/batch"
 	_ "github.com/nitrictech/go-sdk/nitric/errors"
 	_ "github.com/nitrictech/go-sdk/nitric/keyvalue"
 	_ "github.com/nitrictech/go-sdk/nitric/queues"

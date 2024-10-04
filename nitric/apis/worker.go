@@ -17,7 +17,6 @@ package apis
 import (
 	"context"
 	errorsstd "errors"
-	"io"
 
 	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/internal/handlers"
@@ -40,7 +39,7 @@ type apiWorkerOpts struct {
 
 var _ workers.StreamWorker = (*apiWorker)(nil)
 
-// Start implements Worker.
+// Start runs the API worker, creating a stream to the Nitric server
 func (a *apiWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
@@ -48,46 +47,40 @@ func (a *apiWorker) Start(ctx context.Context) error {
 		},
 	}
 
-	stream, err := a.client.Serve(ctx)
-	if err != nil {
-		return err
+	createStream := func(ctx context.Context) (workers.Stream[v1.ClientMessage, v1.RegistrationResponse, *v1.ServerMessage], error) {
+		return a.client.Serve(ctx)
 	}
 
-	err = stream.Send(initReq)
-	if err != nil {
-		return err
-	}
-
-	for {
-		var ctx *Ctx
-
-		resp, err := stream.Recv()
-
-		if errorsstd.Is(err, io.EOF) {
-			err = stream.CloseSend()
-			if err != nil {
-				return err
-			}
-
-			return nil
-		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetHttpRequest() != nil {
-			ctx = NewCtx(resp)
-
-			err = a.Handler(ctx)
-			if err != nil {
-				ctx.WithError(err)
-			}
-
-			err = stream.Send(ctx.ToClientMessage())
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
+	handlerSrvMsg := func(msg *v1.ServerMessage) (*v1.ClientMessage, error) {
+		if msg.GetRegistrationResponse() != nil {
+			// No need to respond to the registration response
+			return nil, nil
 		}
+
+		if msg.GetHttpRequest() != nil {
+			handlerCtx := NewCtx(msg)
+
+			err := a.Handler(handlerCtx)
+			if err != nil {
+				handlerCtx.WithError(err)
+			}
+
+			return handlerCtx.ToClientMessage(), nil
+		}
+
+		return nil, errors.NewWithCause(
+			codes.Internal,
+			"ApiWorker: Unhandled server message",
+			errorsstd.New("unhandled server message"),
+		)
 	}
+
+	return workers.HandleStream(
+		ctx,
+		createStream,
+		initReq,
+		handlerSrvMsg,
+	)
 }
 
 func newApiWorker(opts *apiWorkerOpts) *apiWorker {
