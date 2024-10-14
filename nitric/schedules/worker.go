@@ -64,7 +64,6 @@ func (i *scheduleWorker) Start(ctx context.Context) error {
 			"ScheduleWorker: Unhandled server message",
 			errorsstd.New("unhandled server message"),
 		)
-
 	}
 
 	return workers.HandleStream(
