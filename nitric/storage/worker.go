@@ -12,93 +12,77 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package topics
+package storage
 
 import (
 	"context"
-	"io"
-
 	errorsstd "errors"
 
 	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/internal/handlers"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
+	"github.com/nitrictech/go-sdk/nitric/workers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/storage/v1"
 )
 
-type subscriptionWorker struct {
-	client              v1.SubscriberClient
+type bucketEventWorker struct {
+	client              v1.StorageListenerClient
 	registrationRequest *v1.RegistrationRequest
 	handler             handlers.Handler[Ctx]
 }
-type subscriptionWorkerOpts struct {
+type bucketEventWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
 	Handler             handlers.Handler[Ctx]
 }
 
-// Start implements Worker.
-func (s *subscriptionWorker) Start(ctx context.Context) error {
+// Start runs the BucketEvent worker, creating a stream to the Nitric server
+func (b *bucketEventWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: s.registrationRequest,
+			RegistrationRequest: b.registrationRequest,
 		},
 	}
 
-	// Create the request stream and send the initial request
-	stream, err := s.client.Subscribe(ctx)
-	if err != nil {
-		return err
+	createStream := func(ctx context.Context) (workers.Stream[v1.ClientMessage, v1.RegistrationResponse, *v1.ServerMessage], error) {
+		return b.client.Listen(ctx)
 	}
 
-	err = stream.Send(initReq)
-	if err != nil {
-		return err
-	}
-	for {
-		var ctx *Ctx
+	handlerSrvMsg := func(msg *v1.ServerMessage) (*v1.ClientMessage, error) {
+		if msg.GetBlobEventRequest() != nil {
+			handlerCtx := NewCtx(msg)
 
-		resp, err := stream.Recv()
-
-		if errorsstd.Is(err, io.EOF) {
-			err = stream.CloseSend()
+			err := b.handler(handlerCtx)
 			if err != nil {
-				return err
+				handlerCtx.WithError(err)
 			}
 
-			return nil
-		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetMessageRequest() != nil {
-			ctx = NewCtx(resp)
-			err = s.handler(ctx)
-			if err != nil {
-				ctx.WithError(err)
-			}
-
-			err = stream.Send(ctx.ToClientMessage())
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
+			return handlerCtx.ToClientMessage(), nil
 		}
+
+		return nil, errors.NewWithCause(
+			codes.Internal,
+			"BucketEventWorker: Unhandled server message",
+			errorsstd.New("unhandled server message"),
+		)
 	}
+
+	return workers.HandleStream(ctx, createStream, initReq, handlerSrvMsg)
 }
 
-func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
+func newBucketEventWorker(opts *bucketEventWorkerOpts) *bucketEventWorker {
 	conn, err := grpcx.GetConnection()
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewSubscriptionWorker: Unable to reach SubscriberClient",
+			"NewBlobEventWorker: Unable to reach StorageListenerClient",
 			err,
 		))
 	}
 
-	client := v1.NewSubscriberClient(conn)
+	client := v1.NewStorageListenerClient(conn)
 
-	return &subscriptionWorker{
+	return &bucketEventWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
 		handler:             opts.Handler,

@@ -12,92 +12,78 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package schedules
+package topics
 
 import (
 	"context"
+
 	errorsstd "errors"
-	"io"
 
 	grpcx "github.com/nitrictech/go-sdk/internal/grpc"
 	"github.com/nitrictech/go-sdk/internal/handlers"
 	"github.com/nitrictech/go-sdk/nitric/errors"
 	"github.com/nitrictech/go-sdk/nitric/errors/codes"
-	v1 "github.com/nitrictech/nitric/core/pkg/proto/schedules/v1"
+	"github.com/nitrictech/go-sdk/nitric/workers"
+	v1 "github.com/nitrictech/nitric/core/pkg/proto/topics/v1"
 )
 
-type scheduleWorker struct {
-	client              v1.SchedulesClient
+type subscriptionWorker struct {
+	client              v1.SubscriberClient
 	registrationRequest *v1.RegistrationRequest
 	handler             handlers.Handler[Ctx]
 }
-type scheduleWorkerOpts struct {
+type subscriptionWorkerOpts struct {
 	RegistrationRequest *v1.RegistrationRequest
 	Handler             handlers.Handler[Ctx]
 }
 
 // Start implements Worker.
-func (i *scheduleWorker) Start(ctx context.Context) error {
+func (s *subscriptionWorker) Start(ctx context.Context) error {
 	initReq := &v1.ClientMessage{
 		Content: &v1.ClientMessage_RegistrationRequest{
-			RegistrationRequest: i.registrationRequest,
+			RegistrationRequest: s.registrationRequest,
 		},
 	}
 
-	// Create the request stream and send the initial request
-	stream, err := i.client.Schedule(ctx)
-	if err != nil {
-		return err
+	createStream := func(ctx context.Context) (workers.Stream[v1.ClientMessage, v1.RegistrationResponse, *v1.ServerMessage], error) {
+		return s.client.Subscribe(ctx)
 	}
 
-	err = stream.Send(initReq)
-	if err != nil {
-		return err
-	}
-	for {
-		var ctx *Ctx
+	handleSrvMsg := func(msg *v1.ServerMessage) (*v1.ClientMessage, error) {
+		if msg.GetMessageRequest() != nil {
+			handlerCtx := NewCtx(msg)
 
-		resp, err := stream.Recv()
-
-		if errorsstd.Is(err, io.EOF) {
-			err = stream.CloseSend()
+			err := s.handler(handlerCtx)
 			if err != nil {
-				return err
+				handlerCtx.WithError(err)
 			}
 
-			return nil
-		} else if err == nil && resp.GetRegistrationResponse() != nil {
-			// There is no need to respond to the registration response
-		} else if err == nil && resp.GetIntervalRequest() != nil {
-			ctx = NewCtx(resp)
-			err = i.handler(ctx)
-			if err != nil {
-				ctx.WithError(err)
-			}
-
-			err = stream.Send(ctx.ToClientMessage())
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
+			return handlerCtx.ToClientMessage(), nil
 		}
+
+		return nil, errors.NewWithCause(
+			codes.Internal,
+			"SubscriptionWorker: Unhandled server message",
+			errorsstd.New("unhandled server message"),
+		)
 	}
+
+	return workers.HandleStream(ctx, createStream, initReq, handleSrvMsg)
 }
 
-func newScheduleWorker(opts *scheduleWorkerOpts) *scheduleWorker {
+func newSubscriptionWorker(opts *subscriptionWorkerOpts) *subscriptionWorker {
 	conn, err := grpcx.GetConnection()
 	if err != nil {
 		panic(errors.NewWithCause(
 			codes.Unavailable,
-			"NewScheduleWorker: Unable to reach SchedulesClient",
+			"NewSubscriptionWorker: Unable to reach SubscriberClient",
 			err,
 		))
 	}
 
-	client := v1.NewSchedulesClient(conn)
+	client := v1.NewSubscriberClient(conn)
 
-	return &scheduleWorker{
+	return &subscriptionWorker{
 		client:              client,
 		registrationRequest: opts.RegistrationRequest,
 		handler:             opts.Handler,

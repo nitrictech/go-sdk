@@ -137,7 +137,7 @@ func (m *Manager) RegisterPolicy(res *v1.ResourceIdentifier, actions ...v1.Actio
 	return nil
 }
 
-func (m *Manager) Run() error {
+func (m *Manager) Run(ctx context.Context) error {
 	wg := sync.WaitGroup{}
 	errList := &multierror.ErrorList{}
 
@@ -146,7 +146,7 @@ func (m *Manager) Run() error {
 		go func(s StreamWorker) {
 			defer wg.Done()
 
-			if err := s.Start(context.TODO()); err != nil {
+			if err := s.Start(ctx); err != nil {
 				if isBuildEnvironment() && isEOF(err) {
 					// ignore the EOF error when running code-as-config.
 					return

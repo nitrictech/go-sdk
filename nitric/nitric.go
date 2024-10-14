@@ -15,6 +15,12 @@
 package nitric
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/nitrictech/go-sdk/nitric/apis"
 	"github.com/nitrictech/go-sdk/nitric/batch"
 	"github.com/nitrictech/go-sdk/nitric/keyvalue"
@@ -42,7 +48,19 @@ var (
 )
 
 func Run() {
-	err := workers.GetDefaultManager().Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		<-sigChan
+		fmt.Printf("Received signal, shutting down...\n")
+		cancel()
+	}()
+
+	err := workers.GetDefaultManager().Run(ctx)
 	if err != nil {
 		panic(err)
 	}
